@@ -1,3 +1,4 @@
+import {vacancyIdentity} from './reconciliation-state.ts';
 import {customAdapters} from './custom-sources.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {AppError,CareerVistaApp} from './app.ts';
@@ -19,7 +20,7 @@ function url(input:unknown):string{text(input,'url');let value:URL;try{value=new
 export class SourceCollection {
  readonly app:CareerVistaApp;readonly adapters:CollectionAdapter[];
  constructor(app:CareerVistaApp,adapters?:CollectionAdapter[]){this.app=app;this.adapters=adapters??[seekAdapter,linkedinAdapter,...customAdapters(app)];}
- destinations(jobId:string):Destination[]{this.app.getJob(jobId);return this.app.database.prepare('SELECT destinations_json FROM collection_captures WHERE job_id=? ORDER BY rowid').all(jobId).flatMap(row=>JSON.parse(String(row.destinations_json)) as Destination[]);}
+ destinations(jobId:string):Destination[]{this.app.getJob(jobId);const members=vacancyIdentity(this.app.database,jobId).memberJobIds;return this.app.database.prepare(`SELECT destinations_json FROM collection_captures WHERE job_id IN (${members.map(()=>'?').join(',')}) ORDER BY rowid`).all(...members).flatMap(row=>JSON.parse(String(row.destinations_json)) as Destination[]);}
  private adapter(source:string){const adapter=this.adapters.find(item=>item.id===source);if(!adapter)throw new AppError('This source has no registered supervised collection adapter. Use manual capture.');return adapter;}
  get(runId:string){new RunsService(this.app).get(runId);const db=this.app.database;return {plans:db.prepare('SELECT plan_json FROM collection_plans WHERE run_id=? ORDER BY rowid').all(runId).map(row=>JSON.parse(String(row.plan_json)) as SourcePlan),events:db.prepare('SELECT search_key AS searchKey,outcome,found_count AS foundCount,created_at AS createdAt FROM collection_events WHERE run_id=? ORDER BY rowid').all(runId),listings:db.prepare('SELECT plan_id AS planId,search_key AS searchKey,work_key AS workKey,source,url,job_id AS jobId FROM collection_listings WHERE run_id=? ORDER BY rowid').all(runId).map(row=>({planId:String(row.planId),searchKey:String(row.searchKey),workKey:String(row.workKey),source:String(row.source),url:String(row.url),jobId:row.jobId===null?null:String(row.jobId)}))};}
  plan(runId:string,input:unknown):SourcePlan{

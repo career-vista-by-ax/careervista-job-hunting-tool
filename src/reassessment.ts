@@ -43,9 +43,11 @@ export class ReassessmentsService {
   object(input,['operationId']);text(input.operationId,'operationId');const batch=this.get(id),item=this.item(id,jobId);
   if(batch.status==='budget-exhausted')throw new AppError('Actual provider costs exceeded the batch budget. No further model work is authorized.',409,'budget_exhausted');
   if(item.authorize_id!==null&&item.authorize_id!==input.operationId)throw new AppError('This item already has an authorization. Retry its original operationId or create a new batch.',409,'idempotency_conflict');
+  const job=this.app.getJob(jobId),observationIds=JSON.parse(String(item.observation_ids_json)) as string[];
+  if(job.observations.length!==observationIds.length||job.observations.some(observation=>!observationIds.includes(observation.id)))throw new AppError('The saved vacancy evidence scope changed. Create a new reassessment batch for the current vacancy before authorizing model work. If work was already authorized, complete it with an insufficient-evidence or provider-failure outcome and record its cost.',409,'scope_conflict');
   if(item.authorize_id===null){if(batch.status==='budget-exhausted')throw new AppError('Actual provider costs exceeded the batch budget. No further model work is authorized.',409,'budget_exhausted');if(item.status!=='pending')throw new AppError('This item is complete. Create a new batch to retry it.');this.app.database.prepare("UPDATE reassessment_items SET status='working',authorize_id=? WHERE id=?").run(input.operationId,String(item.id));}
   else if(item.status!=='working')throw new AppError('This item is already complete. Read its saved result instead of repeating model work.',409,'work_complete');
-  const profile=new ProfilesService(this.app).getProfile(batch.profileVersion),job=this.app.getJob(jobId),observationIds=JSON.parse(String(item.observation_ids_json)) as string[];
+  const profile=new ProfilesService(this.app).getProfile(batch.profileVersion);
   return{batchId:id,jobId,profile,trackId:batch.trackId,effectivePreferences:new ProfilesService(this.app).effectivePreferences(batch.profileVersion,batch.trackId),observations:job.observations.filter(observation=>observationIds.includes(observation.id)),previousAssessment:new AssessmentsService(this.app).history(jobId).find(assessment=>assessment.id===item.previous_assessment_id)??null,budget:batch.budget,estimatePerJob:batch.estimatePerJob,instructions:'Use only these saved observations and the approved profile. Do not browse/recollect, infer unknowns as failures, or alter personal decisions/applications. Record the actual available model/configuration metadata.'};
  }
  complete(id:string,jobId:string,input:ReassessmentCompletion){
@@ -54,6 +56,8 @@ export class ReassessmentsService {
   if(item.status!=='working')throw new AppError('Authorize this saved-evidence item before recording a result.');
   if(input.outcome==='assessed'){
    const assessment=input.assessment,ids=JSON.parse(String(item.observation_ids_json)) as string[];
+   const job=this.app.getJob(jobId);
+   if(job.observations.length!==ids.length||job.observations.some(observation=>!ids.includes(observation.id)))throw new AppError('The saved vacancy evidence scope changed after authorization. Complete this item with an insufficient-evidence or provider-failure outcome and its actual cost, then create a new batch for the current vacancy.',409,'scope_conflict');
    if(!assessment||assessment.jobId!==jobId||assessment.profileVersion!==batch.profileVersion||assessment.trackId!==batch.trackId||!Array.isArray(assessment.observationIds)||assessment.observationIds.length!==ids.length||assessment.observationIds.some(value=>!ids.includes(value)))throw new AppError('The new assessment must use this job, selected approved profile/track and the complete saved evidence snapshot.');
    if(new AssessmentsService(this.app).history(jobId).some(previous=>previous.submissionId===assessment.submissionId))throw new AppError('Reassessment needs a fresh assessment submissionId; older reasoning is retained.');
   }else if(input.assessment!==undefined)throw new AppError('Failure or insufficient-evidence outcomes cannot create a fit assessment. Send no raw provider output or credentials.');

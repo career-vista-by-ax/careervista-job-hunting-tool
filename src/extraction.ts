@@ -71,7 +71,7 @@ export class ExtractionService {
         if (!this.history(job.id).analyses.some(a => a.id === input.supersedesId)) throw new AppError('Correction must reference an analysis of this job.');
       } else if (input.reason !== undefined) throw new AppError('A correction reason requires supersedesId.');
       const createdAt = new Date().toISOString(), id = randomUUID();
-      this.app.database.prepare('INSERT INTO analyses VALUES (?, ?, ?, ?, ?)').run(id, job.id, input.submissionId, JSON.stringify(input), createdAt);
+      this.app.database.prepare('INSERT INTO analyses VALUES (?, ?, ?, ?, ?)').run(id, input.jobId, input.submissionId, JSON.stringify(input), createdAt);
       return { analysis: { ...input, id, createdAt } as unknown as Analysis, replayed: false };
     } catch (error) {
       this.recordFailure({ jobId: input.jobId, submissionId: input.submissionId, code: 'invalid_analysis' });
