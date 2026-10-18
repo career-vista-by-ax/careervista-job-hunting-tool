@@ -16,10 +16,10 @@ Host: Codex desktop browser-control tools, Chrome extension with the user's exis
 
 ## Review UI
 
-Desktop and390px mobile inspection: compact full-width table, source/role/company/location/date, filter and sortable headings, horizontally scrolling table confined to container. Selecting a row opens native modal. Escape closes it and restores focus to the originating job control. Mobile modal fits viewport. Source strings and raw listing text render as text.
+Desktop and 390px mobile inspection: compact full-width table, source/role/company/location/date, filter and sortable headings, horizontally scrolling table confined to container. Selecting a row opens native modal. Escape closes it and restores focus to the originating job control. Mobile modal fits viewport. Source strings and raw listing text render as text.
 
 The richer table requested after comparing JobSync is still being completed with domain tickets; this first UI check is not full daily-workspace acceptance.
 
 ## Baseline and limits
 
-Owner reports current research takes1–2hours/session. No comparable timed CareerVista session has been measured; no time-saving claim is justified. Current source checks prove actual capture-to-extraction/review, not all multi-track bounded runs, all page layouts, fresh website login recovery or every platform. Deterministic source/model fixtures are separate evidence and cannot establish real-model judgement quality or site access guarantees. Full Mac release packaging/installation and other platform status remain explicitly pending.
+Owner reports current research takes 1–2 hours/session. No comparable timed CareerVista session has been measured; no time-saving claim is justified. Current source checks prove actual capture-to-extraction/review, not all multi-track bounded runs, all page layouts, fresh website login recovery or every platform. Deterministic source/model fixtures are separate evidence and cannot establish real-model judgement quality or site access guarantees. Full Mac release packaging/installation and other platform status remain explicitly pending.

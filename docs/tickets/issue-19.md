@@ -22,3 +22,7 @@ Implement this as a complete vertical slice, including persistence, public appli
 ### Owner clarification: table and modal review (2026-10-18)
 
 Use a compact full-width table and open job details in a modal dialog. Preserve keyboard closing and focus restoration. No large promotional heading or persistent split-pane detail view.
+
+### Owner clarification: richer comparison table (2026-10-18)
+
+Use JobSync’s documented table and published screenshot as workflow references. Surface application/added dates, employment/work arrangement, status, source and row actions, plus CareerVista-specific compensation with provenance/units, explained fit, independent confidence, material concerns, user decision and availability/freshness. Group secondary labels and allow column visibility/horizontal scrolling so comparisons stay readable. Keep application, user review, agent exclusion and listing availability distinct. Display actual saved values and explicit unknowns; never invent scores, salaries or default onsite values. Details remain in a modal.
