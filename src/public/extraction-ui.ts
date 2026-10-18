@@ -19,7 +19,18 @@ export async function showExtraction(container: HTMLElement, jobId: string) {
       for (const ref of field.evidence) list.append(node('dd', `Evidence ${ref.observationId}: “${ref.quote}”`));
     }
     const older = document.createElement('details'); older.append(node('summary', `${history.analyses.length} analysis versions`));
-    for (const analysis of history.analyses) older.append(node('pre', JSON.stringify(analysis, null, 2))); section.append(older);
+    for (const analysis of history.analyses) {
+      const version = document.createElement('details');
+      version.append(node('summary', `${new Date(analysis.createdAt).toLocaleString()} · ${analysis.metadata.agent}${analysis.reason ? ` · ${analysis.reason}` : ''}`));
+      const fields = document.createElement('dl');
+      for (const [key, label] of Object.entries(names)) {
+        const field = analysis.details[key as keyof ListingDetails];
+        fields.append(node('dt', label), node('dd', field.value ?? 'Unknown'));
+        for (const ref of field.evidence) fields.append(node('dd', `“${ref.quote}”`));
+      }
+      version.append(fields); older.append(version);
+    }
+    section.append(older);
     const form = document.createElement('form'); form.append(node('h4', 'Correct structured details'));
     form.append(node('p', 'Choose a field, enter a value and a verbatim supporting quote from saved evidence. Leave value and quote empty to mark it unknown. Corrections keep all previous versions.'));
     const select = document.createElement('select'); const label = node('label', 'Field '); label.append(select); form.append(label);

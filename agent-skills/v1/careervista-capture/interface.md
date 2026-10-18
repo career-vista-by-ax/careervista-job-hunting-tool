@@ -2,7 +2,13 @@
 
 Any agent or model can use the local HTTP application interface. No proprietary SDK, model key, cloud provider or app account is required. The agent host owns its model/provider settings and any credentials. CareerVista accepts resulting JSON and records optional provenance; it never calls a provider during extraction or sends unrelated notes, resumes or preferences. Change providers/models in the selected host. Do not include API keys or tokens in metadata.
 
-First POST `/api/v1/observations` as documented in `architecture.md`. Evidence is committed before analysis. Use returned IDs in POST `/api/v1/analyses`:
+First POST `/api/v1/observations` with this capture envelope:
+
+```json
+{"ingestionId":"agent:run1:listing1","source":"employer","sourceUrl":"https://example.com/jobs/42","capturedAt":"2026-10-18T01:00:00Z","text":"Teacher. Full readable listing text here.","title":"Teacher","company":"School","context":{"method":"browser-agent"}}
+```
+
+`location` is optional. Source URL must be HTTP(S) without embedded credentials, capture time ISO 8601, text at most one million characters and other strings at most 8000 characters. Requests must be JSON under 2 MB. The app accepts loopback requests only, and any Origin header must match the exact app origin. It fetches no source URL. Returns 201 `{job,observation,replayed:false}`; identical ingestionId retry returns existing IDs with 200 and `replayed:true`. Changed content needs a new identifier. GET `/api/v1/jobs/:id` reads the saved observations. Evidence is committed before analysis. Use returned IDs in POST `/api/v1/analyses`:
 
 ```json
 {

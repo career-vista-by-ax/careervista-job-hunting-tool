@@ -24,7 +24,6 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 }
 const assets: Record<string, [string, string]> = {
   '/': ['index.html', 'text/html; charset=utf-8'],
-  '/extraction-ui.js': ['extraction-ui.js', 'text/javascript; charset=utf-8'],
   '/client.js': ['client.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['style.css', 'text/css; charset=utf-8'],
 };
