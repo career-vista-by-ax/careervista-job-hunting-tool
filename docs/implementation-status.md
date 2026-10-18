@@ -6,7 +6,7 @@ Integration branch: `integration/spec-1`. Draft PR: https://github.com/allenhori
 - #17 application history: merged and public-interface tested.
 - Table/modal owner correction: implemented and desktop/mobile browser checked. Filtering, sorting, Escape close and focus restoration verified. Current full suite: 8 passing tests; typecheck/build pass.
 - #3 agent extraction: unfinished work preserved on `ticket/3-agent-capture`; review/finish tests, skill registration and integration before treating it as complete.
-- #4 profile/search tracks: unfinished work preserved on `ticket/4-profiles`; review/finish tests and integrate before treating it as complete.
+- #4 profile/search tracks: completed on `ticket/4-profiles`; versioned draft/approval, effective per-track preferences and independent toolbar UI pass public-interface tests and typecheck/build. Integration merge and supervised browser validation remain pending.
 - #20 backup: implementation not started.
 - All remaining tickets: pending according to `docs/tickets/graph.json`.
 
