@@ -131,12 +131,12 @@ export class AssessmentsService {
     const id = randomUUID(), createdAt = new Date().toISOString();
     const label = fitLabel(input);
     const db = this.app.database;
-    db.exec('BEGIN IMMEDIATE');
+    db.exec('SAVEPOINT assessment_submit');
     try {
       db.prepare('INSERT INTO assessments VALUES (?,?,?,?,?,?,?,?,?)').run(id, input.jobId, input.submissionId, input.profileVersion, input.trackId, label, rulesVersion, JSON.stringify(input), createdAt);
       for (const observationId of input.observationIds) db.prepare('INSERT INTO assessment_evidence VALUES (?,?)').run(id, observationId);
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+      db.exec('RELEASE assessment_submit');
+    } catch (error) { db.exec('ROLLBACK TO assessment_submit; RELEASE assessment_submit'); throw error; }
     return { assessment: this.history(input.jobId).find(item => item.id === id)!, replayed: false };
   }
 }
