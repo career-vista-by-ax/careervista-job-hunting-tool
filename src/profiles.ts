@@ -38,7 +38,7 @@ function validatePreferences(value: unknown, label: string): asserts value is Pr
     keys.add(pref.key);
     if (!['hard', 'soft', 'undecided'].includes(pref.kind)) throw new AppError('Preference kind must be hard, soft or undecided.');
     if (pref.kind === 'undecided' && pref.value !== null) throw new AppError('Undecided preferences must have a null value.');
-    if (pref.kind !== 'undecided' && (pref.value === null || pref.value === '' || (Array.isArray(pref.value) && pref.value.length === 0))) throw new AppError('A hard or soft preference needs an explicit value; choose undecided for unknown needs.');
+    if (pref.kind !== 'undecided' && (pref.value === null || (typeof pref.value === 'string' && !pref.value.trim()) || (Array.isArray(pref.value) && pref.value.length === 0))) throw new AppError('A hard or soft preference needs an explicit value; choose undecided for unknown needs.');
     if (!isJson(pref.value) || JSON.stringify(pref.value).length > 64_000) throw new AppError('Preference value must be finite JSON, at most 64000 characters and 20 levels deep.');
   }
 }

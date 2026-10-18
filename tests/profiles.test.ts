@@ -64,6 +64,7 @@ test('invalid or ambiguous profile preferences fail with guidance and leave vers
     assert.throws(() => profiles.createDraft({ ...input, preferences: [{ key: 'location', kind: 'undecided', value: 'Melbourne' }] }), /undecided.*null/i);
     assert.throws(() => profiles.createDraft({ ...input, preferences: [{ key: 'location', kind: 'hard', value: null }] }), /hard.*value/i);
     assert.throws(() => profiles.createDraft({ ...input, preferences: [{ key: 'location', kind: 'soft', value: 'Melbourne' }, { key: 'location', kind: 'hard', value: 'Sydney' }] }), /duplicate.*preference/i);
+    assert.throws(() => profiles.createDraft({ ...input, preferences: [{ key: 'location', kind: 'hard', value: '   ' }] }), /explicit value/i);
     assert.equal(profiles.listProfiles().length, 0);
   } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
 });
