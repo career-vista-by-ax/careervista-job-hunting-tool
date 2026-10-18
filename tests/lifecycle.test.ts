@@ -1,6 +1,7 @@
+import {CareerVistaApp} from '../src/app.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync,copyFileSync,chmodSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync,copyFileSync,chmodSync,cpSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -17,3 +18,21 @@ test('launch and stop authenticate owned instances and never signal a stored PID
 });
 
 test('scoped cache clearing protects credentials and sessions and preserves modified package files on uninstall',async()=>{const root=mkdtempSync(join(tmpdir(),'cv-cleanup-'));try{const source=bundle(root);const installation=new Installation(join(root,'install'));await installation.install(source);writeFileSync(join(root,'install','cache','temporary'),'cache');writeFileSync(join(root,'install','sessions','browser'),'persistent session');writeFileSync(join(root,'install','credentials','key'),'persistent key');assert.equal(installation.storage().totalBytes,5);assert.equal(installation.clearCache({all:true}).reclaimedBytes,5);assert.equal(readFileSync(join(root,'install','sessions','browser'),'utf8'),'persistent session');const modified=join(root,'install','releases','test-1','app','dist','main.js');writeFileSync(modified,'user changed this file');const result=await installation.uninstall();assert.ok(result.retained.some(path=>path.endsWith('/releases/test-1/app/dist/main.js')));assert.equal(readFileSync(modified,'utf8'),'user changed this file');assert.equal(readFileSync(join(root,'install','credentials','key'),'utf8'),'persistent key');}finally{rmSync(root,{recursive:true,force:true});}});
+
+
+test('a migration failure after touching the owned database restores its private snapshot and leaves the previous release active',async()=>{
+ const root=mkdtempSync(join(tmpdir(),'cv-upgrade-rollback-')),installation=new Installation(join(root,'install'));
+ try{
+  const source=bundle(root),manifestPath=join(source,'release.json'),manifest=JSON.parse(readFileSync(manifestPath,'utf8'));
+  mkdirSync(join(source,'app/dist/migrations'),{recursive:true});
+  for(const name of readdirSync('src/migrations')){const path=`app/dist/migrations/${name}`;copyFileSync(join('src/migrations',name),join(source,path));manifest.files[path]=createHash('sha256').update(readFileSync(join(source,path))).digest('hex');}
+  writeFileSync(manifestPath,JSON.stringify(manifest));await installation.install(source);
+  let app=new CareerVistaApp({root:installation.root});const saved=app.saveObservation({ingestionId:'retained',source:'manual',sourceUrl:'https://example.com/job',capturedAt:'2026-10-18T00:00:00Z',title:'Nurse',company:'Clinic',text:'Original evidence.'});app.close();
+  const incoming=join(root,'incoming');cpSync(source,incoming,{recursive:true});
+  const helper=`import {writeFileSync} from 'node:fs';import {DatabaseSync} from 'node:sqlite';import {join} from 'node:path';const root=process.argv[process.argv.indexOf('--root')+1];const token=process.argv[process.argv.indexOf('--start-token')+1];let value='';for await(const chunk of process.stdin)value+=chunk;if(value!==token+'\\n')process.exit(2);if(root.includes('/temp/.upgrade-'))process.exit(0);const db=new DatabaseSync(join(root,'data/careervista.sqlite'));const changed=db.prepare("UPDATE jobs SET title='Corrupted by controlled migration failure'").run().changes;db.close();writeFileSync(join(root,'state/controlled-migration-attempt'),String(changed));process.exit(1);`;
+  writeFileSync(join(incoming,'app/dist/migrate.js'),helper);manifest.version='test-2';manifest.files['app/dist/migrate.js']=createHash('sha256').update(helper).digest('hex');writeFileSync(join(incoming,'release.json'),JSON.stringify(manifest));
+  await assert.rejects(installation.install(incoming),/migration/i);assert.equal(readFileSync(join(installation.root,'state/controlled-migration-attempt'),'utf8'),'1');assert.equal(installation.status().active,'test-1');
+  app=new CareerVistaApp({root:installation.root});try{assert.equal(app.getJob(saved.job.id).title,'Nurse');assert.equal(app.getJob(saved.job.id).observations[0]?.text,'Original evidence.');}finally{app.close();}
+  assert.equal(existsSync(join(installation.root,'state/upgrade-stage.json')),false);assert.equal(readdirSync(join(installation.root,'state')).some(name=>name.startsWith('.upgrade-')),false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
