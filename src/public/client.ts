@@ -1,5 +1,6 @@
 import { installResumeUI } from './resume-ui.ts';
 import { showAvailability } from './availability-ui.ts';
+import { mountDataTools } from './datalifecycle-ui.ts';
 import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { showCompensation } from './compensation-ui.ts';
@@ -120,3 +121,5 @@ window.addEventListener('careervista:open-job', event => { void showDetail((even
 void showApplicationAttention();
 
 mountBackupTools();
+
+mountDataTools();
