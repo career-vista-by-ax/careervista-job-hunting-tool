@@ -19,3 +19,5 @@ This skill uses the host's existing browser, network access and model configurat
 
 For focused company investigations, read [company.md](company.md) before browsing or summarizing reports.
 For LinkedIn discovery, read [linkedin.md](linkedin.md) and [collection.md](collection.md).
+
+For approved unfamiliar source exploration, read [custom-sources.md](custom-sources.md).

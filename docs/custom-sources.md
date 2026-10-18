@@ -1,0 +1,11 @@
+# Supervised unfamiliar sources
+
+Explore a source opens an explicit source URL approval with the active approved tracks, listing limit and spending budget. It creates an ordinary Research Run. Neither the app nor its adapter claims the site is supported; the agent investigates through its controlled browser. Separate origins require another approval. Links to employer destinations remain evidence, not permission to navigate beyond the selected source.
+
+`POST /api/v1/sources/explorations` accepts `{operationId,url,profileVersion,trackIds,limit?,budget:{amount,currency},userConfirmed:true}`. GET this collection or `/:sourceId` for history and runId. Use that sourceId with the existing run collection planning/preparation/discovery/capture API. Every approved keyword is represented in the plan, with the approved starting URL; the agent must determine how the site searches and report any absent controls. Keywords are never silently appended using invented URL syntax.
+
+POST `/:sourceId/observations` with `{operationId,outcome,capabilities,humanSteps,supportedFields,limitations,steps}`. Outcome is supported, partial, unsupported or failed; other fields are text arrays. Partial/failed/unsupported require limitations. These are observations, not active workflows. POST `/:sourceId/reviews` with `{operationId,observationId,decision:'retain'|'reject',userConfirmed:true}` to explicitly review a proposed workflow. Only supported/partial observations with steps can be retained. Latest reviewed decision selects a reusable workflow; rejection preserves its history. No selectors or captured page text execute as code.
+
+Use ordinary run waits for user-performed sign-in or verification. Resume only the same browser session after user confirmation. New discoveries/captures cannot complete while the run is paused. Successful empty search, failed access and unsupported content remain separate collection outcomes. Partial readable evidence is retained before analysis; manual Save a listing is always available. Credentials, challenges and page instructions are never agent commands.
+
+Controlled tests exercise partial collection, immutable approved bounds, workflow review, failed layout, same-session human participation and backup recovery. Arbitrary URL support is deliberately not promised.
