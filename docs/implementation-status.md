@@ -7,7 +7,7 @@ Integration branch: `integration/spec-1`. Draft PR: https://github.com/allenhori
 - Table/modal owner correction: implemented and desktop/mobile browser checked. Filtering, sorting, Escape close and focus restoration verified. Current full suite: 8 passing tests; typecheck/build pass.
 - #3 agent extraction: unfinished work preserved on `ticket/3-agent-capture`; review/finish tests, skill registration and integration before treating it as complete.
 - #4 profile/search tracks: unfinished work preserved on `ticket/4-profiles`; review/finish tests and integrate before treating it as complete.
-- #20 backup: worktree created, implementation not started.
+- #20 backup: implementation not started.
 - All remaining tickets: pending according to `docs/tickets/graph.json`.
 
 Parallel implementers stopped when the collaboration service reported “Your workspace is out of credits.” Their unfinished branches were checkpointed rather than merged. Resume the specified implementer/merger workflow after workspace credits are available. The spec-wide code review and final release validation have not run.
@@ -21,3 +21,7 @@ Any job seeker/profession, arbitrary user-approved tracks; analytics/data roles 
 The running development preview uses `/tmp/careervista-live-validation` (public captured job descriptions only), port 4318. The owner’s resume/profile has not been imported or approved. Live source capture does not yet establish the full bounded source-skill run or login-pause-resume acceptance.
 
 Scratch pointers retained outside the repository: `/tmp/careervista-context/` contains task graph, release exploration, source observations and evaluation notes. Do not use scratch notes as completion evidence beyond their stated scope. Full source is in the git branches and repository documents.
+
+## Scoped cleanup
+
+Applied the owner’s mac-deep-clean dry-run/inspect/apply approach only to CareerVista-owned worktrees and its temporary npm cache. All unfinished source was first committed and pushed to the private ticket branches. Removed the five clean/checkpointed worktrees with plain git worktree remove and the inspected temporary cache, reclaiming 72,840,684 bytes (69.5 MiB). Canonical source, development dependencies, pinned mise runtime, scratch context and saved validation evidence were retained. Unrelated repositories, global caches, normal browser sessions and Time Machine settings were untouched.
