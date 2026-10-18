@@ -18,3 +18,4 @@ Use the local origin supplied by the running CareerVista app. Read `interface.md
 This skill uses the host's existing browser, network access and model configuration. It bundles no browser or model runtime. Agent host availability, platform support, licensing, usage charges and browser session retention are determined by that host. Manual local capture and offline review remain available independently.
 
 For focused company investigations, read [company.md](company.md) before browsing or summarizing reports.
+For LinkedIn discovery, read [linkedin.md](linkedin.md) and [collection.md](collection.md).
