@@ -18,7 +18,7 @@ export interface ObservationInput {
   context?: Record<string, unknown>;
 }
 export interface Job {
-  id: string; title: string; company: string; location: string | null; createdAt: string;
+  id: string; title: string; company: string; location: string | null; createdAt: string; sources?: string[];
 }
 export interface Observation {
   id: string; jobId: string; ingestionId: string; source: string; sourceUrl: string;
@@ -89,7 +89,8 @@ export class CareerVistaApp {
     return { job, observation: job.observations[0]!, replayed: false };
   }
   listJobs(): Job[] {
-    return this.database.prepare('SELECT id, title, company, location, created_at AS createdAt FROM jobs ORDER BY created_at DESC, id').all() as unknown as Job[];
+    const rows = this.database.prepare('SELECT id, title, company, location, created_at AS createdAt, (SELECT json_group_array(DISTINCT source) FROM observations WHERE job_id = jobs.id) AS sources FROM jobs ORDER BY created_at DESC, id').all();
+    return rows.map(row => ({ ...row, sources: JSON.parse(String(row.sources)) })) as unknown as Job[];
   }
   getJob(id: string): JobDetail {
     const job = this.database.prepare('SELECT id, title, company, location, created_at AS createdAt FROM jobs WHERE id = ?').get(id) as unknown as Job | undefined;
