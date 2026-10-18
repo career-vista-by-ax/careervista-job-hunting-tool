@@ -8,7 +8,7 @@ The native Apple Silicon archive includes Node, SQLite, compiled local assets an
 
 ## Mac development launch
 
-This is the source/developer workflow. Self-contained end-user archives and installation lifecycle are tracked separately; the source workflow is not the promised installer.
+This is the source/developer workflow. End-user archive instructions are above; these commands are for contributors.
 
 1. Install [mise](https://mise.jdx.dev/getting-started.html), then run `mise trust` and `mise install` in this repository.
 2. Run `mise exec -- npm ci` and `mise exec -- npm run build`.
@@ -22,15 +22,15 @@ Set `CAREERVISTA_ROOT` to choose an independent root; set `CAREERVISTA_PORT` if 
 
 | Directory | Ownership and purpose |
 | --- | --- |
-| `app/` | Reserved for owned application/runtime release files |
+| `releases/`, `state/` | Owned versioned runtime/application and lifecycle manifests |
 | `data/` | Persistent SQLite database and its live SQLite journals |
-| `cache/` | Disposable app caches; currently unused |
-| `temp/` | Disposable app temporary files; currently unused |
-| `logs/` | Disposable app logs; currently unused; launch messages go to terminal |
+| `cache/` | Capped disposable run caches |
+| `temp/` | Disposable run files and isolated upgrade probes |
+| `logs/` | Capped disposable run logs; launch messages go to terminal |
 | `sessions/` | Persistent supported agent browser sessions; currently unused |
 | `credentials/` | Persistent optional provider credentials; currently unused |
 
-Never remove `data`, `sessions`, or `credentials` as cache cleanup. Do not manually delete live SQLite WAL/journal files. The app makes no runtime downloads and writes no accumulating cache or log files in this slice.
+Never remove `data`, `sessions`, or `credentials` as cache cleanup. Do not manually delete live SQLite WAL/journal files. The app makes no runtime downloads. Disposable storage has size/age caps; upgrade probes and build staging are cleaned on completion or recovery.
 
 ## Agent-assisted extraction
 
@@ -42,6 +42,12 @@ Open **Research runs** to choose approved tracks, configurable sources, a new-jo
 
 ## Development checks
 
-`mise exec -- npm test` runs behavioral tests through the public application and HTTP interfaces. `mise exec -- npm run build` checks and compiles backend/frontend TypeScript and copies local assets/migrations into `dist`. The HTTP test needs permission to bind a loopback port in restrictive sandboxes. The tests use temporary independent databases and deterministic inputs; they do not contact job sites or model services.
+`mise exec -- node --test tests/*.test.ts` runs behavioral tests through the public application and HTTP interfaces. `mise exec -- npm run build` checks and compiles backend/frontend TypeScript and copies local assets/migrations into `dist`. The HTTP test needs permission to bind a loopback port in restrictive sandboxes. The tests use temporary independent databases and deterministic inputs; they do not contact job sites or model services.
 
-Initial verification is on macOS arm64 with Node 26.12.0. Windows, Linux, Chromebook, release archive installation and live browser-agent workflows remain unverified. See [architecture and interface](docs/architecture.md) and [references/licenses](docs/references-and-licenses.md).
+Verification is on macOS arm64 with Node 26.12.0, including an isolated self-contained offline archive and supervised SEEK/LinkedIn workflows. Fresh-OS/Gatekeeper testing and Windows, Linux, Intel Mac and Chromebook support remain unverified. See the [validation record](docs/validation-2026-10-18.md) for exact scope. See [architecture and interface](docs/architecture.md) and [references/licenses](docs/references-and-licenses.md).
+
+## Daily review and follow-up
+
+The table includes work arrangement/employment, compensation provenance and units, fit/confidence/concerns, saved/applied dates, source freshness and independent review/application states. Use Filters & columns to choose comparison fields and save views. Select a role for modal evidence, source reports, compensation, corrections, duplicate review and history.
+
+[Feedback](docs/feedback.md) creates pending, reversible preference proposals only after explicit review. [Reassessment](docs/reassessment.md) uses saved evidence under an approved profile; [sparse-result diagnosis](docs/sparse-results.md) distinguishes failed access, query coverage and confirmed conflicts before proposing any broadening. [Focused company research](docs/company.md) and [unfamiliar sources](docs/custom-sources.md) retain attribution, human participation and limitations. Backups are private full-data copies; they include original resumes but exclude host credentials/session directories.

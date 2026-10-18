@@ -1,27 +1,23 @@
-# Spec #1 implementation checkpoint
+# Spec #1 implementation status
 
-Integration branch: `integration/spec-1`. Draft PR: https://github.com/allenhori/careervista-job-hunting-tool/pull/23. Full spec is **not complete**; keep the PR draft and all implementation tickets open until their acceptance criteria pass.
+Integration branch: `integration/spec-1`. Review: https://github.com/allenhori/careervista-job-hunting-tool/pull/23. All feature slices #2–#21 are integrated. #22 includes native Mac arm64 packaging, isolated offline installation, populated-data upgrades/rollback, repeat launch, keep-data reinstall and explicit owned-data removal. The PR closes #1–#22 when merged; no ticket is closed merely because code was drafted.
 
-- #2 listing evidence: merged and public-interface tested; live SEEK/LinkedIn descriptions saved and reviewed through the UI.
-- #17 application history: merged and public-interface tested.
-- Table/modal owner correction: implemented and desktop/mobile browser checked. Filtering, sorting, Escape close and focus restoration verified. Current full suite: 8 passing tests; typecheck/build pass.
-- #3 agent extraction: unfinished work preserved on `ticket/3-agent-capture`; review/finish tests, skill registration and integration before treating it as complete.
-- #4 profile/search tracks: completed on `ticket/4-profiles`; versioned draft/approval, effective per-track preferences and independent toolbar UI pass public-interface tests and typecheck/build. Integration merge and supervised browser validation remain pending.
-- #20 backup: implementation not started.
-- All remaining tickets: pending according to `docs/tickets/graph.json`.
+The product supports any profession and arbitrary user-approved tracks. It is model/agent independent; Codex is the development/browser validation host. Daily review is a rich full-width table with filters, saved views, column choices and modal details. User review, agent fit, application progress and source availability have separate histories.
 
-Parallel implementers stopped when the collaboration service reported “Your workspace is out of credits.” Their unfinished branches were checkpointed rather than merged. Resume the specified implementer/merger workflow after workspace credits are available. The spec-wide code review and final release validation have not run.
+## Verification
 
-## Accepted scope
+- Exact pinned Node 26.12.0; TypeScript check/build and 80 behavioral checks through public application/HTTP/lifecycle interfaces. Tests use isolated roots and deterministic inputs; the archive test also invokes the real bundled runtime and launcher with no development tools on PATH and non-loopback networking denied.
+- Real supervised SEEK teaching and LinkedIn baking discovery/capture, approved multi-track run, saved destinations, grounded extraction, explicit unknowns and conservative Codex fit review. LinkedIn's broadened location was detected and corrected using its visible control.
+- Browser-verified synthetic resume import/redaction/payload review, grounded suggestions, separate aspirations, draft/approval, explicit save feedback and preference proposal, cached reassessment restoring eligibility while retaining old exclusion and independent review, synthetic application event and sparse-run diagnosis.
+- Standards and Spec reviews found three grouping/reversal issues. All were fixed in one implementer branch with regression coverage, then independently rechecked: grouped destinations, extraction source ownership and reassessment evidence-scope drift.
+- Detailed evidence and limits: [validation record](validation-2026-10-18.md), [review record](review-spec-1.md), [release instructions](release.md).
 
-Any job seeker/profession, arbitrary user-approved tracks; analytics/data roles are only examples. Model and agent independent, Codex used as development host. User's current research baseline is 1–2 hours/session; no time-saving claim has been measured. Local review is a full-width table; details open in a modal.
+## Verification limits
 
-## Validation data and external context
+Native execution is verified on the maintainer's macOS 27.0.1 arm64 with isolated installation roots, not a fresh OS image. Gatekeeper/quarantine/notarization and other platforms remain unverified and are not advertised as supported. The external browser-capable host is optional and separately installed/licensed; no website password, CAPTCHA bypass or host account is provided by the app. Actual fresh website-login challenges were not encountered in the live checks; pause/resume behavior is tested with controlled responses.
 
-The running development preview uses `/tmp/careervista-live-validation` (public captured job descriptions only), port 4318. The owner’s resume/profile has not been imported or approved. Live source capture does not yet establish the full bounded source-skill run or login-pause-resume acceptance.
-
-Scratch pointers retained outside the repository: `/tmp/careervista-context/` contains task graph, release exploration, source observations and evaluation notes. Do not use scratch notes as completion evidence beyond their stated scope. Full source is in the git branches and repository documents.
+The owner reports a 1–2 hour research baseline. The bounded two-listing capture took about 2.61 minutes, excluding subsequent interpretation/review and development work. These workloads are not comparable enough for a time-saving percentage or a claim of worthwhile personal matches. Profiles/resume and application events used in validation are synthetic; no owner resume, real application submission or recruiter message was used.
 
 ## Scoped cleanup
 
-Applied the owner’s mac-deep-clean dry-run/inspect/apply approach only to CareerVista-owned worktrees and its temporary npm cache. All unfinished source was first committed and pushed to the private ticket branches. Removed the five clean/checkpointed worktrees with plain git worktree remove and the inspected temporary cache, reclaiming 72,840,684 bytes (69.5 MiB). Canonical source, development dependencies, pinned mise runtime, scratch context and saved validation evidence were retained. Unrelated repositories, global caches, normal browser sessions and Time Machine settings were untouched.
+Use the owner's mac-deep-clean dry-run/inspect/apply method only on completed CareerVista worktrees and owned temporary build/cache output. Preserve canonical source, branches, reusable dependencies/runtime, release artifacts and validation evidence. The broad machine-specific script's DRE/global-cache/Time Machine operations are excluded. Final cleanup measurements are recorded in the validation record.

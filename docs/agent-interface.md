@@ -42,7 +42,7 @@ In-process public boundary: `new ExtractionService(app)`, `submitAnalysis(input)
 
 The release includes `agent-skills/v1/careervista-capture/`. Explicitly register in a compatible host's skill directory using `node scripts/register-agent-skills.mjs --install --target <directory>`. Use `--uninstall` with the same target to remove only unchanged owned files. A registration manifest in that directory records paths and SHA-256 hashes. Existing conflicting entries are preserved and setup refuses to overwrite them. Uninstall preserves modified files and reports them. No global caches, browser sessions or other skills are touched. Reload the host's skills using its documented mechanism.
 
-Hosts without filesystem skills may consume the packaged SKILL.md and interface.md directly. This setup step is explicit; the core app remains usable without a host. The registration script currently requires Node, so it is a maintainer setup utility until release packaging supplies the runtime. Browser assistance is not yet a self-contained distributed runtime.
+Hosts without filesystem skills may consume the packaged SKILL.md and interface.md directly. This setup step is explicit; the core app remains usable without a host. The source registration script is a maintainer utility. End users use the bundled launcher’s `register-skills --host codex` or `--host agents` operation, which uses the included runtime and records installation ownership; see release.md. Browser assistance remains an external, separately installed host capability.
 
 # Codex development validation
 

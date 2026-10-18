@@ -61,7 +61,8 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   function rowCell(row: WorkspaceRow, key: typeof workspaceColumns[number]) {
     if (key === 'role') {
       const td = node('td','','identity-cell'); const button = node('button',row.title,'job-title'); button.type='button'; button.dataset.jobId=row.id; button.setAttribute('aria-haspopup','dialog'); button.setAttribute('aria-label',`View ${row.title} at ${row.company}`); button.addEventListener('click',()=>void openJob(row.id));
-      td.append(button,node('span',`${row.employment ?? 'Employment unknown'} · Saved ${date(row.createdAt)}`,'cell-secondary')); return td;
+      const employment=node('span',row.employment ?? 'Employment unknown','cell-secondary role-employment'); employment.title=row.employment ?? 'Employment unknown';
+      td.append(button,employment,node('span',`Saved ${date(row.createdAt)}`,'cell-secondary')); return td;
     }
     if (key === 'company') return cell(row.company);
     if (key === 'location') return cell(row.location ?? 'Location unknown',row.workArrangement ?? 'Workplace unknown');
