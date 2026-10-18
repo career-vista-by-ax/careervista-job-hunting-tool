@@ -1,3 +1,4 @@
+import { installResumeUI } from './resume-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { showCompensation } from './compensation-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
@@ -108,6 +109,7 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installResumeUI();
 void showApplicationAttention();
 
 mountBackupTools();
