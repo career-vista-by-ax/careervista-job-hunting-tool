@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -16,9 +17,10 @@ function required(value: unknown, key: string, max = 8000): asserts value is str
 export class Availability {
   private app: CareerVistaApp;
   constructor(app: CareerVistaApp) { this.app = app; }
-  history(jobId: string) {
+  history(jobId: string, sourceOnly = false) {
+    const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     this.app.getJob(jobId);
-    const checks = this.app.database.prepare('SELECT id,input_json,created_at FROM availability_checks WHERE job_id=? ORDER BY sequence').all(jobId).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at) })) as AvailabilityCheck[];
+    const checks = this.app.database.prepare(`SELECT id,input_json,created_at FROM availability_checks WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at) })) as AvailabilityCheck[];
     const chronological = [...checks].sort((a, b) => Date.parse(a.checkedAt) - Date.parse(b.checkedAt));
     const latest = chronological.at(-1) ?? null;
     const lastSuccessful = chronological.filter(check => check.result !== 'could_not_verify').at(-1) ?? null;

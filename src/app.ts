@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
@@ -24,7 +25,7 @@ export interface Observation {
   id: string; jobId: string; ingestionId: string; source: string; sourceUrl: string;
   capturedAt: string; text: string; context: Record<string, unknown>; createdAt: string;
 }
-export interface JobDetail extends Job { observations: Observation[] }
+export interface JobDetail extends Job { observations: Observation[]; memberJobIds?: string[] }
 
 /** Application-owned directories. cache/temp/logs are disposable; all other paths persist. */
 export function appPaths(root: string) {
@@ -89,14 +90,16 @@ export class CareerVistaApp {
     return { job, observation: job.observations[0]!, replayed: false };
   }
   listJobs(): Job[] {
-    const rows = this.database.prepare('SELECT id, title, company, location, created_at AS createdAt, (SELECT json_group_array(DISTINCT source) FROM observations WHERE job_id = jobs.id) AS sources FROM jobs ORDER BY created_at DESC, id').all();
+    const rows = this.database.prepare('SELECT id, title, company, location, created_at AS createdAt, (SELECT json_group_array(DISTINCT source) FROM observations WHERE job_id = jobs.id OR job_id IN (SELECT job_id FROM vacancy_members WHERE canonical_job_id=jobs.id)) AS sources FROM jobs WHERE NOT EXISTS (SELECT 1 FROM vacancy_members WHERE job_id=jobs.id AND canonical_job_id<>jobs.id) ORDER BY created_at DESC, id').all();
     return rows.map(row => ({ ...row, sources: JSON.parse(String(row.sources)) })) as unknown as Job[];
   }
   getJob(id: string): JobDetail {
+    const identity = vacancyIdentity(this.database, id);
+    id = identity.canonicalId;
     const job = this.database.prepare('SELECT id, title, company, location, created_at AS createdAt FROM jobs WHERE id = ?').get(id) as unknown as Job | undefined;
     if (!job) throw new AppError('Job not found.', 404, 'not_found');
-    const rows = this.database.prepare('SELECT id, job_id AS jobId, ingestion_id AS ingestionId, source, source_url AS sourceUrl, captured_at AS capturedAt, text, context_json AS contextJson, created_at AS createdAt FROM observations WHERE job_id = ? ORDER BY created_at, id').all(id);
-    return { ...job, observations: rows.map(row => {
+    const rows = this.database.prepare(`SELECT id, job_id AS jobId, ingestion_id AS ingestionId, source, source_url AS sourceUrl, captured_at AS capturedAt, text, context_json AS contextJson, created_at AS createdAt FROM observations WHERE job_id IN (${identity.memberJobIds.map(() => '?').join(',')}) ORDER BY created_at, id`).all(...identity.memberJobIds);
+    return { ...job, memberJobIds: identity.memberJobIds, observations: rows.map(row => {
       const { contextJson, ...rest } = row;
       return { ...rest, context: JSON.parse(String(contextJson)) } as unknown as Observation;
     }) };
