@@ -1,7 +1,10 @@
 import { installResumeUI } from './resume-ui.ts';
+import { showAvailability } from './availability-ui.ts';
+import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { showCompensation } from './compensation-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
+
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
@@ -39,6 +42,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showAvailability(detail, id, job.observations, refresh);
     await showCompensation(id, detail);
     await showExtraction(detail, id);
     await showAssessments(detail, id, job.observations);
@@ -72,15 +76,16 @@ function renderRows() {
   }
 }
 async function refresh() {
-  jobs = await api<Job[]>('/jobs');
+  jobs = await api<Job[]>(element<HTMLInputElement>('include-closed').checked ? '/jobs' : '/jobs?availability=active');
   renderRows();
 }
 element('close-detail').addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => {
   const button = document.querySelector<HTMLButtonElement>(`[data-job-id="${CSS.escape(selectedId ?? '')}"]`);
-  selectedId = undefined; button?.focus();
+  selectedId = undefined; (button ?? element('job-search')).focus();
 });
 element('job-search').addEventListener('input', renderRows);
+element('include-closed').addEventListener('change', () => void refresh().catch(showError));
 document.querySelectorAll<HTMLButtonElement>('[data-sort]').forEach(button => button.addEventListener('click', () => {
   const key = button.dataset.sort as typeof sortKey;
   sortDirection = sortKey === key ? -sortDirection : 1; sortKey = key;
@@ -110,6 +115,8 @@ void refresh().catch(showError);
 
 installProfilesUI();
 installResumeUI();
+installRunsUI();
+window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
 void showApplicationAttention();
 
 mountBackupTools();
