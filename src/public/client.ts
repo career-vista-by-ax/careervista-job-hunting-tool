@@ -1,3 +1,4 @@
+import { mountBackupTools } from './backup-ui.ts';
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
@@ -104,3 +105,5 @@ void refresh().catch(showError);
 
 installProfilesUI();
 void showApplicationAttention();
+
+mountBackupTools();
