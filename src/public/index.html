@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CareerVista · Jobs</title><link rel="stylesheet" href="/style.css"><script type="module" src="/client.js"></script></head>
+<body>
+<header><a href="/" class="brand">CareerVista</a><span class="local-label">Local workspace</span></header>
+<main>
+<div class="toolbar"><h1>Jobs <span id="count" class="count">0 saved</span></h1><button id="show-form" type="button">Save a listing</button></div>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="entry" hidden aria-labelledby="entry-title"><div class="section-heading"><h2 id="entry-title">Save a listing</h2><button id="hide-form" type="button" class="quiet">Close</button></div><p class="muted">Paste the original listing to keep a local copy.</p>
+<form id="listing-form"><div class="fields"><label>Job title<input name="title" required maxlength="8000" autocomplete="off"></label><label>Company<input name="company" required maxlength="8000" autocomplete="off"></label><label>Location <span>(optional)</span><input name="location" maxlength="8000" autocomplete="off"></label><label>Source<input name="source" required value="manual" maxlength="8000"></label><label class="wide">Source URL<input name="sourceUrl" type="url" required placeholder="https://…" maxlength="8000"></label><label class="wide">Original listing text<textarea name="text" required rows="8" maxlength="1000000"></textarea></label></div><div class="form-bottom"><p class="muted">Capture time is recorded when you save.</p><button type="submit">Save evidence</button></div></form></section>
+<section class="jobs" aria-label="Saved jobs">
+<p id="workspace-summary" class="workspace-summary" aria-live="polite"></p>
+<div class="table-tools"><label class="search-label">Search saved jobs<input id="job-search" type="search" placeholder="Role, company, location or source" autocomplete="off"></label><div class="table-refresh"><p id="results-summary" class="muted" aria-live="polite">Loading your saved jobs…</p><button id="refresh-jobs" type="button" class="quiet">Refresh</button></div></div>
+<div id="workspace-controls"></div><p id="workspace-status" role="status" aria-live="polite"></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Job comparison table, scroll horizontally for more columns"><table id="jobs-table"><caption class="sr-only">Saved jobs. Sort using a heading or filters. Select a role to open details.</caption><thead><tr></tr></thead><tbody id="job-rows"></tbody></table></div>
+<div id="empty"><h2>No saved jobs yet</h2><p>Save a listing, or ask your agent to collect a batch.</p></div>
+</section>
+<footer>Stored on this computer · No account required</footer>
+</main>
+<dialog id="job-dialog" aria-labelledby="detail-title"><div class="dialog-toolbar"><span>Job details</span><button id="close-detail" type="button" class="quiet" aria-label="Close job details">Close <kbd>Esc</kbd></button></div><div id="detail" aria-live="polite"><h2 id="detail-title">Loading job…</h2></div></dialog>
+</body></html>
