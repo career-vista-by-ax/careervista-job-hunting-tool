@@ -1,3 +1,4 @@
+import { showDestinations } from './collection-ui.ts';
 import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { showCompensation } from './compensation-ui.ts';
@@ -40,6 +41,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showDestinations(detail, id);
     await showCompensation(id, detail);
     await showExtraction(detail, id);
     await showAssessments(detail, id, job.observations);
