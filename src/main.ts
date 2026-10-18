@@ -1,0 +1,18 @@
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { CareerVistaApp } from './app.ts';
+import { startServer } from './server.ts';
+
+const root = resolve(process.env.CAREERVISTA_ROOT ?? join(homedir(), 'Library', 'Application Support', 'CareerVista'));
+const port = Number(process.env.CAREERVISTA_PORT ?? '4318');
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('CAREERVISTA_PORT must be an integer from 0 to 65535.');
+const app = new CareerVistaApp({ root });
+try {
+  const server = await startServer(app, { port });
+  console.log(`CareerVista is ready: ${server.url}\nLocal data: ${app.paths.data}\nPress Ctrl+C to stop.`);
+  let stopping = false;
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => {
+    if (stopping) return; stopping = true;
+    void server.close().finally(() => { app.close(); process.exit(0); });
+  });
+} catch (error) { app.close(); throw error; }
