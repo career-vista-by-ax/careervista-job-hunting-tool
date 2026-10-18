@@ -3,6 +3,7 @@ import {AppError,CareerVistaApp} from './app.ts';
 import {ProfilesService} from './profiles.ts';
 import {RunsService} from './runs.ts';
 import {seekAdapter} from './sources/seek.ts';
+import {linkedinAdapter} from './sources/linkedin.ts';
 import type {ApiRoute} from './server.ts';
 export interface CollectionAdapter {id:string;name:string;searchUrl(keyword:string,config:{location?:string}):string;listingUrl(input:string):string;acceptsPage(input:string):boolean}
 export interface SourcePlan {id:string;runId:string;source:string;config:{location?:string};searches:{workKey:string;trackId:string;keyword:string;url:string}[];createdAt:string}
@@ -16,7 +17,7 @@ function only(input:Record<string,any>,fields:string[]){if(Object.keys(input).so
 function url(input:unknown):string{text(input,'url');let value:URL;try{value=new URL(input);}catch{throw new AppError('Supply a complete HTTP(S) URL.');}if(!['http:','https:'].includes(value.protocol)||value.username||value.password)throw new AppError('URL must use HTTP(S) without credentials.');return value.href;}
 export class SourceCollection {
  readonly app:CareerVistaApp;readonly adapters:CollectionAdapter[];
- constructor(app:CareerVistaApp,adapters:CollectionAdapter[]=[seekAdapter]){this.app=app;this.adapters=adapters;}
+ constructor(app:CareerVistaApp,adapters:CollectionAdapter[]=[seekAdapter,linkedinAdapter]){this.app=app;this.adapters=adapters;}
  destinations(jobId:string):Destination[]{this.app.getJob(jobId);return this.app.database.prepare('SELECT destinations_json FROM collection_captures WHERE job_id=? ORDER BY rowid').all(jobId).flatMap(row=>JSON.parse(String(row.destinations_json)) as Destination[]);}
  private adapter(source:string){const adapter=this.adapters.find(item=>item.id===source);if(!adapter)throw new AppError('This source has no registered supervised collection adapter. Use manual capture.');return adapter;}
  get(runId:string){new RunsService(this.app).get(runId);const db=this.app.database;return {plans:db.prepare('SELECT plan_json FROM collection_plans WHERE run_id=? ORDER BY rowid').all(runId).map(row=>JSON.parse(String(row.plan_json)) as SourcePlan),events:db.prepare('SELECT search_key AS searchKey,outcome,found_count AS foundCount,created_at AS createdAt FROM collection_events WHERE run_id=? ORDER BY rowid').all(runId),listings:db.prepare('SELECT plan_id AS planId,search_key AS searchKey,work_key AS workKey,source,url,job_id AS jobId FROM collection_listings WHERE run_id=? ORDER BY rowid').all(runId).map(row=>({planId:String(row.planId),searchKey:String(row.searchKey),workKey:String(row.workKey),source:String(row.source),url:String(row.url),jobId:row.jobId===null?null:String(row.jobId)}))};}
@@ -40,7 +41,7 @@ export class SourceCollection {
  prepare(runId:string,input:unknown){record(input);only(input,['operationId','workKey','modelWork','reservationId']);text(input.workKey,'workKey',128);const state=this.get(runId);if(!state.plans.some(plan=>plan.searches.some(search=>search.workKey===input.workKey))&&!state.listings.some(listing=>listing.workKey===input.workKey))throw new AppError('Plan this source search or discover its listing before browser work.');return new RunsService(this.app).authorize(runId,input);}
  discover(runId:string,input:unknown){
   record(input);only(input,['operationId','searchKey','outcome','listings']);text(input.operationId,'operationId',128);text(input.searchKey,'searchKey',128);
-  if(!['results','zero-results','access-failure'].includes(input.outcome))throw new AppError('Distinguish results, zero-results and access-failure explicitly.');
+  if(!['results','zero-results','access-failure','unsupported-content'].includes(input.outcome))throw new AppError('Distinguish results, zero-results, access-failure and unsupported-content explicitly.');
   const state=this.get(runId),plan=state.plans.find(plan=>plan.searches.some(search=>search.workKey===input.searchKey));if(!plan)throw new AppError('Unknown planned source search.');const search=plan.searches.find(search=>search.workKey===input.searchKey)!;
   const adapter=this.adapter(plan.source),runs=new RunsService(this.app),run=runs.get(runId),work=run.work.find(work=>work.workKey===search.workKey)!;
   const db=this.app.database,existing=db.prepare('SELECT input_hash FROM collection_events WHERE run_id=? AND operation_id=?').get(runId,input.operationId);
@@ -52,7 +53,7 @@ export class SourceCollection {
   const canonicalUrls=[...new Set(listings.map(listing=>{record(listing);only(listing,['url']);return adapter.listingUrl(url(listing.url));}))];
   if(!existing)db.prepare('INSERT INTO collection_events VALUES (?,?,?,?,?,?,?)').run(runId,input.operationId,digest(input),search.workKey,input.outcome,canonicalUrls.length,new Date().toISOString());
   for(const listingUrl of canonicalUrls){const workKey=key(runId,plan.source,listingUrl);runs.enqueue(runId,{operationId:key('queue-listing',workKey),workKey,trackId:search.trackId,source:plan.source,url:listingUrl});db.prepare('INSERT OR IGNORE INTO collection_listings VALUES (?,?,?,?,?,?,NULL)').run(runId,plan.id,search.workKey,workKey,plan.source,listingUrl);}
-  runs.checkpoint(runId,{operationId:key('search-checkpoint',input.operationId),workKey:search.workKey,status:input.outcome==='access-failure'?'failed':'searched',...(input.outcome==='access-failure'?{errorCode:'unavailable'}:{})});
+  runs.checkpoint(runId,{operationId:key('search-checkpoint',input.operationId),workKey:search.workKey,status:['access-failure','unsupported-content'].includes(input.outcome)?'failed':'searched',...(input.outcome==='access-failure'?{errorCode:'unavailable'}:input.outcome==='unsupported-content'?{errorCode:'malformed_output'}:{})});
   return this.get(runId);
  }
  capture(runId:string,input:unknown){
@@ -76,7 +77,7 @@ export class SourceCollection {
   return {...saved,completion,destinations};
  }
 }
-export function collectionRoutes(adapters:CollectionAdapter[]=[seekAdapter]):ApiRoute{return async({app,request,url,json,send})=>{
+export function collectionRoutes(adapters:CollectionAdapter[]=[seekAdapter,linkedinAdapter]):ApiRoute{return async({app,request,url,json,send})=>{
  const destination=/^\/api\/v1\/jobs\/([^/]+)\/destinations$/.exec(url.pathname);if(request.method==='GET'&&destination){send(new SourceCollection(app,adapters).destinations(decodeURIComponent(destination[1]!)));return true;}
  const match=/^\/api\/v1\/runs\/([^/]+)\/collection(?:\/(plans|prepare|discover|capture))?$/.exec(url.pathname);if(!match)return false;const runId=decodeURIComponent(match[1]!),service=new SourceCollection(app,adapters);
  if(request.method==='GET'&&!match[2]){send(service.get(runId));return true;}
