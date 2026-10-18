@@ -3,7 +3,7 @@ import { AppError, CareerVistaApp } from './app.ts';
 import { Backups } from './backup.ts';
 import { Applications } from './applications.ts';
 import type { ApiRoute } from './server.ts';
-const warning = 'Permanent deletion removes selected jobs and their associated live evidence, analyses, assessments and application history. Existing backup and export files are separate copies and are not erased. Unrelated jobs and history remain.';
+const warning = 'Permanent deletion removes selected vacancies, all linked source job records and their associated live evidence, analyses, assessments and application history. Existing backup and export files are separate copies and are not erased. Unrelated jobs and history remain.';
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
 function cell(value: unknown) { let text = String(value ?? ''); if (/^\s*[=+@-]|^[\t\r\n]/.test(text)) text = `'${text}`; return `"${text.replaceAll('"', '""')}"`; }
 export class DataLifecycle {
@@ -17,7 +17,8 @@ export class DataLifecycle {
  }
  private selected(input: unknown) {
   if(!Array.isArray(input)||!input.length||input.length>500||input.some(id=>typeof id!=='string'||!id)||new Set(input).size!==input.length) throw new AppError('jobIds must contain 1–500 distinct saved job IDs.');
-  return input.map(id=>this.app.getJob(id));
+  const ids=[...new Set(input.flatMap(id=>this.app.getJob(id).memberJobIds??[id]))];
+  return ids.map(id=>this.app.database.prepare('SELECT id,title,company FROM jobs WHERE id=?').get(id) as unknown as {id:string;title:string;company:string});
  }
  private counts() {
   return Object.fromEntries(this.app.database.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'migrations'").all().map(row=>[String(row.name),Number(this.app.database.prepare(`SELECT count(*) AS count FROM ${quote(String(row.name))}`).get()?.count)]));

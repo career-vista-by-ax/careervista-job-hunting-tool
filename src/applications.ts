@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -22,9 +23,10 @@ function required(value: unknown, label: string, limit = 8000): asserts value is
 export class Applications {
   private app: CareerVistaApp;
   constructor(app: CareerVistaApp) { this.app = app; }
-  timeline(jobId: string) {
+  timeline(jobId: string, sourceOnly = false) {
+    const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     this.app.getJob(jobId);
-    const rows = this.app.database.prepare('SELECT id, job_id AS jobId, operation_id AS operationId, status, occurred_at AS occurredAt, note, documents_json AS documentsJson, follow_up_on AS followUpOn, created_at AS createdAt FROM application_events WHERE job_id = ? ORDER BY sequence').all(jobId);
+    const rows = this.app.database.prepare(`SELECT id, job_id AS jobId, operation_id AS operationId, status, occurred_at AS occurredAt, note, documents_json AS documentsJson, follow_up_on AS followUpOn, created_at AS createdAt FROM application_events WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds);
     const events = rows.map(({ documentsJson, ...row }) => ({ ...row, documents: JSON.parse(String(documentsJson)) }) as unknown as ApplicationEvent);
     const latest = events.at(-1);
     return { jobId, status: latest?.status ?? null, followUpOn: latest?.followUpOn ?? null, events };

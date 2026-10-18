@@ -1,3 +1,5 @@
+import { showFeedback, installFeedbackUI } from './feedback-ui.ts';
+import { showReconciliation } from './reconciliation-ui.ts';
 import {installCustomSourcesUI} from './custom-sources-ui.ts';
 import {showCompany} from './company-ui.ts';
 import { installWorkspaceUI } from './workspace-ui.ts';
@@ -50,6 +52,7 @@ async function showDetail(id: string) {
     const listingSection = document.createElement('details'); listingSection.append(text('summary', 'Structured listing & compensation')); detail.append(listingSection);
     const availabilitySection = document.createElement('details'); availabilitySection.append(text('summary', 'Availability & check history')); detail.append(availabilitySection);
     const companySection = document.createElement('details'); companySection.append(text('summary', 'Company research & source reports')); detail.append(companySection);
+    const reconciliationSection = document.createElement('details'); reconciliationSection.append(text('summary', 'Duplicate review, revisions & source conflicts')); detail.append(reconciliationSection);
     const evidenceSection = document.createElement('details'); evidenceSection.append(text('summary', `Original saved evidence (${job.observations.length})`)); detail.append(evidenceSection);
     for (const observation of job.observations) {
       const meta = text('p', `${observation.source} · Captured ${new Date(observation.capturedAt).toLocaleString()}`, 'evidence-meta');
@@ -58,6 +61,8 @@ async function showDetail(id: string) {
       evidenceSection.append(meta, link, text('pre', observation.text, 'evidence'));
     }
     await Promise.all([
+      showFeedback(overview, id, refresh),
+      showReconciliation(reconciliationSection, id, () => { void refresh(); void showDetail(id); }),
       showCompany(companySection, id),
       showDestinations(applicationSection, id),
       showAssessments(fitSection, id, job.observations),
@@ -102,6 +107,7 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installFeedbackUI(refresh);
 installResumeUI();
 installRunsUI();
 window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });

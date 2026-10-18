@@ -1,3 +1,5 @@
+import { FeedbackService } from './feedback.ts';
+import { Reconciliation } from './reconciliation.ts';
 import { randomUUID } from 'node:crypto';
 import { AppError, CareerVistaApp } from './app.ts';
 import type { ApiRoute } from './server.ts';
@@ -18,11 +20,12 @@ export class WorkspaceService {
     const extraction = new ExtractionService(this.app), assessments = new AssessmentsService(this.app), compensation = new Compensation(this.app), applications = new Applications(this.app), availability = new Availability(this.app);
     return this.app.listJobs().map(job => {
       const detail = this.app.getJob(job.id), analysis = extraction.history(job.id).analyses.at(-1), assessment = assessments.history(job.id).at(-1), application = applications.timeline(job.id), checks = availability.history(job.id);
+      const reconciliation = new Reconciliation(this.app).detail(job.id);
       const capturedAt = detail.observations.map(item => item.capturedAt).sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1)!;
-      return { ...job, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
+      return { ...job, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
         compensation: compensation.summary(job.id), fit: assessment?.label ?? null, confidence: assessment?.confidence.level ?? null,
-        concerns: [...new Set([...(assessment?.concerns.map(item => item.statement) ?? []), ...Object.values(assessment?.axes ?? {}).flatMap(axis => axis.findings.filter(item => item.status === 'concern').map(item => item.statement))])],
-        profileVersion: assessment?.profileVersion ?? null, review: 'unreviewed' as string,
+        concerns: [...new Set([...reconciliation.differences,...(assessment?.concerns.map(item => item.statement) ?? []), ...Object.values(assessment?.axes ?? {}).flatMap(axis => axis.findings.filter(item => item.status === 'concern').map(item => item.statement))])],
+        profileVersion: assessment?.profileVersion ?? null, review: new FeedbackService(this.app).history(job.id).decision,
         application: { status: application.status, appliedAt: application.events.findLast(item => item.status === 'applied')?.occurredAt ?? null, followUpOn: application.followUpOn },
         availability: { status: checks.status, checkedAt: checks.lastSuccessful?.checkedAt ?? null, lastAttempt: checks.latest?.result ?? null },
         capturedAt, sourceUrl: detail.observations[0]!.sourceUrl };
