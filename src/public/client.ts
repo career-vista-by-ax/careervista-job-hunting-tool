@@ -1,4 +1,6 @@
 import { mountBackupTools } from './backup-ui.ts';
+import { installProfilesUI } from './profiles-ui.ts';
+import { showExtraction } from './extraction-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
 import type { Job, JobDetail } from '../app.ts';
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -34,6 +36,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showExtraction(detail, id);
     for (const observation of job.observations) {
       const meta = text('p', `${observation.source} · Captured ${new Date(observation.capturedAt).toLocaleString()}`, 'evidence-meta');
       const link = text('a', 'Open original listing ↗'); link.href = observation.sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
@@ -100,6 +103,7 @@ form.addEventListener('submit', async event => {
 form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete form.dataset.capturedAt; });
 void refresh().catch(showError);
 
+installProfilesUI();
 void showApplicationAttention();
 
 mountBackupTools();
