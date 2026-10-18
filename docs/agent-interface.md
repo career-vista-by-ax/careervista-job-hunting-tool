@@ -51,3 +51,7 @@ Codex desktop with browser-control Chrome extension is the selected development 
 # Explained fit assessments
 
 After extraction and explicit profile/track approval, any host may submit evidence-linked fit interpretations via `POST /api/v1/assessments`. Use the complete [assessment v1 schema and fit rules](assessments.md). Read the approved profile version and effective track preferences; keep qualification fit, working preferences and practical constraints separate. Preserve unknown pay/work-arrangement values, source attribution and questions. Use concrete working-condition evidence rather than company size for authority/culture judgements. Never infer a confirmed hard conflict from an external report or missing information. The application derives labels, retains excluded jobs and immutable history, and leaves the user's decisions/application state untouched.
+
+# Resume proposals
+
+For resume analysis, use only an explicitly user-reviewed payload from `/api/v1/resume-payloads/:id`. Do not request original source text or unrelated personal notes. Follow the [resume proposal schema](resume.md): experience is extractive, possible career tracks need quotes, and aspirations/preferences are supplied by the user during onboarding. Get explicit user authorisation before confirming payload review, creating a user-reviewed draft or approving a profile. Host/model choice stays independent and no app provider key is required.
