@@ -60,6 +60,28 @@ account, network and platform requirements are separate. CareerVista has no
 account; reviewing saved evidence never requires a model or host. Website
 passwords are entered directly on the website by you, never into this app.
 
+First use:
+  1. Approve your experience, aspirations, preferences and search tracks in
+     Profile & search tracks. Optional Import resume accepts reviewed text.
+  2. Register the skill as above, reload your agent host's skills, and create
+     a bounded Research Run with approved tracks/sources and a spending cap.
+  3. Give your agent the exact local browser URL and Run reference. The app
+     stores/validates work; your agent performs browsing and analysis.
+  4. Refresh the table and select a role for modal evidence review. Your own
+     save/dismiss and application progress are explicit, separate actions.
+
+Starter prompt (replace both placeholders):
+  Use CareerVista at <LOCAL_URL>. Read the careervista-capture skill and its
+  collection/source instructions, then carry out Research Run <RUN_ID> within
+  its approved tracks, sources, listing limit and budget. Save evidence before
+  analysis, preserve unknowns/checkpoints, and pause for my website sign-in or
+  verification in the same browser. Show saved jobs and limitations. Do not
+  submit applications or send messages.
+
+Without host skill registration, give your agent this extracted folder's
+agent-skills/v1/careervista-capture/SKILL.md and sibling instructions directly.
+The agent needs browser tools and local HTTP access on the same computer.
+
 Read app/docs/release.md for support and validation limitations, installation
 recovery, upgrade restrictions, build provenance and privacy. This archive is
 not notarized; real download/quarantine and clean-machine Finder launch remain

@@ -40,9 +40,11 @@ In-process public boundary: `new ExtractionService(app)`, `submitAnalysis(input)
 
 # Host setup and removal
 
-The release includes `agent-skills/v1/careervista-capture/`. Explicitly register in a compatible host's skill directory using `node scripts/register-agent-skills.mjs --install --target <directory>`. Use `--uninstall` with the same target to remove only unchanged owned files. A registration manifest in that directory records paths and SHA-256 hashes. Existing conflicting entries are preserved and setup refuses to overwrite them. Uninstall preserves modified files and reports them. No global caches, browser sessions or other skills are touched. Reload the host's skills using its documented mechanism.
+For a self-contained release, install/launch with `CareerVista.command`, then run `./CareerVista.command register-skills --host codex` from its extracted folder (`--host agents` for a compatible filesystem-skills host). This uses the bundled runtime and records only the installation-owned skill directory. Reload host skills and use the exact localhost URL shown by the running app. The repository README contains the first-run checklist and a copyable research-run prompt.
 
-Hosts without filesystem skills may consume the packaged SKILL.md and interface.md directly. This setup step is explicit; the core app remains usable without a host. The registration script currently requires Node, so it is a maintainer setup utility until release packaging supplies the runtime. Browser assistance is not yet a self-contained distributed runtime.
+Hosts without skill registration may read the extracted `agent-skills/v1/careervista-capture/SKILL.md` and sibling instructions directly. Local review remains usable without a host. Browser/model capabilities, configuration, credentials and session retention belong to that external host.
+
+The source-only maintainer utility is `node scripts/register-agent-skills.mjs --install --target <directory>`; `--uninstall` removes only unchanged owned files. It is not required for archive users. The release lifecycle handles its own registrations during uninstall; modified/unrelated host files are preserved and reported. See `app/docs/release.md` in the archive for lifecycle commands.
 
 # Codex development validation
 
