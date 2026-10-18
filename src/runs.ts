@@ -6,7 +6,7 @@ import { AppError, CareerVistaApp } from './app.ts';
 import { ProfilesService } from './profiles.ts';
 import type { ApiRoute } from './server.ts';
 export type RunStatus = 'running' | 'paused' | 'stopped' | 'cancelled' | 'completed' | 'budget-exhausted' | 'waiting-user-signin' | 'waiting-user-verification' | 'session-expired';
-export type WorkStatus = 'pending' | 'working' | 'collected' | 'assessed' | 'excluded' | 'duplicate' | 'failed';
+export type WorkStatus = 'pending' | 'working' | 'collected' | 'assessed' | 'excluded' | 'duplicate' | 'failed' | 'searched';
 export interface RunInput { requestId: string; profileVersion: number; trackIds: string[]; sources: string[]; limit?: number; budget: { amount: number; currency: string } }
 export interface RunWork { workKey: string; trackId: string; source: string; url: string; ingestionId: string; status: WorkStatus; jobId?: string; captured: boolean; assessed: boolean; attempts: number; errorCode?: string; modelReservationId?: string; deleted?: boolean }
 export interface Reservation { id: string; operationId: string; workKey: string; estimate: number; currency: string; status: 'reserved' | 'settled'; actual: number | null; used: boolean }
@@ -15,7 +15,7 @@ export interface ResearchRun extends RunInput {
  work: RunWork[]; reservations: Reservation[]; newJobIds: string[]; removedNewJobs?: number;
  waiting?: { workKey: string; sessionRef: string; pageUrl: string };
  errors: { code: string; message: string; workKey?: string; createdAt: string }[];
- counters: { pending: number; working: number; collected: number; assessed: number; excluded: number; duplicate: number; failed: number; newJobs: number };
+ counters: { pending: number; working: number; collected: number; assessed: number; excluded: number; duplicate: number; failed: number; searched: number; newJobs: number };
  costs: { known: number; estimatedUnavailable: number; reserved: number; committed: number; remaining: number; currency: string; actualUnavailable: boolean };
 }
 type StoredRun = Omit<ResearchRun, 'counters' | 'costs'> & { baselineJobIds: string[] };
@@ -37,7 +37,7 @@ export class RunsService {
  get(id: string): ResearchRun {
   const stored = this.stored(id), { baselineJobIds, ...run } = stored;
   const count = (status: WorkStatus) => run.work.filter(w => w.status === status).length;
-  return { ...run, counters: { pending: count('pending'), working: count('working'), collected: run.work.filter(w => w.captured).length, assessed: run.work.filter(w => w.assessed).length, excluded: count('excluded'), duplicate: count('duplicate'), failed: count('failed'), newJobs: run.newJobIds.length + (run.removedNewJobs ?? 0) }, costs: totals(stored) };
+  return { ...run, counters: { pending: count('pending'), working: count('working'), collected: run.work.filter(w => w.captured).length, assessed: run.work.filter(w => w.assessed).length, excluded: count('excluded'), duplicate: count('duplicate'), failed: count('failed'), searched: count('searched'), newJobs: run.newJobIds.length + (run.removedNewJobs ?? 0) }, costs: totals(stored) };
  }
  list(): ResearchRun[] { return this.app.database.prepare('SELECT id FROM research_runs ORDER BY rowid DESC').all().map(row => this.get(String(row.id))); }
  create(input: RunInput): ResearchRun {
@@ -92,7 +92,7 @@ export class RunsService {
   this.active(run); const work = this.work(run,value.workKey);
   if (work.deleted) throw new AppError('This saved job was permanently deleted. Its work cannot be replayed.');
   if (typeof value.modelWork !== 'boolean') throw new AppError('Declare modelWork true or false before work begins.');
-  if (['assessed','excluded','duplicate'].includes(work.status)) throw new AppError('This work is complete. Preserve its checkpoint.');
+  if (['assessed','excluded','duplicate','searched'].includes(work.status)) throw new AppError('This work is complete. Preserve its checkpoint.');
   if (!work.captured && work.status !== 'working' && run.newJobIds.length + (run.removedNewJobs ?? 0) + run.work.filter(w => w.status === 'working' && !w.captured).length >= run.limit) throw new AppError('New-listing limit reached. Review collected work; duplicates and failed uncaptured work release their slots.', 409, 'listing_limit');
   if (run.work.reduce((sum,w) => sum + w.attempts,0) >= Math.max(100,run.limit * 10)) throw new AppError('Attempt limit reached. Review failed work before creating another run.');
   if (value.modelWork) { const reservation = run.reservations.find(r => r.id === value.reservationId && r.workKey === work.workKey && r.status === 'reserved' && !r.used); if (!reservation) throw new AppError('Reserve an estimate for this model work before starting. Use one fresh reservation per model operation.'); reservation.used = true; work.modelReservationId = reservation.id; }
@@ -102,7 +102,7 @@ export class RunsService {
   if (['cancelled','completed'].includes(run.status)) throw new AppError('This run is terminal. Saved checkpoints remain available.');
   const work = this.work(run,value.workKey);
   if (work.deleted) throw new AppError('This saved job was permanently deleted. Its work cannot be replayed.');
-  if (!['collected','assessed','excluded','duplicate','failed'].includes(value.status)) throw new AppError('Checkpoint status must be collected, assessed, excluded, duplicate or failed.');
+  if (!['collected','assessed','excluded','duplicate','failed','searched'].includes(value.status)) throw new AppError('Checkpoint status must be collected, assessed, excluded, duplicate, failed or searched.');
   if (work.status !== 'working') throw new AppError('Authorize the work before submitting its next checkpoint.');
   if (value.jobId !== undefined) { text(value.jobId,'jobId'); this.app.getJob(value.jobId); if (work.jobId && work.jobId !== value.jobId) throw new AppError('A work item cannot replace its linked saved job.'); }
   const jobId = value.jobId ?? work.jobId;
