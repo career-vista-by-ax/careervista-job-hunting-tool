@@ -1,3 +1,4 @@
+import {installReassessmentUI} from './reassessment-ui.ts';
 import { showFeedback, installFeedbackUI } from './feedback-ui.ts';
 import { showReconciliation } from './reconciliation-ui.ts';
 import {installCustomSourcesUI} from './custom-sources-ui.ts';
@@ -118,3 +119,5 @@ mountBackupTools();
 mountDataTools();
 
 installCustomSourcesUI();
+
+installReassessmentUI(refresh);
