@@ -1,3 +1,4 @@
+import { showApplications, showApplicationAttention } from './applications-ui.ts';
 import type { Job, JobDetail } from '../app.ts';
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const message = element('message');
@@ -31,6 +32,7 @@ async function showDetail(id: string) {
       const link = text('a', 'Open original listing ↗'); link.href = observation.sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
       detail.append(meta, link, text('pre', observation.text, 'evidence'));
     }
+    await showApplications(id, detail);
   } catch (error) { showError(error); }
 }
 async function refresh() {
@@ -67,3 +69,5 @@ form.addEventListener('submit', async event => {
 // Editing after a failed attempt creates a new operation; unchanged retries retain their identifier.
 form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete form.dataset.capturedAt; });
 void refresh().catch(showError);
+
+void showApplicationAttention();

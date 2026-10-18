@@ -52,6 +52,14 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
         const result = app.saveObservation(await context.json() as ObservationInput);
         send(result, result.replayed ? 200 : 201); return;
       }
+      // Serve only filename-only compiled browser modules inside public/.
+      const moduleName = /^\/[a-zA-Z0-9_-]+\.js$/.test(url.pathname) ? url.pathname.slice(1) : undefined;
+      if (request.method === 'GET' && moduleName && !assets[url.pathname]) {
+        let content: Buffer;
+        try { content = readFileSync(new URL(`./public/${moduleName}`, import.meta.url)); }
+        catch { throw new AppError('Browser module not found. Build the application first.', 404, 'not_found'); }
+        response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }); response.end(content); return;
+      }
       if (request.method === 'GET' && assets[url.pathname]) {
         const [name, type] = assets[url.pathname]!;
         // Source execution is for development/tests; production contains compiled client.js.
