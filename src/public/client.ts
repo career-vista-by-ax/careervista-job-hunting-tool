@@ -1,3 +1,4 @@
+import { mountBackupTools } from './backup-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
 import type { Job, JobDetail } from '../app.ts';
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -100,3 +101,5 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 void showApplicationAttention();
+
+mountBackupTools();
