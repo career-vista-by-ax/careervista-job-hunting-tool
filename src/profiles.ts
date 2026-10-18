@@ -6,6 +6,7 @@ export type JsonValue = null | boolean | number | string | JsonValue[] | { [key:
 export interface Preference { key: string; kind: PreferenceKind; value: JsonValue }
 export interface SearchTrack { id: string; name: string; titles: string[]; keywords: string[]; preferences: Preference[] }
 export interface ProfileInput {
+  basedOnVersion?: number;
   name: string; demonstratedExperience: string[]; aspirations: string[];
   preferences: Preference[]; tracks: SearchTrack[];
 }
@@ -45,6 +46,7 @@ function validatePreferences(value: unknown, label: string): asserts value is Pr
 function validateProfile(input: ProfileInput) {
   if (!input || typeof input !== 'object') throw new AppError('A profile object is required.');
   requiredText(input.name, 'Profile name');
+  if (input.basedOnVersion !== undefined && (!Number.isSafeInteger(input.basedOnVersion) || input.basedOnVersion < 1)) throw new AppError('basedOnVersion must identify an existing profile revision.');
   textList(input.demonstratedExperience, 'Demonstrated experience'); textList(input.aspirations, 'Aspirations');
   validatePreferences(input.preferences, 'Shared preferences');
   if (!Array.isArray(input.tracks) || input.tracks.length < 1 || input.tracks.length > 50) throw new AppError('Add between one and 50 search tracks before saving a profile.');
@@ -66,18 +68,20 @@ export class ProfilesService {
   constructor(app: CareerVistaApp) { this.app = app; }
   createDraft(input: ProfileInput): Profile {
     validateProfile(input);
+    if (input.basedOnVersion !== undefined) this.getProfile(input.basedOnVersion);
     const db = this.app.database;
-    db.exec('BEGIN IMMEDIATE');
+    db.exec('SAVEPOINT profile_draft');
     let version: number;
     try {
       const result = db.prepare('INSERT INTO profile_revisions (name,experience_json,aspirations_json,created_at) VALUES (?,?,?,?)').run(input.name, JSON.stringify(input.demonstratedExperience), JSON.stringify(input.aspirations), new Date().toISOString());
       version = Number(result.lastInsertRowid);
+      if (input.basedOnVersion !== undefined) db.prepare('INSERT INTO profile_ancestry VALUES (?,?)').run(version, input.basedOnVersion);
       for (const track of input.tracks) db.prepare('INSERT INTO search_tracks VALUES (?,?,?,?,?)').run(version, track.id, track.name, JSON.stringify(track.titles), JSON.stringify(track.keywords));
       const insert = db.prepare('INSERT INTO profile_preferences VALUES (?,?,?,?,?)');
       for (const pref of input.preferences) insert.run(version, '', pref.key, pref.kind, JSON.stringify(pref.value));
       for (const track of input.tracks) for (const pref of track.preferences) insert.run(version, track.id, pref.key, pref.kind, JSON.stringify(pref.value));
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+      db.exec('RELEASE SAVEPOINT profile_draft');
+    } catch (error) { db.exec('ROLLBACK TO SAVEPOINT profile_draft; RELEASE SAVEPOINT profile_draft'); throw error; }
     return this.getProfile(version!);
   }
   getProfile(version: number): Profile {
@@ -86,7 +90,8 @@ export class ProfilesService {
     if (!row) throw new AppError('Profile revision not found.', 404, 'not_found');
     const preferences = (trackId: string): Preference[] => db.prepare('SELECT key,kind,value_json FROM profile_preferences WHERE profile_version=? AND track_id=? ORDER BY key').all(version, trackId).map(item => ({ key: String(item.key), kind: item.kind as PreferenceKind, value: JSON.parse(String(item.value_json)) as JsonValue }));
     const tracks = db.prepare('SELECT * FROM search_tracks WHERE profile_version=? ORDER BY id').all(version).map(track => ({ id: String(track.id), name: String(track.name), titles: JSON.parse(String(track.titles_json)) as string[], keywords: JSON.parse(String(track.keywords_json)) as string[], preferences: preferences(String(track.id)) }));
-    return { version, name: String(row.name), demonstratedExperience: JSON.parse(String(row.experience_json)) as string[], aspirations: JSON.parse(String(row.aspirations_json)) as string[], createdAt: String(row.created_at), approvedAt: row.approved_at === null ? null : String(row.approved_at), status: row.approved_at === null ? 'draft' : 'approved', preferences: preferences(''), tracks };
+    const parent = db.prepare('SELECT parent_version FROM profile_ancestry WHERE profile_version=?').get(version);
+    return { ...(parent ? { basedOnVersion: Number(parent.parent_version) } : {}), version, name: String(row.name), demonstratedExperience: JSON.parse(String(row.experience_json)) as string[], aspirations: JSON.parse(String(row.aspirations_json)) as string[], createdAt: String(row.created_at), approvedAt: row.approved_at === null ? null : String(row.approved_at), status: row.approved_at === null ? 'draft' : 'approved', preferences: preferences(''), tracks };
   }
   listProfiles(): Profile[] {
     return this.app.database.prepare('SELECT version FROM profile_revisions ORDER BY version DESC').all().map(row => this.getProfile(Number(row.version)));

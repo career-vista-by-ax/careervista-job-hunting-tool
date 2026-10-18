@@ -1,5 +1,8 @@
 import { installWorkspaceUI } from './workspace-ui.ts';
+import { showDestinations } from './collection-ui.ts';
+import { installResumeUI } from './resume-ui.ts';
 import { showAvailability } from './availability-ui.ts';
+import { mountDataTools } from './datalifecycle-ui.ts';
 import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { showCompensation } from './compensation-ui.ts';
@@ -52,6 +55,7 @@ async function showDetail(id: string) {
       evidenceSection.append(meta, link, text('pre', observation.text, 'evidence'));
     }
     await Promise.all([
+      showDestinations(applicationSection, id),
       showAssessments(fitSection, id, job.observations),
       showApplications(id, applicationSection),
       showCompensation(id, listingSection),
@@ -94,8 +98,11 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installResumeUI();
 installRunsUI();
 window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
 void showApplicationAttention();
 
 mountBackupTools();
+
+mountDataTools();

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, rmdirSync, realpathSync, lstatSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, rmdirSync, realpathSync, lstatSync, readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const args = process.argv.slice(2), mode = args[0], targetIndex = args.indexOf('--target');
@@ -9,8 +9,8 @@ mkdirSync(target, { recursive: true });
 const canonical = realpathSync(target), name = 'careervista-capture', folder = join(canonical, name);
 const manifestPath = join(canonical, '.careervista-skills-v1.json');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const filenames = ['SKILL.md', 'interface.md'];
 const source = fileURLToPath(new URL('../agent-skills/v1/careervista-capture/', import.meta.url));
+const filenames = readdirSync(source, {withFileTypes:true}).filter(entry => entry.isFile() && /^[a-zA-Z][a-zA-Z0-9-]*\.md$/.test(entry.name)).map(entry => entry.name).sort();
 let manifest;
 if (existsSync(manifestPath)) {
   if (lstatSync(manifestPath).isSymbolicLink()) throw new Error('Registration manifest must be a regular file.');

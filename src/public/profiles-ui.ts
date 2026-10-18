@@ -30,6 +30,11 @@ export function installProfilesUI() {
     panel.hidden = !panel.hidden; toggle.setAttribute('aria-expanded', String(!panel.hidden));
     if (!panel.hidden) void load().catch(report);
   });
+  window.addEventListener('careervista:profile-draft', event => {
+    const version = (event as CustomEvent<number>).detail;
+    panel.hidden = false; toggle.setAttribute('aria-expanded', 'true');
+    void Promise.all([api<Profile>(`/${version}`), load()]).then(([profile]) => { renderReview(profile); panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }).catch(report);
+  });
   function renderOverview() {
     content.replaceChildren();
     content.append(node('h2', 'Your profile & search tracks'), node('p', active ? `Active: ${active.name} · revision ${active.version}. Only this approved revision guides searches.` : 'No approved profile yet. Create a draft, review each track, then approve it.'));
@@ -90,7 +95,7 @@ export function installProfilesUI() {
     const actions = node('div'); actions.className = 'profile-actions'; actions.append(add, cancel, save); form.append(actions);
     form.addEventListener('submit', event => {
       event.preventDefault(); save.disabled = true;
-      const input: ProfileInput = { name: name.value.trim(), demonstratedExperience: lines(experience.value), aspirations: lines(aspirations.value), preferences: shared(), tracks: trackGetters.map(get => get()).filter((item): item is SearchTrack => item !== null) };
+      const input: ProfileInput = { ...(source ? { basedOnVersion: source.version } : {}), name: name.value.trim(), demonstratedExperience: lines(experience.value), aspirations: lines(aspirations.value), preferences: shared(), tracks: trackGetters.map(get => get()).filter((item): item is SearchTrack => item !== null) };
       void api<Profile>('', input).then(profile => { status.textContent = 'Draft saved. Review effective preferences before approval.'; status.className = ''; renderReview(profile); }).catch(report).finally(() => { save.disabled = false; });
     });
   }
