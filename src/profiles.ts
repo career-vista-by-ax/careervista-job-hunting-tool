@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { AppError, CareerVistaApp } from './app.ts';
 import type { ApiRoute } from './server.ts';
 
@@ -121,10 +120,6 @@ export class ProfilesService {
 export function profileRoutes(profiles: ProfilesService): ApiRoute {
   return async context => {
     const path = context.url.pathname;
-    if (path === '/profiles-ui.js' && context.request.method === 'GET') {
-      context.response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
-      context.response.end(readFileSync(new URL('./public/profiles-ui.js', import.meta.url))); return true;
-    }
     if (path === '/api/v1/profiles' && context.request.method === 'GET') { context.send(profiles.listProfiles()); return true; }
     if (path === '/api/v1/profiles/active' && context.request.method === 'GET') { context.send(profiles.getActiveProfile()); return true; }
     if (path === '/api/v1/profiles' && context.request.method === 'POST') { context.send(profiles.createDraft(await context.json() as ProfileInput), 201); return true; }

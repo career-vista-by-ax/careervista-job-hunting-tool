@@ -54,3 +54,14 @@ test('retrying an ingestion identifier returns the existing evidence and rejects
     assert.equal(app.getJob(first.job.id).observations.length, 1);
   } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
 });
+
+test('the jobs table can show source names without loading full listing evidence', () => {
+  const root = mkdtempSync(join(tmpdir(), 'cv-table-'));
+  const app = new CareerVistaApp({ root });
+  try {
+    app.saveObservation({ ...listing, source: 'employer' });
+    const row = app.listJobs()[0];
+    assert.deepEqual(row?.sources, ['employer']);
+    assert.equal('observations' in row!, false);
+  } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
+});

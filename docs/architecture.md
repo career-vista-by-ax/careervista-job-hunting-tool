@@ -34,7 +34,7 @@ Returns 201 with `{job, observation, replayed:false}`. Identical retries with th
 
 ### GET /api/v1/jobs
 
-Returns a JSON array of `{id,title,company,location,createdAt}`, newest saved first. Unknown location is null, not an asserted mismatch.
+Returns a JSON array of `{id,title,company,location,createdAt,sources}`, newest saved first. Unknown location is null, not an asserted mismatch.
 
 ### GET /api/v1/jobs/:id
 
@@ -48,6 +48,6 @@ Internal modules may own repositories using `app.database`, a synchronous `Datab
 
 `startServer(app,{port,routes})` accepts `ApiRoute[]`; each route receives `{app,request,response,url,json,send}` and returns true after handling. Routes run under the same host/origin controls and error mapping. A route may throw `AppError(message,status,code)`. Register new routes with small imports at the composition root (`src/main.ts`), keeping modules independent. New endpoints should retain `/api/v1/` and input validation, idempotency and evidence lineage conventions. Tests should instantiate modules through their public application operations or register routes and exercise HTTP, not query private tables.
 
-The browser entry point is `src/public/client.ts`; it uses text nodes for untrusted evidence and real buttons/labels/table headings for keyboard operation. Styles and HTML are local assets. Future daily workspace work can replace this minimal table/detail view while preserving the public interface.
+The browser entry point is `src/public/client.ts`; it uses text nodes for untrusted evidence and real buttons/labels/table headings for keyboard operation. Review uses a compact full-width sortable/filterable table; selecting a job opens a native modal dialog with Escape close and focus restoration. Source names are included in list summaries, so the table does not download full evidence for every row. Styles and HTML are local assets. Future daily workspace work can replace this minimal table/detail view while preserving the public interface.
 
 The initial T1 evidence slice is extended by [T3 profile revisions and search tracks](profiles.md). Extraction, assessment, reconciliation, review/application events, bounded runs, collection, backup/export/deletion and release lifecycle remain tracked tickets.

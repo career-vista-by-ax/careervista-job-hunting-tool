@@ -10,13 +10,16 @@ const displayValue = (value: JsonValue) => typeof value === 'string' ? value : J
 const lines = (value: string) => value.split('\n').map(item => item.trim()).filter(Boolean);
 
 export function installProfilesUI() {
-  const main = document.querySelector('main')!;
   const panel = node('section'); panel.id = 'profiles-panel'; panel.hidden = true; panel.setAttribute('aria-label', 'Search profile and preferences');
   const status = node('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
   const toggle = node('button', 'Profile & search tracks'); toggle.type = 'button'; toggle.className = 'quiet'; toggle.setAttribute('aria-expanded', 'false');
-  document.querySelector('.intro')?.after(toggle, panel);
+  const toolbar = document.querySelector('.toolbar')!;
+  const actions = node('div'); actions.className = 'toolbar-actions';
+  const save = document.getElementById('show-form')!;
+  save.before(actions); actions.append(toggle, save);
+  toolbar.after(panel);
   panel.append(status);
-  let profiles: Profile[] = []; let active: Profile | null = null; let draft: Profile | null = null;
+  let profiles: Profile[] = []; let active: Profile | null = null;
   const content = node('div'); panel.append(content);
   function report(error: unknown) { status.textContent = error instanceof Error ? error.message : 'Could not save your profile.'; status.className = 'error'; }
   async function load() {
@@ -35,7 +38,7 @@ export function installProfilesUI() {
     if (profiles.length) content.append(node('h3', 'Revision history'));
     for (const profile of profiles) {
       const row = node('p'); const edit = node('button', `${profile.name} · v${profile.version} · ${profile.status}${profile.version === active?.version ? ' · active' : ''}`); edit.className = 'quiet'; edit.type = 'button';
-      edit.addEventListener('click', () => { draft = profile; renderReview(profile); }); row.append(edit); content.append(row);
+      edit.addEventListener('click', () => { renderReview(profile); }); row.append(edit); content.append(row);
     }
   }
   function field(parent: HTMLElement, title: string, value: string, multiline = false): HTMLInputElement | HTMLTextAreaElement {
@@ -88,7 +91,7 @@ export function installProfilesUI() {
     form.addEventListener('submit', event => {
       event.preventDefault(); save.disabled = true;
       const input: ProfileInput = { name: name.value.trim(), demonstratedExperience: lines(experience.value), aspirations: lines(aspirations.value), preferences: shared(), tracks: trackGetters.map(get => get()).filter((item): item is SearchTrack => item !== null) };
-      void api<Profile>('', input).then(profile => { draft = profile; status.textContent = 'Draft saved. Review effective preferences before approval.'; status.className = ''; renderReview(profile); }).catch(report).finally(() => { save.disabled = false; });
+      void api<Profile>('', input).then(profile => { status.textContent = 'Draft saved. Review effective preferences before approval.'; status.className = ''; renderReview(profile); }).catch(report).finally(() => { save.disabled = false; });
     });
   }
   function renderReview(profile: Profile) {

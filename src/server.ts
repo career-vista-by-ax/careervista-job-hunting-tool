@@ -41,7 +41,8 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
     try {
       if (request.headers.host !== new URL(origin).host) throw new AppError('Only the local application host is allowed.', 403, 'forbidden_host');
       if (request.headers.origin && request.headers.origin !== origin) throw new AppError('Requests must originate from the local application.', 403, 'forbidden_origin');
-      if (request.headers['sec-fetch-site'] === 'cross-site') throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
+      const isDocumentNavigation = request.method === 'GET' && request.url === '/' && request.headers['sec-fetch-mode'] === 'navigate' && request.headers['sec-fetch-dest'] === 'document';
+      if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
       const context: RouteContext = { app, request, response, url, json: () => readJson(request), send };
       for (const route of options.routes ?? []) if (await route(context)) return;
@@ -50,6 +51,14 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
       if (request.method === 'POST' && url.pathname === '/api/v1/observations') {
         const result = app.saveObservation(await context.json() as ObservationInput);
         send(result, result.replayed ? 200 : 201); return;
+      }
+      // Serve only filename-only compiled browser modules inside public/.
+      const moduleName = /^\/[a-zA-Z0-9_-]+\.js$/.test(url.pathname) ? url.pathname.slice(1) : undefined;
+      if (request.method === 'GET' && moduleName && !assets[url.pathname]) {
+        let content: Buffer;
+        try { content = readFileSync(new URL(`./public/${moduleName}`, import.meta.url)); }
+        catch { throw new AppError('Browser module not found. Build the application first.', 404, 'not_found'); }
+        response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }); response.end(content); return;
       }
       if (request.method === 'GET' && assets[url.pathname]) {
         const [name, type] = assets[url.pathname]!;
