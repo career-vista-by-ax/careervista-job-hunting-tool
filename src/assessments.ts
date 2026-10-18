@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -47,9 +48,10 @@ function fitLabel(input: AssessmentInput): FitLabel {
 export class AssessmentsService {
   readonly app: CareerVistaApp;
   constructor(app: CareerVistaApp) { this.app = app; }
-  history(jobId: string): Assessment[] {
+  history(jobId: string, sourceOnly = false): Assessment[] {
+    const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     this.app.getJob(jobId);
-    return this.app.database.prepare('SELECT * FROM assessments WHERE job_id=? ORDER BY rowid').all(jobId).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at), label: row.label as FitLabel, rulesVersion: String(row.rules_version) }));
+    return this.app.database.prepare(`SELECT * FROM assessments WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY rowid`).all(...memberIds).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at), label: row.label as FitLabel, rulesVersion: String(row.rules_version) }));
   }
   list(filters: { label?: FitLabel; excluded?: boolean; profileVersion?: number } = {}) {
     if (filters.label !== undefined && !fitLabels.includes(filters.label)) throw new AppError('label must be strong, promising, investigate, low_fit or excluded.');

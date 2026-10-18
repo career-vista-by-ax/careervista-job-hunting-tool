@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -28,11 +29,12 @@ function display(amount: CompensationAmount) {
 export class Compensation {
   private app: CareerVistaApp;
   constructor(app: CareerVistaApp) { this.app = app; }
-  history(jobId: string) {
+  history(jobId: string, sourceOnly = false) {
+    const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     const job = this.app.getJob(jobId);
-    const records = this.app.database.prepare('SELECT id, job_id AS jobId, input_json AS inputJson, created_at AS createdAt FROM compensation_records WHERE job_id = ? ORDER BY sequence').all(jobId).map(row => {
+    const records = this.app.database.prepare(`SELECT id, job_id AS jobId, input_json AS inputJson, created_at AS createdAt FROM compensation_records WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds).map(row => {
       const input = JSON.parse(String(row.inputJson)) as CompensationInput;
-      return { ...input, id: String(row.id), jobId, createdAt: String(row.createdAt), displayLabel: display(input.amount) } as CompensationRecord;
+      return { ...input, id: String(row.id), jobId: String(row.jobId), createdAt: String(row.createdAt), displayLabel: display(input.amount) } as CompensationRecord;
     });
     return { jobId, records, sources: job.observations.map(observation => ({ observationId: observation.id, source: observation.source, sourceUrl: observation.sourceUrl, capturedAt: observation.capturedAt })) };
   }
