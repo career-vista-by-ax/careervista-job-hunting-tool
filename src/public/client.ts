@@ -1,4 +1,5 @@
 import { showAssessments } from './assessments-ui.ts';
+import { showCompensation } from './compensation-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
@@ -37,6 +38,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showCompensation(id, detail);
     await showExtraction(detail, id);
     await showAssessments(detail, id, job.observations);
     for (const observation of job.observations) {
