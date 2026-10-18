@@ -33,3 +33,19 @@ test('localhost UI and versioned API save evidence and reject cross-origin or re
     assert.match((await malformed.json() as { error: { message: string } }).error.message, /JSON/);
   } finally { await server.close(); app.close(); rmSync(root, { recursive: true, force: true }); }
 });
+
+test('opening the app from another page allows only document navigation, not cross-site data access', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'cv-navigation-'));
+  const app = new CareerVistaApp({ root });
+  const server = await startServer(app, { port: 0 });
+  const status = (path: string, headers: Record<string, string>) => new Promise<number | undefined>((resolve, reject) => {
+    const req = request(`${server.url}${path}`, { headers }, res => { res.resume(); resolve(res.statusCode); });
+    req.on('error', reject); req.end();
+  });
+  try {
+    const navigation = { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document' };
+    assert.equal(await status('/', navigation), 200);
+    assert.equal(await status('/api/v1/jobs', navigation), 403);
+    assert.equal(await status('/', { 'Sec-Fetch-Site': 'cross-site' }), 403);
+  } finally { await server.close(); app.close(); rmSync(root, { recursive: true, force: true }); }
+});

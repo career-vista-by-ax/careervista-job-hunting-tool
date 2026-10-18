@@ -41,7 +41,8 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
     try {
       if (request.headers.host !== new URL(origin).host) throw new AppError('Only the local application host is allowed.', 403, 'forbidden_host');
       if (request.headers.origin && request.headers.origin !== origin) throw new AppError('Requests must originate from the local application.', 403, 'forbidden_origin');
-      if (request.headers['sec-fetch-site'] === 'cross-site') throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
+      const isDocumentNavigation = request.method === 'GET' && request.url === '/' && request.headers['sec-fetch-mode'] === 'navigate' && request.headers['sec-fetch-dest'] === 'document';
+      if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
       const context: RouteContext = { app, request, response, url, json: () => readJson(request), send };
       for (const route of options.routes ?? []) if (await route(context)) return;
