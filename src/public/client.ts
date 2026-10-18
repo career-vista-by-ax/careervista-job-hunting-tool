@@ -1,3 +1,4 @@
+import { showFeedback, installFeedbackUI } from './feedback-ui.ts';
 import { showReconciliation } from './reconciliation-ui.ts';
 import {installCustomSourcesUI} from './custom-sources-ui.ts';
 import {showCompany} from './company-ui.ts';
@@ -60,6 +61,7 @@ async function showDetail(id: string) {
       evidenceSection.append(meta, link, text('pre', observation.text, 'evidence'));
     }
     await Promise.all([
+      showFeedback(overview, id, refresh),
       showReconciliation(reconciliationSection, id, () => { void refresh(); void showDetail(id); }),
       showCompany(companySection, id),
       showDestinations(applicationSection, id),
@@ -105,6 +107,7 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installFeedbackUI(refresh);
 installResumeUI();
 installRunsUI();
 window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
