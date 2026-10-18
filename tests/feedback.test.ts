@@ -102,3 +102,16 @@ test('reversing a track override requires confirmation when it exposes an inheri
   assert.equal(feedback.reverse(proposal.id,{operationId:'reverse-inherited',confirmed:true,confirmHardExclusion:true}).proposal.status,'reversed');
  }finally{app.close();rmSync(root,{recursive:true,force:true});}
 });
+
+test('linked vacancy review histories aggregate without rewriting source ownership and split back on reversal',async()=>{
+ const {Reconciliation}=await import('../src/reconciliation.ts');const {root,app,saved,feedback}=setup();
+ try{
+  const alias=app.saveObservation({ingestionId:'teacher-alias',source:'employer',sourceUrl:'https://example.com/school/teacher',capturedAt:'2026-10-18T01:00:00Z',title:'Teacher',company:'School',text:'Same teaching vacancy at the school.'});
+  feedback.recordDecision(saved.job.id,{operationId:'original-save',decision:'saved'});feedback.recordDecision(alias.job.id,{operationId:'alias-dismiss',decision:'dismissed',reason:'This source clarifies the commute.'});
+  const reconciliation=new Reconciliation(app);const link=reconciliation.decide({operationId:'link-teacher',leftJobId:saved.job.id,rightJobId:alias.job.id,decision:'link',reason:'Confirmed same vacancy.',userConfirmed:true}).event;
+  assert.equal(feedback.history(saved.job.id).events.length,2);assert.equal(feedback.history(alias.job.id).decision,'dismissed');
+  assert.equal(feedback.history(saved.job.id,true).events[0]?.jobId,saved.job.id);assert.equal(feedback.history(saved.job.id,true).events.length,1);
+  reconciliation.reverse({operationId:'split-teacher',eventId:link.id,reason:'Actually distinct vacancies.',userConfirmed:true});
+  assert.equal(feedback.history(saved.job.id).decision,'saved');assert.equal(feedback.history(alias.job.id).decision,'dismissed');
+ }finally{app.close();rmSync(root,{recursive:true,force:true});}
+});

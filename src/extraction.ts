@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -26,10 +27,11 @@ function string(value: unknown, name: string): asserts value is string {
 export class ExtractionService {
   readonly app: CareerVistaApp;
   constructor(app: CareerVistaApp) { this.app = app; }
-  history(jobId: string): { analyses: Analysis[]; failures: AnalysisFailure[] } {
+  history(jobId: string, sourceOnly = false): { analyses: Analysis[]; failures: AnalysisFailure[] } {
+    const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     this.app.getJob(jobId);
-    const analyses = this.app.database.prepare('SELECT id, input_json, created_at FROM analyses WHERE job_id = ? ORDER BY rowid').all(jobId).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at) }));
-    const failures = this.app.database.prepare('SELECT id, job_id AS jobId, submission_id AS submissionId, code, created_at AS createdAt FROM analysis_failures WHERE job_id = ? ORDER BY rowid').all(jobId).map(row => ({ ...row, message: failureMessages[String(row.code)]! })) as unknown as AnalysisFailure[];
+    const analyses = this.app.database.prepare(`SELECT id, input_json, created_at FROM analyses WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY rowid`).all(...memberIds).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at) }));
+    const failures = this.app.database.prepare(`SELECT id, job_id AS jobId, submission_id AS submissionId, code, created_at AS createdAt FROM analysis_failures WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY rowid`).all(...memberIds).map(row => ({ ...row, message: failureMessages[String(row.code)]! })) as unknown as AnalysisFailure[];
     return { analyses, failures };
   }
   submitAnalysis(input: unknown): { analysis: Analysis; replayed: boolean } {

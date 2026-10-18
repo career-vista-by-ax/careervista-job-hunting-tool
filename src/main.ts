@@ -1,3 +1,5 @@
+import {customSourceRoutes} from './custom-sources.ts';
+import {companyRoutes} from './company.ts';
 import { workspaceRoutes } from './workspace.ts';
 import { collectionRoutes } from './collection.ts';
 import { resumeRoutes } from './resume.ts';
@@ -22,7 +24,7 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('CAREER
 const app = new CareerVistaApp({ root });
 try {
   new RunsService(app).cleanupStorage();
-  const server = await startServer(app, { port, routes: [workspaceRoutes, collectionRoutes(), ...(process.env.CAREERVISTA_CONTROL_NONCE && process.env.CAREERVISTA_INSTALLATION_ID && process.env.CAREERVISTA_INSTANCE_ID ? [controlRoute({ installationId: process.env.CAREERVISTA_INSTALLATION_ID, instanceId: process.env.CAREERVISTA_INSTANCE_ID, nonce: process.env.CAREERVISTA_CONTROL_NONCE, shutdown: () => { process.emit('SIGTERM'); } })] : []), resumeRoutes, availabilityRoutes, dataLifecycleRoutes, runsRoute, compensationRoutes, applicationRoutes, backupRoutes, profileRoutes(new ProfilesService(app)), extractionRoute, assessmentRoutes] });
+  const server = await startServer(app, { port, routes: [customSourceRoutes, companyRoutes, workspaceRoutes, collectionRoutes(), ...(process.env.CAREERVISTA_CONTROL_NONCE && process.env.CAREERVISTA_INSTALLATION_ID && process.env.CAREERVISTA_INSTANCE_ID ? [controlRoute({ installationId: process.env.CAREERVISTA_INSTALLATION_ID, instanceId: process.env.CAREERVISTA_INSTANCE_ID, nonce: process.env.CAREERVISTA_CONTROL_NONCE, shutdown: () => { process.emit('SIGTERM'); } })] : []), resumeRoutes, availabilityRoutes, dataLifecycleRoutes, runsRoute, compensationRoutes, applicationRoutes, backupRoutes, profileRoutes(new ProfilesService(app)), extractionRoute, assessmentRoutes] });
   console.log(`CareerVista is ready: ${server.url}\nLocal data: ${app.paths.data}\nPress Ctrl+C to stop.`);
   let stopping = false;
   for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => {

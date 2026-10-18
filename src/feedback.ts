@@ -1,3 +1,4 @@
+import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
@@ -17,9 +18,10 @@ function object(value:unknown,label:string,keys:string[]){if(!value||typeof valu
 export class FeedbackService {
  readonly app:CareerVistaApp;
  constructor(app:CareerVistaApp){this.app=app;}
- history(jobId:string){
+ history(jobId:string,sourceOnly=false){
   this.app.getJob(jobId);
-  const events=this.app.database.prepare('SELECT id,job_id AS jobId,operation_id AS operationId,decision,reason,created_at AS createdAt FROM review_decisions WHERE job_id=? ORDER BY rowid').all(jobId) as unknown as Decision[];
+  const {memberJobIds}=vacancyIdentity(this.app.database,jobId);const ids=sourceOnly?[jobId]:memberJobIds;
+  const events=this.app.database.prepare(`SELECT id,job_id AS jobId,operation_id AS operationId,decision,reason,created_at AS createdAt FROM review_decisions WHERE job_id IN (${ids.map(()=>'?').join(',')}) ORDER BY rowid`).all(...ids) as unknown as Decision[];
   return{jobId,decision:events.at(-1)?.decision??'unreviewed',events};
  }
  recordDecision(jobId:string,input:DecisionInput){

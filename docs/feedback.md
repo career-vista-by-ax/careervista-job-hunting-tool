@@ -13,7 +13,7 @@ Choose **Apply change** only after reviewing the supporting feedback and propose
 `new FeedbackService(app)`:
 
 - `recordDecision(jobId,{operationId,decision,reason?})` returns `{event,replayed}`. Decisions are `saved`, `dismissed` or `unreviewed`; reason defaults to empty text.
-- `history(jobId)` returns `{jobId,decision,events}`; the latest explicit decision is current, with `unreviewed` as the default.
+- `history(jobId,sourceOnly=false)` returns `{jobId,decision,events}`; the latest explicit decision is current, with `unreviewed` as the default.
 - `propose(input)` returns `{proposal,replayed}`. Requires 1–100 distinct supporting decision IDs, at least one nonempty reason, and a valid changed preference based on an approved profile revision.
 - `getProposal(id)` and `proposals(status?)` expose the original proposal, supporting feedback and append-only acceptance/rejection/reversal events.
 - `accept`, `reject` and `reverse` take `(proposalId,{operationId,confirmed:true,confirmHardExclusion?})` and return `{proposal,profile,replayed}`. Rejection has no profile result.
@@ -67,3 +67,5 @@ This ticket intentionally leaves `src/main.ts` and `src/public/client.ts` unchan
 Private backups and full JSON exports include decisions, proposals, support relationships and event history. Existing public round-trip tests verify recovery. Explicit job deletion removes its decision history and dependent proposals/events; the user-approved profile revision remains an independent preference snapshot. Separate backup/export files remain separate private copies. No credentials or browser sessions are added to the domain database.
 
 Synthetic teaching fixtures verify decision independence, pursuit of low-rated candidates, proposal acceptance/rejection/reversal, hard-confirmation boundaries (including inherited exclusions), immutable history, idempotency, backup recovery and explicit deletion. UI/model evaluation remains an integration validation step.
+
+Vacancy-group history aggregates all member decisions by default and retains each event’s original source job ID. Passing `sourceOnly=true` shows one source, and splitting a group restores its separate review state without moving rows. New UI actions target the canonical job; the public API preserves an explicitly supplied source ID, consistent with other domain histories. Reconciliation detail includes per-member review histories.

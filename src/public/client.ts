@@ -1,3 +1,5 @@
+import {installCustomSourcesUI} from './custom-sources-ui.ts';
+import {showCompany} from './company-ui.ts';
 import { installWorkspaceUI } from './workspace-ui.ts';
 import { showDestinations } from './collection-ui.ts';
 import { installResumeUI } from './resume-ui.ts';
@@ -47,6 +49,7 @@ async function showDetail(id: string) {
     const applicationSection = document.createElement('details'); applicationSection.append(text('summary', 'Application history & actions')); detail.append(applicationSection);
     const listingSection = document.createElement('details'); listingSection.append(text('summary', 'Structured listing & compensation')); detail.append(listingSection);
     const availabilitySection = document.createElement('details'); availabilitySection.append(text('summary', 'Availability & check history')); detail.append(availabilitySection);
+    const companySection = document.createElement('details'); companySection.append(text('summary', 'Company research & source reports')); detail.append(companySection);
     const evidenceSection = document.createElement('details'); evidenceSection.append(text('summary', `Original saved evidence (${job.observations.length})`)); detail.append(evidenceSection);
     for (const observation of job.observations) {
       const meta = text('p', `${observation.source} · Captured ${new Date(observation.capturedAt).toLocaleString()}`, 'evidence-meta');
@@ -55,6 +58,7 @@ async function showDetail(id: string) {
       evidenceSection.append(meta, link, text('pre', observation.text, 'evidence'));
     }
     await Promise.all([
+      showCompany(companySection, id),
       showDestinations(applicationSection, id),
       showAssessments(fitSection, id, job.observations),
       showApplications(id, applicationSection),
@@ -106,3 +110,5 @@ void showApplicationAttention();
 mountBackupTools();
 
 mountDataTools();
+
+installCustomSourcesUI();
