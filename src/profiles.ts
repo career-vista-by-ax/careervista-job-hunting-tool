@@ -112,12 +112,12 @@ export class ProfilesService {
   approve(version: number): Profile {
     this.getProfile(version);
     const db = this.app.database;
-    db.exec('BEGIN IMMEDIATE');
+    db.exec('SAVEPOINT profile_approval');
     try {
       db.prepare('UPDATE profile_revisions SET approved_at=COALESCE(approved_at,?) WHERE version=?').run(new Date().toISOString(), version);
       db.prepare('INSERT INTO active_profile VALUES (1,?) ON CONFLICT(singleton) DO UPDATE SET profile_version=excluded.profile_version').run(version);
-      db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+      db.exec('RELEASE SAVEPOINT profile_approval');
+    } catch (error) { db.exec('ROLLBACK TO SAVEPOINT profile_approval; RELEASE SAVEPOINT profile_approval'); throw error; }
     return this.getProfile(version);
   }
 }
