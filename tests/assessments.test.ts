@@ -128,3 +128,19 @@ test('open unknown findings and inference-only matches cannot receive a strong l
     assert.equal(service.submitAssessment(inferred).assessment.label, 'promising');
   } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
 });
+
+test('a private backup round trip preserves historical and current assessments with their original profile and evidence', async () => {
+  const { Backups } = await import('../src/backup.ts');
+  const root = mkdtempSync(join(tmpdir(), 'cv-fit-backup-'));
+  const source = new CareerVistaApp({ root: join(root, 'source') }); const destination = new CareerVistaApp({ root: join(root, 'destination') });
+  try {
+    const approved = profile(source); const saved = listing(source, 'restore-school', 'Teachers choose teaching methods.'); const service = new AssessmentsService(source);
+    const base = input(saved.job.id, saved.observation.id, approved.version, 'Teachers choose teaching methods.');
+    service.submitAssessment(base);
+    service.submitAssessment({ ...base, submissionId: 'follow-up', confidence: { level: 'high', explanation: 'Working conditions confirmed in a supervised review.' } });
+    new Backups(destination).restore(new Backups(source).create());
+    assert.deepEqual(new AssessmentsService(destination).history(saved.job.id), service.history(saved.job.id));
+    assert.deepEqual(new AssessmentsService(destination).list(), service.list());
+    assert.deepEqual(new ProfilesService(destination).getProfile(approved.version), approved);
+  } finally { source.close(); destination.close(); rmSync(root, { recursive: true, force: true }); }
+});
