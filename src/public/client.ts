@@ -1,3 +1,4 @@
+import {installSparseUI} from './sparse-ui.ts';
 import {installReassessmentUI} from './reassessment-ui.ts';
 import { showFeedback, installFeedbackUI } from './feedback-ui.ts';
 import { showReconciliation } from './reconciliation-ui.ts';
@@ -121,3 +122,5 @@ mountDataTools();
 installCustomSourcesUI();
 
 installReassessmentUI(refresh);
+
+installSparseUI();
