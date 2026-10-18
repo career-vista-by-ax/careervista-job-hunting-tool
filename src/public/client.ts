@@ -1,3 +1,4 @@
+import { installRunsUI } from './runs-ui.ts';
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
@@ -103,4 +104,6 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installRunsUI();
+window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
 void showApplicationAttention();
