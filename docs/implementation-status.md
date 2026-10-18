@@ -20,4 +20,4 @@ The owner reports a 1–2 hour research baseline. The bounded two-listing captur
 
 ## Scoped cleanup
 
-Use the owner's mac-deep-clean dry-run/inspect/apply method only on completed CareerVista worktrees and owned temporary build/cache output. Preserve canonical source, branches, reusable dependencies/runtime, release artifacts and validation evidence. The broad machine-specific script's DRE/global-cache/Time Machine operations are excluded. Final cleanup measurements are recorded in the validation record.
+Use the owner's mac-deep-clean dry-run/inspect/apply method only on completed CareerVista worktrees and owned temporary build/cache output. Preserve canonical source, branches, reusable dependencies/runtime, release artifacts and validation evidence. The broad machine-specific script's DRE/global-cache/Time Machine operations are excluded. Final scoped cleanup removed 21 integrated worktrees and superseded preview artifacts, reclaiming 491.68 MiB; measurements are recorded in the validation record.
