@@ -1,3 +1,4 @@
+import { installResumeUI } from './resume-ui.ts';
 import { showAvailability } from './availability-ui.ts';
 import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
@@ -113,6 +114,7 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installResumeUI();
 installRunsUI();
 window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
 void showApplicationAttention();
