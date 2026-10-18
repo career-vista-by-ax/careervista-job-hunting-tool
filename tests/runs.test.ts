@@ -164,3 +164,21 @@ test('job deletion cleanup removes listing pointers while retaining historical r
   assert.throws(() => runs.authorize(run.id,{operationId:'a-new',workKey:redacted.work[0]!.workKey,modelWork:false}),/deleted/);
  } finally {app.close();rmSync(root,{recursive:true,force:true});}
 });
+
+test('portable backup restores run queue, reservations and operation retries into an empty installation', async () => {
+ const {Backups} = await import('../src/backup.ts');
+ const root = mkdtempSync(join(tmpdir(),'cv-runs-')), restoredRoot = mkdtempSync(join(tmpdir(),'cv-runs-restored-'));
+ const app = new CareerVistaApp({root}), restored = new CareerVistaApp({root:restoredRoot});
+ try {
+  const profile = setup(app), service = new RunsService(app);
+  const run = service.create({requestId:'backup-run',profileVersion:profile.version,trackIds:['teacher'],sources:['custom'],budget:{amount:1,currency:'USD'}});
+  const queued = {operationId:'q',workKey:'teacher',trackId:'teacher',source:'custom',url:'https://example.com/teacher'};
+  service.enqueue(run.id,queued);
+  service.reserve(run.id,{operationId:'r',workKey:'teacher',estimate:0.2,currency:'USD'});
+  new Backups(restored).restore(new Backups(app).create());
+  const other = new RunsService(restored);
+  assert.deepEqual(other.get(run.id),service.get(run.id));
+  assert.equal(other.enqueue(run.id,queued).work.length,1);
+  assert.equal(other.get(run.id).costs.reserved,0.2);
+ } finally {app.close();restored.close();rmSync(root,{recursive:true,force:true});rmSync(restoredRoot,{recursive:true,force:true});}
+});
