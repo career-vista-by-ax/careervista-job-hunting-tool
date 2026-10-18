@@ -1,3 +1,4 @@
+import { showDestinations } from './collection-ui.ts';
 import { installResumeUI } from './resume-ui.ts';
 import { showAvailability } from './availability-ui.ts';
 import { mountDataTools } from './datalifecycle-ui.ts';
@@ -43,6 +44,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showDestinations(detail, id);
     await showAvailability(detail, id, job.observations, refresh);
     await showCompensation(id, detail);
     await showExtraction(detail, id);
