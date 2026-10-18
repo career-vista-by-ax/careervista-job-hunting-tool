@@ -23,3 +23,4 @@ For LinkedIn discovery, read [linkedin.md](linkedin.md) and [collection.md](coll
 For approved unfamiliar source exploration, read [custom-sources.md](custom-sources.md).
 
 For reassessing saved evidence after an approved profile change, read [reassessment.md](reassessment.md).
+For diagnosing sparse results and reviewed search changes, read [sparse-results.md](sparse-results.md).

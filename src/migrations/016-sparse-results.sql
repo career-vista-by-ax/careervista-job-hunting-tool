@@ -32,3 +32,12 @@ CREATE TABLE sparse_search_events (
  input_json TEXT NOT NULL,
  created_at TEXT NOT NULL
 );
+
+CREATE TABLE preference_proposal_diagnoses (
+ proposal_id TEXT PRIMARY KEY REFERENCES preference_proposals(id) ON DELETE CASCADE,
+ diagnosis_id TEXT NOT NULL REFERENCES sparse_diagnoses(id) ON DELETE CASCADE
+);
+CREATE TRIGGER forget_diagnosis_proposals BEFORE DELETE ON sparse_saved_jobs
+BEGIN
+ DELETE FROM preference_proposals WHERE id IN (SELECT proposal_id FROM preference_proposal_diagnoses WHERE diagnosis_id=OLD.diagnosis_id);
+END;

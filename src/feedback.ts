@@ -9,7 +9,7 @@ import type { ApiRoute } from './server.ts';
 export type ReviewDecision = 'saved' | 'dismissed' | 'unreviewed';
 export interface DecisionInput { operationId:string;decision:ReviewDecision;reason?:string }
 export interface Decision { id:string;jobId:string;operationId:string;decision:ReviewDecision;reason:string;createdAt:string }
-export interface PreferenceProposalInput { submissionId:string;baseProfileVersion:number;feedbackIds:string[];trackId?:string;change:Preference;explanation:string }
+export interface PreferenceProposalInput { submissionId:string;baseProfileVersion:number;feedbackIds:string[];diagnosisId?:string;trackId?:string;change:Preference;explanation:string }
 export interface ProposalActionInput {operationId:string;confirmed:boolean;confirmHardExclusion?:boolean}
 export interface ProposalEvent {id:string;proposalId:string;operationId:string;action:'accepted'|'rejected'|'reversed';profileVersion:number|null;createdAt:string}
 export interface PreferenceProposal extends PreferenceProposalInput {id:string;createdAt:string;status:'pending'|'accepted'|'rejected'|'reversed';events:ProposalEvent[];feedback:Decision[]}
@@ -64,14 +64,15 @@ export class FeedbackService {
   return input;
  }
  propose(input:PreferenceProposalInput){
-  object(input,'Preference proposal',['submissionId','baseProfileVersion','feedbackIds','trackId','change','explanation']);text(input.submissionId,'submissionId');text(input.explanation,'Proposal explanation');
+  object(input,'Preference proposal',['submissionId','baseProfileVersion','feedbackIds','diagnosisId','trackId','change','explanation']);text(input.submissionId,'submissionId');text(input.explanation,'Proposal explanation');
   if(!Number.isSafeInteger(input.baseProfileVersion)||input.baseProfileVersion<1)throw new AppError('baseProfileVersion must identify an approved revision.');
   if(input.trackId!==undefined)text(input.trackId,'trackId');
   const profiles=new ProfilesService(this.app),profile=profiles.getProfile(input.baseProfileVersion);
   if(profile.status!=='approved')throw new AppError('Proposals must be based on an approved preference profile.');
-  if(!Array.isArray(input.feedbackIds)||!input.feedbackIds.length||input.feedbackIds.length>100||new Set(input.feedbackIds).size!==input.feedbackIds.length)throw new AppError('feedbackIds must contain 1–100 distinct saved review decisions.');
+  if(!Array.isArray(input.feedbackIds)||(!input.feedbackIds.length&&!input.diagnosisId)||input.feedbackIds.length>100||new Set(input.feedbackIds).size!==input.feedbackIds.length)throw new AppError('feedbackIds must contain 1–100 distinct saved review decisions.');
   const feedback=input.feedbackIds.map(id=>{text(id,'feedbackId');return this.decision(id);});
-  if(!feedback.some(event=>event.reason.trim()))throw new AppError('A general preference proposal needs an explicit feedback explanation; a save/dismiss alone does not imply a preference.');
+  if(input.diagnosisId!==undefined){text(input.diagnosisId,'diagnosisId');const rows=this.app.database.prepare('SELECT reasons_json,tracks_json FROM sparse_saved_jobs WHERE diagnosis_id=?').all(input.diagnosisId);if(!rows.some(row=>(input.trackId===undefined||(JSON.parse(String(row.tracks_json)) as string[]).includes(input.trackId))&&(JSON.parse(String(row.reasons_json)) as {preferenceKey:string}[]).some(reason=>reason.preferenceKey===input.change?.key)))throw new AppError('Diagnosis-backed requirement proposals need a saved evidenced conflict for this preference and track. Collection failure alone is not a preference conflict.');}
+  if(!input.diagnosisId&&!feedback.some(event=>event.reason.trim()))throw new AppError('A general preference proposal needs an explicit feedback explanation; a save/dismiss alone does not imply a preference.');
   object(input.change,'Proposed preference',['key','kind','value']);text(input.change.key,'Preference key');
   const db=this.app.database;
   // Reuse the public profile validation inside a rollback-only savepoint. No pending
@@ -84,7 +85,7 @@ export class FeedbackService {
   const existing=db.prepare('SELECT id,input_json FROM preference_proposals WHERE submission_id=?').get(input.submissionId);
   if(existing){if(!isDeepStrictEqual(JSON.parse(String(existing.input_json)),input))throw new AppError('This proposal identifier already has different content. Use a new identifier.',409,'idempotency_conflict');return{proposal:this.getProposal(String(existing.id)),replayed:true};}
   const id=randomUUID();db.exec('BEGIN IMMEDIATE');
-  try{db.prepare('INSERT INTO preference_proposals VALUES (?,?,?,?,?)').run(id,input.submissionId,input.baseProfileVersion,JSON.stringify(input),new Date().toISOString());for(const decisionId of input.feedbackIds)db.prepare('INSERT INTO preference_proposal_feedback VALUES (?,?)').run(id,decisionId);db.exec('COMMIT');}
+  try{db.prepare('INSERT INTO preference_proposals VALUES (?,?,?,?,?)').run(id,input.submissionId,input.baseProfileVersion,JSON.stringify(input),new Date().toISOString());for(const decisionId of input.feedbackIds)db.prepare('INSERT INTO preference_proposal_feedback VALUES (?,?)').run(id,decisionId);if(input.diagnosisId)db.prepare('INSERT INTO preference_proposal_diagnoses VALUES (?,?)').run(id,input.diagnosisId);db.exec('COMMIT');}
   catch(error){db.exec('ROLLBACK');throw error;}
   return{proposal:this.getProposal(id),replayed:false};
  }
