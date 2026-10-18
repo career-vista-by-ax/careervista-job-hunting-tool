@@ -1,6 +1,6 @@
 # Release/lifecycle bundle contract v1
 
-The release directory contains `release.json` plus only the files named in its `files` map. Example:
+The installed release payload contains only the files named in `release.json`’s `files` map. The downloadable archive also carries `CareerVista.command` and `README.txt`, which are transport/launcher copies outside the installation root. Their SHA-256 hashes are in `archiveFiles`; the lifecycle does not install them. The archive sidecar hashes the entire compressed archive, including the manifest. Example:
 
 ```json
 {

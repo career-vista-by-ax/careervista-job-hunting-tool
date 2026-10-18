@@ -2,6 +2,10 @@
 
 A private, single-user job research workspace. Save any kind of job listing and read its original evidence later, including offline. Each person uses a separate installation and database. No application account, model key, or agent is needed for local review.
 
+## Self-contained Mac archive
+
+The native Apple Silicon archive includes Node, SQLite, compiled local assets and versioned skills. Extract it and double-click **CareerVista.command** to install/launch privately without development tools or an application account. Optional browser-agent setup remains separate. See [release instructions and verified limitations](docs/release.md). Windows, Linux, Intel Mac and Chromebook release support remains unverified.
+
 ## Mac development launch
 
 This is the source/developer workflow. Self-contained end-user archives and installation lifecycle are tracked separately; the source workflow is not the promised installer.
