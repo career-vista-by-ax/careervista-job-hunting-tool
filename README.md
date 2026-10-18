@@ -9,7 +9,7 @@ This is the source/developer workflow. Self-contained end-user archives and inst
 1. Install [mise](https://mise.jdx.dev/getting-started.html), then run `mise trust` and `mise install` in this repository.
 2. Run `mise exec -- npm ci` and `mise exec -- npm run build`.
 3. Run `mise exec -- npm start` and open [CareerVista](http://127.0.0.1:4318).
-4. Choose **Save a listing**, enter the source URL and basic details, and paste the readable listing text. Choose its title in the table to read the evidence.
+4. Choose **Save a listing**, enter the source URL and basic details, and paste the readable listing text. Choose its title in the table to read the evidence. Open **Profile & search tracks** to create, review and explicitly approve your search preferences; see [profile help](docs/profiles.md).
 5. Stop with Control+C. Start again to review stored records. After the build, launching and reviewing needs no network access or agent.
 
 The server binds exclusively to `127.0.0.1`; it rejects unexpected Host headers, foreign origins and cross-site browser requests. Open the exact address printed at launch. This is a local, single-user interface, not a remotely hosted service. Other processes running as your user can access it.

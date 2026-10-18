@@ -50,4 +50,4 @@ Internal modules may own repositories using `app.database`, a synchronous `Datab
 
 The browser entry point is `src/public/client.ts`; it uses text nodes for untrusted evidence and real buttons/labels/table headings for keyboard operation. Styles and HTML are local assets. Future daily workspace work can replace this minimal table/detail view while preserving the public interface.
 
-Only T1 is implemented here. Profile, extraction, assessment, reconciliation, review/application events, bounded runs, collection, backup/export/deletion and release lifecycle remain tracked tickets.
+The initial T1 evidence slice is extended by [T3 profile revisions and search tracks](profiles.md). Extraction, assessment, reconciliation, review/application events, bounded runs, collection, backup/export/deletion and release lifecycle remain tracked tickets.

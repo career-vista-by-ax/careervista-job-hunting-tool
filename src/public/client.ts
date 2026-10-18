@@ -1,3 +1,4 @@
+import { installProfilesUI } from './profiles-ui.ts';
 import type { Job, JobDetail } from '../app.ts';
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const message = element('message');
@@ -67,3 +68,5 @@ form.addEventListener('submit', async event => {
 // Editing after a failed attempt creates a new operation; unchanged retries retain their identifier.
 form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete form.dataset.capturedAt; });
 void refresh().catch(showError);
+
+installProfilesUI();
