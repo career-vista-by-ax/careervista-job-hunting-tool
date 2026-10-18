@@ -19,12 +19,19 @@ export class Availability {
   constructor(app: CareerVistaApp) { this.app = app; }
   history(jobId: string, sourceOnly = false) {
     const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
-    this.app.getJob(jobId);
+    const job = this.app.getJob(jobId);
     const checks = this.app.database.prepare(`SELECT id,input_json,created_at FROM availability_checks WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds).map(row => ({ ...JSON.parse(String(row.input_json)), id: String(row.id), createdAt: String(row.created_at) })) as AvailabilityCheck[];
     const chronological = [...checks].sort((a, b) => Date.parse(a.checkedAt) - Date.parse(b.checkedAt));
     const latest = chronological.at(-1) ?? null;
     const lastSuccessful = chronological.filter(check => check.result !== 'could_not_verify').at(-1) ?? null;
-    return { jobId, status: lastSuccessful?.result ?? 'unknown', latest, lastSuccessful, checks };
+    let status: string = lastSuccessful?.result ?? 'unknown';
+    if (memberIds.length > 1) {
+      const perSource = new Map<string, AvailabilityCheck>();
+      for (const check of chronological) if (check.result !== 'could_not_verify') perSource.set(new URL(check.sourceUrl).href, check);
+      const urls = [...new Set(job.observations.map(item => new URL(item.sourceUrl).href))];
+      status = [...perSource.values()].some(check => check.result === 'active') ? 'active' : urls.every(url => perSource.get(url)?.result === 'confirmed_closed') ? 'confirmed_closed' : 'unknown';
+    }
+    return { jobId, status, latest, lastSuccessful, checks };
   }
   record(jobId: string, input: AvailabilityInput) {
     const job = this.app.getJob(jobId);

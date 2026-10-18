@@ -3,7 +3,7 @@ import { AppError, CareerVistaApp } from './app.ts';
 import { Backups } from './backup.ts';
 import { Applications } from './applications.ts';
 import type { ApiRoute } from './server.ts';
-const warning = 'Permanent deletion removes selected jobs and their associated live evidence, analyses, assessments and application history. Existing backup and export files are separate copies and are not erased. Unrelated jobs and history remain.';
+const warning = 'Permanent deletion removes selected vacancies, all linked source job records and their associated live evidence, analyses, assessments and application history. Existing backup and export files are separate copies and are not erased. Unrelated jobs and history remain.';
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
 function cell(value: unknown) { let text = String(value ?? ''); if (/^\s*[=+@-]|^[\t\r\n]/.test(text)) text = `'${text}`; return `"${text.replaceAll('"', '""')}"`; }
 export class DataLifecycle {
