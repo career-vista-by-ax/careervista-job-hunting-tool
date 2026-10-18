@@ -1,6 +1,9 @@
 import { mountDataTools } from './datalifecycle-ui.ts';
+import { installRunsUI } from './runs-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
+import { showCompensation } from './compensation-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
+
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
 import { showApplications, showApplicationAttention } from './applications-ui.ts';
@@ -38,6 +41,7 @@ async function showDetail(id: string) {
     detail.replaceChildren();
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
+    await showCompensation(id, detail);
     await showExtraction(detail, id);
     await showAssessments(detail, id, job.observations);
     for (const observation of job.observations) {
@@ -107,6 +111,8 @@ form.addEventListener('input', () => { ingestionId = crypto.randomUUID(); delete
 void refresh().catch(showError);
 
 installProfilesUI();
+installRunsUI();
+window.addEventListener('careervista:open-job', event => { void showDetail((event as CustomEvent<string>).detail); });
 void showApplicationAttention();
 
 mountBackupTools();

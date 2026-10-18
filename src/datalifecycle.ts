@@ -1,3 +1,4 @@
+import { RunsService } from './runs.ts';
 import { AppError, CareerVistaApp } from './app.ts';
 import { Backups } from './backup.ts';
 import { Applications } from './applications.ts';
@@ -24,13 +25,13 @@ export class DataLifecycle {
  previewDeletion(jobIds: unknown) {
   const jobs=this.selected(jobIds); const before=this.counts(); const db=this.app.database;
   db.exec('SAVEPOINT deletion_preview');
-  try { const remove=db.prepare('DELETE FROM jobs WHERE id = ?'); for(const job of jobs) remove.run(job.id); const after=this.counts(); return {jobs:jobs.map(({id,title,company})=>({id,title,company})),associatedRecords:Object.fromEntries(Object.entries(before).map(([table,count])=>[table,count-(after[table]??0)]).filter(([,count])=>Number(count)>0)),warning,confirmation:'DELETE_SELECTED_JOBS'}; }
+  try { const remove=db.prepare('DELETE FROM jobs WHERE id = ?'); for(const job of jobs) { new RunsService(this.app).forgetJob(job.id); remove.run(job.id); } const after=this.counts(); return {jobs:jobs.map(({id,title,company})=>({id,title,company})),associatedRecords:Object.fromEntries(Object.entries(before).map(([table,count])=>[table,count-(after[table]??0)]).filter(([,count])=>Number(count)>0)),warning,confirmation:'DELETE_SELECTED_JOBS'}; }
   finally { db.exec('ROLLBACK TO deletion_preview; RELEASE deletion_preview'); }
  }
  deleteJobs(input:{jobIds:unknown;confirmation:unknown}) {
   if(!input||input.confirmation!=='DELETE_SELECTED_JOBS') throw new AppError(`Confirm the destructive scope with confirmation DELETE_SELECTED_JOBS. ${warning}`);
   const jobs=this.selected(input.jobIds); const db=this.app.database; db.exec('BEGIN IMMEDIATE');
-  try { const statement=db.prepare('DELETE FROM jobs WHERE id = ?'); for(const job of jobs)statement.run(job.id); if(db.prepare('PRAGMA foreign_key_check').all().length)throw new AppError('Deletion would leave broken relationships. No records were removed.',409,'deletion_conflict'); db.exec('COMMIT'); return {deletedJobIds:jobs.map(job=>job.id),warning}; }
+  try { const statement=db.prepare('DELETE FROM jobs WHERE id = ?'); for(const job of jobs) { new RunsService(this.app).forgetJob(job.id); statement.run(job.id); } if(db.prepare('PRAGMA foreign_key_check').all().length)throw new AppError('Deletion would leave broken relationships. No records were removed.',409,'deletion_conflict'); db.exec('COMMIT'); return {deletedJobIds:jobs.map(job=>job.id),warning}; }
   catch(error){db.exec('ROLLBACK');throw error;}
  }
 }
