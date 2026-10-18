@@ -6,17 +6,17 @@ import type { ObservationInput } from './app.ts';
 
 export interface RouteContext {
   app: CareerVistaApp; request: IncomingMessage; response: ServerResponse;
-  url: URL; json: () => Promise<unknown>; send: (value: unknown, status?: number) => void;
+  url: URL; json: (maxBytes?: number) => Promise<unknown>; send: (value: unknown, status?: number) => void;
 }
 /** Return true when handled. Install module routes via startServer({ routes: [...] }). */
 export type ApiRoute = (context: RouteContext) => boolean | Promise<boolean>;
 
-async function readJson(request: IncomingMessage): Promise<unknown> {
+async function readJson(request: IncomingMessage, maxBytes = 2_000_000): Promise<unknown> {
   if (!request.headers['content-type']?.toLowerCase().startsWith('application/json')) throw new AppError('Use Content-Type: application/json.', 415, 'unsupported_media_type');
   const chunks: Buffer[] = []; let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 2_000_000) throw new AppError('Request exceeds the 2 MB limit.', 413, 'payload_too_large');
+    if (size > maxBytes) throw new AppError(`Request exceeds the ${maxBytes} byte limit.`, 413, 'payload_too_large');
     chunks.push(Buffer.from(chunk));
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
@@ -44,7 +44,7 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
       const isDocumentNavigation = request.method === 'GET' && request.url === '/' && request.headers['sec-fetch-mode'] === 'navigate' && request.headers['sec-fetch-dest'] === 'document';
       if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
-      const context: RouteContext = { app, request, response, url, json: () => readJson(request), send };
+      const context: RouteContext = { app, request, response, url, json: maxBytes => readJson(request, maxBytes), send };
       for (const route of options.routes ?? []) if (await route(context)) return;
       if (request.method === 'GET' && url.pathname === '/api/v1/jobs') { send(app.listJobs()); return; }
       if (request.method === 'GET' && /^\/api\/v1\/jobs\/[^/]+$/.test(url.pathname)) { send(app.getJob(decodeURIComponent(url.pathname.split('/').at(-1)!))); return; }

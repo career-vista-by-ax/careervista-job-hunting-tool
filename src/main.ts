@@ -1,8 +1,12 @@
 import { RunsService, runsRoute } from './runs.ts';
+import { assessmentRoutes } from './assessments.ts';
+import { compensationRoutes } from './compensation.ts';
+
 import { ProfilesService, profileRoutes } from './profiles.ts';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { CareerVistaApp } from './app.ts';
+import { backupRoutes } from './backup.ts';
 import { applicationRoutes } from './applications.ts';
 import { startServer } from './server.ts';
 import { extractionRoute } from './extraction.ts';
@@ -13,7 +17,8 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('CAREER
 const app = new CareerVistaApp({ root });
 try {
   new RunsService(app).cleanupStorage();
-  const server = await startServer(app, { port, routes: [runsRoute, applicationRoutes, profileRoutes(new ProfilesService(app)), extractionRoute] });
+  const server = await startServer(app, { port, routes: [runsRoute, compensationRoutes, applicationRoutes, backupRoutes, profileRoutes(new ProfilesService(app)), extractionRoute, assessmentRoutes] });
+
   console.log(`CareerVista is ready: ${server.url}\nLocal data: ${app.paths.data}\nPress Ctrl+C to stop.`);
   let stopping = false;
   for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => {
