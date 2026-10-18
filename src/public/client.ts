@@ -1,3 +1,4 @@
+import { mountDataTools } from './datalifecycle-ui.ts';
 import { showAssessments } from './assessments-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
 import { installProfilesUI } from './profiles-ui.ts';
@@ -109,3 +110,5 @@ installProfilesUI();
 void showApplicationAttention();
 
 mountBackupTools();
+
+mountDataTools();
