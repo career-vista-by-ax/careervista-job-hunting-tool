@@ -1,3 +1,4 @@
+import { FeedbackService } from './feedback.ts';
 import { randomUUID } from 'node:crypto';
 import { AppError, CareerVistaApp } from './app.ts';
 import type { ApiRoute } from './server.ts';
@@ -22,7 +23,7 @@ export class WorkspaceService {
       return { ...job, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
         compensation: compensation.summary(job.id), fit: assessment?.label ?? null, confidence: assessment?.confidence.level ?? null,
         concerns: [...new Set([...(assessment?.concerns.map(item => item.statement) ?? []), ...Object.values(assessment?.axes ?? {}).flatMap(axis => axis.findings.filter(item => item.status === 'concern').map(item => item.statement))])],
-        profileVersion: assessment?.profileVersion ?? null, review: 'unreviewed' as string,
+        profileVersion: assessment?.profileVersion ?? null, review: new FeedbackService(this.app).history(job.id).decision,
         application: { status: application.status, appliedAt: application.events.findLast(item => item.status === 'applied')?.occurredAt ?? null, followUpOn: application.followUpOn },
         availability: { status: checks.status, checkedAt: checks.lastSuccessful?.checkedAt ?? null, lastAttempt: checks.latest?.result ?? null },
         capturedAt, sourceUrl: detail.observations[0]!.sourceUrl };
