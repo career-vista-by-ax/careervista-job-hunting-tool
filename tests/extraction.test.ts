@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CareerVistaApp } from '../src/app.ts';
+import { Reconciliation } from '../src/reconciliation.ts';
 import { ExtractionService } from '../src/extraction.ts';
 
 test('any agent can submit grounded nursing details after evidence is saved and read them after restart', () => {
@@ -46,4 +47,23 @@ test('rejected electrician analysis retains evidence, exposes safe failures and 
     assert.throws(() => service.submitAnalysis({ ...input, submissionId: 'good-1' }), /identifier/);
     assert.throws(() => service.submitAnalysis({ ...input, submissionId: 'cross-job', observationIds: ['missing'] }), /saved evidence/);
   } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
+});
+
+test('analysis submitted through a grouped alias remains owned by its explicit source after reversal',()=>{
+ const root=mkdtempSync(join(tmpdir(),'cv-extract-group-'));let app=new CareerVistaApp({root});
+ try{
+  const save=(ingestionId:string)=>app.saveObservation({ingestionId,source:'employer',sourceUrl:`https://clinic.example/${ingestionId}`,capturedAt:'2026-10-18T00:00:00Z',title:'Nurse',company:'Clinic',text:'Nurse at Clinic.'});
+  const a=save('a'),b=save('b'),reconciliation=new Reconciliation(app);
+  const link=reconciliation.decide({operationId:'link',leftJobId:a.job.id,rightJobId:b.job.id,decision:'link',reason:'Same vacancy',userConfirmed:true});
+  const canonicalId=app.getJob(a.job.id).id,alias=canonicalId===a.job.id?b:a;
+  const service=new ExtractionService(app),unknown={status:'unknown',value:null,evidence:[]};
+  const input={submissionId:'grouped-b',jobId:alias.job.id,observationIds:[alias.observation.id],metadata:{agent:'fixture',analysisVersion:'1'},details:Object.fromEntries(['title','company','requirements','benefits','location','workArrangement','employment'].map(field=>[field,unknown]))};
+  const saved=service.submitAnalysis(input).analysis;
+  assert.equal(service.history(canonicalId).analyses[0]?.id,saved.id);
+  reconciliation.reverse({operationId:'reverse',eventId:link.event.id,reason:'Separate vacancies',userConfirmed:true});
+  app.close();app=new CareerVistaApp({root});
+  assert.deepEqual(new ExtractionService(app).history(canonicalId).analyses,[]);
+  assert.equal(new ExtractionService(app).history(alias.job.id).analyses[0]?.id,saved.id);
+  assert.equal(new ExtractionService(app).submitAnalysis(input).replayed,true);
+ }finally{app.close();rmSync(root,{recursive:true,force:true});}
 });
