@@ -28,6 +28,10 @@ Set `CAREERVISTA_ROOT` to choose an independent root; set `CAREERVISTA_PORT` if 
 
 Never remove `data`, `sessions`, or `credentials` as cache cleanup. Do not manually delete live SQLite WAL/journal files. The app makes no runtime downloads and writes no accumulating cache or log files in this slice.
 
+## Agent-assisted extraction
+
+Any compatible agent can submit evidence-linked structured details through the [version 1 interface](docs/agent-interface.md). The agent host owns model/provider configuration; CareerVista requires no provider key. The job modal shows details, unknowns, source quotes and correction history. The packaged capture skill and explicit registration/removal command are documented in that guide. Codex is the development validation host; no bundled browser/runtime claim is made.
+
 ## Development checks
 
 `mise exec -- npm test` runs behavioral tests through the public application and HTTP interfaces. `mise exec -- npm run build` checks and compiles backend/frontend TypeScript and copies local assets/migrations into `dist`. The HTTP test needs permission to bind a loopback port in restrictive sandboxes. The tests use temporary independent databases and deterministic inputs; they do not contact job sites or model services.
