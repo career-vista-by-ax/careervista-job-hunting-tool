@@ -4,3 +4,5 @@ dist/
 *.sqlite-shm
 *.sqlite-wal
 .DS_Store
+
+release-artifacts/

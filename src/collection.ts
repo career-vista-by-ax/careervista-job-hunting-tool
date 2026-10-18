@@ -1,3 +1,4 @@
+import {customAdapters} from './custom-sources.ts';
 import {createHash,randomUUID} from 'node:crypto';
 import {AppError,CareerVistaApp} from './app.ts';
 import {ProfilesService} from './profiles.ts';
@@ -17,7 +18,7 @@ function only(input:Record<string,any>,fields:string[]){if(Object.keys(input).so
 function url(input:unknown):string{text(input,'url');let value:URL;try{value=new URL(input);}catch{throw new AppError('Supply a complete HTTP(S) URL.');}if(!['http:','https:'].includes(value.protocol)||value.username||value.password)throw new AppError('URL must use HTTP(S) without credentials.');return value.href;}
 export class SourceCollection {
  readonly app:CareerVistaApp;readonly adapters:CollectionAdapter[];
- constructor(app:CareerVistaApp,adapters:CollectionAdapter[]=[seekAdapter,linkedinAdapter]){this.app=app;this.adapters=adapters;}
+ constructor(app:CareerVistaApp,adapters?:CollectionAdapter[]){this.app=app;this.adapters=adapters??[seekAdapter,linkedinAdapter,...customAdapters(app)];}
  destinations(jobId:string):Destination[]{this.app.getJob(jobId);return this.app.database.prepare('SELECT destinations_json FROM collection_captures WHERE job_id=? ORDER BY rowid').all(jobId).flatMap(row=>JSON.parse(String(row.destinations_json)) as Destination[]);}
  private adapter(source:string){const adapter=this.adapters.find(item=>item.id===source);if(!adapter)throw new AppError('This source has no registered supervised collection adapter. Use manual capture.');return adapter;}
  get(runId:string){new RunsService(this.app).get(runId);const db=this.app.database;return {plans:db.prepare('SELECT plan_json FROM collection_plans WHERE run_id=? ORDER BY rowid').all(runId).map(row=>JSON.parse(String(row.plan_json)) as SourcePlan),events:db.prepare('SELECT search_key AS searchKey,outcome,found_count AS foundCount,created_at AS createdAt FROM collection_events WHERE run_id=? ORDER BY rowid').all(runId),listings:db.prepare('SELECT plan_id AS planId,search_key AS searchKey,work_key AS workKey,source,url,job_id AS jobId FROM collection_listings WHERE run_id=? ORDER BY rowid').all(runId).map(row=>({planId:String(row.planId),searchKey:String(row.searchKey),workKey:String(row.workKey),source:String(row.source),url:String(row.url),jobId:row.jobId===null?null:String(row.jobId)}))};}
@@ -46,6 +47,7 @@ export class SourceCollection {
   const adapter=this.adapter(plan.source),runs=new RunsService(this.app),run=runs.get(runId),work=run.work.find(work=>work.workKey===search.workKey)!;
   const db=this.app.database,existing=db.prepare('SELECT input_hash FROM collection_events WHERE run_id=? AND operation_id=?').get(runId,input.operationId);
   if(existing&&existing.input_hash!==digest(input))throw new AppError('Discovery identifier already has different results.',409,'idempotency_conflict');
+  if(!existing&&run.status!=='running')throw new AppError('Resume the paused source run before reporting browser results.');
   if(!existing&&work.status!=='working')throw new AppError('Authorize this search before opening the browser or reporting results.');
   const listings=input.listings??[];if(!Array.isArray(listings)||listings.length>run.limit)throw new AppError('Submit at most the run listing limit in one discovery page. Keep remaining results for a later approved search.');
   if(input.outcome==='results'&&!listings.length)throw new AppError('Results need at least one observed listing URL; use zero-results only for a successful empty search.');
@@ -63,6 +65,7 @@ export class SourceCollection {
   const db=this.app.database,existing=db.prepare('SELECT * FROM collection_captures WHERE run_id=? AND work_key=?').get(runId,input.workKey);
   const {operationId,...content}=input;
   if(existing){if(existing.input_hash!==digest(content))throw new AppError('This source capture already has different content. Save a new observation revision instead of overwriting it.',409,'idempotency_conflict');const job=this.app.getJob(String(existing.job_id));db.prepare('UPDATE collection_listings SET job_id=? WHERE run_id=? AND work_key=?').run(job.id,runId,work.workKey);runs.checkpoint(runId,{operationId:key('capture-checkpoint',runId,work.workKey),workKey:work.workKey,status:existing.completion==='complete'?'collected':'failed',jobId:job.id,...(existing.completion==='partial'?{errorCode:'malformed_output'}:{})});return {job,observation:job.observations.find(item=>item.id===existing.observation_id)!,completion:String(existing.completion),destinations:JSON.parse(String(existing.destinations_json)) as Destination[]};}
+  if(run.status!=='running')throw new AppError('Resume the paused source run before capture.');
   if(work.status!=='working')throw new AppError('Authorize this listing before browser capture.');
   const saved=this.app.saveObservation({ingestionId:work.ingestionId,source:String(listing.source),sourceUrl:String(listing.url),capturedAt:input.capturedAt,title:input.title,company:input.company,...(input.location!==undefined?{location:input.location}:{}),text:input.text,context:{method:'supervised-browser',planId:listing.planId,workKey:listing.workKey}});
   let completion='complete',destinations:Destination[]=[];
@@ -77,7 +80,7 @@ export class SourceCollection {
   return {...saved,completion,destinations};
  }
 }
-export function collectionRoutes(adapters:CollectionAdapter[]=[seekAdapter,linkedinAdapter]):ApiRoute{return async({app,request,url,json,send})=>{
+export function collectionRoutes(adapters?:CollectionAdapter[]):ApiRoute{return async({app,request,url,json,send})=>{
  const destination=/^\/api\/v1\/jobs\/([^/]+)\/destinations$/.exec(url.pathname);if(request.method==='GET'&&destination){send(new SourceCollection(app,adapters).destinations(decodeURIComponent(destination[1]!)));return true;}
  const match=/^\/api\/v1\/runs\/([^/]+)\/collection(?:\/(plans|prepare|discover|capture))?$/.exec(url.pathname);if(!match)return false;const runId=decodeURIComponent(match[1]!),service=new SourceCollection(app,adapters);
  if(request.method==='GET'&&!match[2]){send(service.get(runId));return true;}
