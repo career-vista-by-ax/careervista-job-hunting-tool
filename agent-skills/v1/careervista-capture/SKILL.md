@@ -21,3 +21,5 @@ For focused company investigations, read [company.md](company.md) before browsin
 For LinkedIn discovery, read [linkedin.md](linkedin.md) and [collection.md](collection.md).
 
 For approved unfamiliar source exploration, read [custom-sources.md](custom-sources.md).
+
+For reassessing saved evidence after an approved profile change, read [reassessment.md](reassessment.md).
