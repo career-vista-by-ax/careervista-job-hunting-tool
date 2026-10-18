@@ -46,7 +46,16 @@ test('the native Mac archive contains the tested runtime, full notices, compiled
    assert.equal(cli('status').installed,true);assert.equal(cli('install').installed,true);
    assert.equal(cli('uninstall').keptData,true);assert.ok(existsSync(join(installRoot,'data/careervista.sqlite')));
    assert.equal(cli('install').installed,true);launched=cli('launch','--no-browser');assert.equal((await(await fetch(`${launched.url}/api/v1/jobs`)).json())[0].id,listing.job.id);
-   cli('stop');assert.equal(cli('uninstall','--remove-data','--confirm','REMOVE_OWNED_DATA').keptData,false);assert.equal(existsSync(join(installRoot,'data')),false);
+   cli('stop');
+   const upgraded=join(root,'upgraded bundle');cpSync(bundle,upgraded,{recursive:true});const upgradedManifest=JSON.parse(readFileSync(join(upgraded,'release.json'),'utf8'));upgradedManifest.version='0.2.0-test';
+   const migration='app/dist/migrations/020-upgrade-acceptance.sql';writeFileSync(join(upgraded,migration),'CREATE TABLE upgrade_acceptance (id INTEGER PRIMARY KEY);');upgradedManifest.files[migration]=createHash('sha256').update(readFileSync(join(upgraded,migration))).digest('hex');writeFileSync(join(upgraded,'release.json'),JSON.stringify(upgradedManifest));
+   const upgradeCli=(...args:string[])=>JSON.parse(execFileSync('/usr/bin/sandbox-exec',['-f',profile,join(upgraded,'CareerVista.command'),'--root',installRoot,...args],{env,encoding:'utf8',timeout:20000}));
+   assert.equal(upgradeCli('install').active,'0.2.0-test');launched=upgradeCli('launch','--no-browser');assert.equal((await(await fetch(`${launched.url}/api/v1/jobs`)).json())[0].id,listing.job.id);upgradeCli('stop');
+   const failedUpgrade=join(root,'invalid migration bundle');cpSync(upgraded,failedUpgrade,{recursive:true});const failedManifest=JSON.parse(readFileSync(join(failedUpgrade,'release.json'),'utf8'));failedManifest.version='0.3.0-test';const failedMigration='app/dist/migrations/021-invalid-upgrade.sql';writeFileSync(join(failedUpgrade,failedMigration),'CREATE TABLE rolled_back (id INTEGER); INVALID SQL;');failedManifest.files[failedMigration]=createHash('sha256').update(readFileSync(join(failedUpgrade,failedMigration))).digest('hex');writeFileSync(join(failedUpgrade,'release.json'),JSON.stringify(failedManifest));
+   assert.throws(()=>execFileSync(join(failedUpgrade,'CareerVista.command'),['install','--root',installRoot],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}),/migration|syntax|SQL/i);assert.equal(upgradeCli('status').active,'0.2.0-test');
+   launched=upgradeCli('launch','--no-browser');assert.equal((await(await fetch(`${launched.url}/api/v1/jobs`)).json())[0].id,listing.job.id);upgradeCli('stop');
+   assert.throws(()=>cli('install'),/newer|unknown|Downgrade|migration/i);assert.equal(upgradeCli('status').active,'0.2.0-test');
+   assert.equal(cli('uninstall','--remove-data','--confirm','REMOVE_OWNED_DATA').keptData,false);assert.equal(existsSync(join(installRoot,'data')),false);
    assert.equal(existsSync(join(installRoot,'releases',release.version)),false);assert.ok(existsSync(join(bundle,'runtime/node')),'Extracted download is a separate copy.');
   }finally{try{cli('stop');}catch{}}
 
