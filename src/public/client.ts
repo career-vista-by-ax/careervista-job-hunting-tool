@@ -1,3 +1,4 @@
+import {installCustomSourcesUI} from './custom-sources-ui.ts';
 import {showCompany} from './company-ui.ts';
 import { installWorkspaceUI } from './workspace-ui.ts';
 import { showDestinations } from './collection-ui.ts';
@@ -109,3 +110,5 @@ void showApplicationAttention();
 mountBackupTools();
 
 mountDataTools();
+
+installCustomSourcesUI();
