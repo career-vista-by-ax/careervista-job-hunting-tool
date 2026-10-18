@@ -1,3 +1,4 @@
+import { showAssessments } from './assessments-ui.ts';
 import { mountBackupTools } from './backup-ui.ts';
 import { installProfilesUI } from './profiles-ui.ts';
 import { showExtraction } from './extraction-ui.ts';
@@ -37,6 +38,7 @@ async function showDetail(id: string) {
     const heading = text('h2', job.title); heading.id = 'detail-title'; detail.append(heading);
     detail.append(text('p', `${job.company}${job.location ? ` · ${job.location}` : ''}`, 'muted'));
     await showExtraction(detail, id);
+    await showAssessments(detail, id, job.observations);
     for (const observation of job.observations) {
       const meta = text('p', `${observation.source} · Captured ${new Date(observation.capturedAt).toLocaleString()}`, 'evidence-meta');
       const link = text('a', 'Open original listing ↗'); link.href = observation.sourceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';

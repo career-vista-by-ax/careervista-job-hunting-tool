@@ -59,7 +59,7 @@ test('damaged, unsupported and relationally invalid backups fail before an empty
     assert.deepEqual(destination.listJobs(), []);
     const older = structuredClone(good);
     older.migrations = older.migrations.filter(name => name.startsWith('001-') || name.startsWith('017-'));
-    for (const name of ['analyses', 'analysis_failures', 'profile_revisions', 'search_tracks', 'profile_preferences', 'active_profile']) delete older.tables[name];
+    for (const name of ['analyses', 'analysis_failures', 'profile_revisions', 'search_tracks', 'profile_preferences', 'active_profile', 'assessments', 'assessment_evidence']) delete older.tables[name];
     new Backups(destination).restore(resign(older));
     assert.equal(destination.listJobs()[0]?.title, 'Chef');
     assert.equal(new ProfilesService(destination).getActiveProfile(), null);
