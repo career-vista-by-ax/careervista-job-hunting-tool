@@ -32,6 +32,10 @@ Never remove `data`, `sessions`, or `credentials` as cache cleanup. Do not manua
 
 Any compatible agent can submit evidence-linked structured details through the [version 1 interface](docs/agent-interface.md). The agent host owns model/provider configuration; CareerVista requires no provider key. The job modal shows details, unknowns, source quotes and correction history. The packaged capture skill and explicit registration/removal command are documented in that guide. Codex is the development validation host; no bundled browser/runtime claim is made.
 
+## Bounded research runs
+
+Open **Research runs** to choose approved tracks, configurable sources, a new-job limit (25 suggested), and a spending cap. Your agent receives the saved run and uses its [version 1 interface](docs/runs.md) to obtain work authorizations, reserve model estimates, persist progress and pause for user sign-in or verification. You can stop, resume or cancel while retaining partial evidence. Budget reports distinguish known costs from estimates; they do not meter unrelated agent-host spending.
+
 ## Development checks
 
 `mise exec -- npm test` runs behavioral tests through the public application and HTTP interfaces. `mise exec -- npm run build` checks and compiles backend/frontend TypeScript and copies local assets/migrations into `dist`. The HTTP test needs permission to bind a loopback port in restrictive sandboxes. The tests use temporary independent databases and deterministic inputs; they do not contact job sites or model services.
