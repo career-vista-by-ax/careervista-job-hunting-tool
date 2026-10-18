@@ -1,0 +1,19 @@
+# Daily comparison workspace
+
+The full-width comparison table groups employment type and saved date under the role; location and work arrangement; original compensation units and provenance; fit, independent evidence confidence and material concerns; your review decision; application stage, applied date and follow-up date; availability and freshness; and sources. Actions open the modal or original listing without recording an application. The role stays visible while the remaining columns scroll horizontally. Unknown fields remain unknown, with no inferred on-site default or numeric match percentage.
+
+Use **Filters & columns** to choose listing availability, fit (including excluded), compensation provenance, independent review status, application stage, sorting and visible columns. Confirmed closed listings are hidden by default and explicitly accessible through Closed only or All. Agent-excluded candidates remain visible by default and can be isolated by fit. They are never treated as dismissed or rejected applications. Before the independent review module is available, every job is explicitly Unreviewed; filtering Saved/Dismissed returns no invented decisions.
+
+The current filters, sorting and visible columns are saved on this computer. Name a configuration and choose **Save view** to retain several views. Role identity is always visible. Sorting uses saved strings, confidence/fit ordering or timestamps; compensation sorts by provenance and its original label/units, not an invented annual equivalent. Unknown values sort last. Search includes role, company, location, arrangement, employment and source. The summary reports saved opportunities from the last seven days, applications with follow-up due, agent exclusions and confirmed closure separately.
+
+Selecting a role opens a native modal. Fit, concerns and interview questions are shown first; application actions, structured listing/compensation, availability checks and original evidence have separate disclosures. Escape closes the modal and restores keyboard focus to that role, or search if the role is filtered out. Headers, filters, column controls, disclosures, retry and row actions are real keyboard controls. The page fits narrow screens while the table scrolls within its own labelled region. No remote assets, site access or model service is needed for stored review.
+
+## Public application operations
+
+`WorkspaceService.query(partialView)` returns compact rows, effective view settings and counts without full source text. `summaries()` combines public extraction, fit, compensation, application and availability histories. The service owns no career decisions. `state()`, `setCurrent(view)`, `saveView(name, view)` and `deleteView(id)` manage view preferences. Additive migration 019 stores these preferences and named views; private backups include them automatically.
+
+HTTP: `GET /api/v1/workspace` accepts scalar filter/sort query parameters; `GET /api/v1/workspace/views` reads current and saved views; `PUT /api/v1/workspace/views/current` saves a validated JSON view; `POST /api/v1/workspace/views` accepts `{name,view}`; `DELETE /api/v1/workspace/views/:id` removes only that saved configuration. Unsupported filters, sorting and column names produce actionable 400 errors. Evidence, profile or application mutations remain with their existing versioned operations.
+
+## Validation
+
+Public-interface tests cover facts/unknowns and source units, independent statuses, closed/excluded retrieval, application dates, view validation, restart persistence, private-backup recovery and HTTP behavior. Desktop and 390 px mobile Chrome verification uses an isolated synthetic fixture root, with no real user resume/credentials. It checks table overflow, sticky role, saved views, filtering, modal disclosure order, Escape/focus and explicit empty states. This validates UI behavior; it does not claim real-model judgement quality or source collection support.
