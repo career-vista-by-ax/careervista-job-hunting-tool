@@ -23,7 +23,7 @@ This ticket intentionally leaves main.ts and client.ts untouched for the integra
 
 1. Import `reconciliationRoutes` from `./reconciliation.ts` and add to `startServer(...routes)`.
 2. Import `showReconciliation` from `./reconciliation-ui.ts` in public/client.ts; call `await showReconciliation(detail, job.id)` inside the job modal, preferably before original evidence. Optional third callback refreshes the workspace after a decision; default reloads the page to reflect canonical rows.
-3. The separate UI presents candidates, explicit link/keep-separate buttons, reasons/reversal history, source variants, every original captured text and per-member application/assessment/compensation/availability histories with full explanation inspection.
+3. The agent presents duplicate candidates, reasons and source variants in the conversation and uses the explicit link/keep-separate API. Saved originals and per-member histories remain inspectable through the APIs; the browsing page displays the resulting vacancy groups.
 4. The comparison workspace may call GET `/api/v1/reconciliation/summaries` to display alias counts, source-job IDs and differences. Existing domain histories already aggregate group members, so an alias's applied event, assessment or compensation does not disappear from canonical summaries. Future review/feedback modules should use `vacancyIdentity` for grouped reads and preserve original source ownership for reversible histories.
 
 Automated acceptance covers retry stability, confirmed/ambiguous candidates, explicit separation, revision text, transitive conflicts, reversal across restart, grouped application history, all-source API responses, backup recovery and deletion without resurrected aliases.

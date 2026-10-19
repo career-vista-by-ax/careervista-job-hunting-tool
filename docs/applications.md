@@ -31,6 +31,6 @@ Each new event explicitly supplies its relevant documents and reminder; omission
 
 A successful new event returns HTTP 201 `{event,replayed:false}`. An identical operationId retry returns 200 with the original event and `replayed:true`. Changed content or another job with the same operationId returns 409 `idempotency_conflict`, without changing history. Invalid dates, document references, statuses and missing jobs produce actionable validation errors.
 
-The local detail panel provides a labelled explicit-event form and persistent timeline. It offers a document version reference per event; the public operation supports multiple references together. The main screen displays due follow-ups and buttons to open their saved job details. These operations require no model or account.
+The local modal presents the application timeline. Tell the agent about application progress, dates and document references; it uses the explicit-event API only after that instruction. Opening an original/apply link never records an application.
 
 Application events use relational persistence with job-owned cascading deletion, so a future lifecycle module must include them in exports and backups alongside job data. At this implementation point there is no pre-existing export/backup API to extend.

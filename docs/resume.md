@@ -1,6 +1,8 @@
 # Resume import and explicit onboarding
 
-Choose **Import resume** in the toolbar. CareerVista supports pasted readable text and UTF-8 `.txt` files, up to one million characters. PDF, DOCX, scanned images and other formats require exporting to plain text or pasting readable content. Unsupported formats and invalid UTF-8 are rejected with a fallback; they are never partly ingested. There is no document parser or model call in this module.
+Resume intake happens in the agent conversation. The host's document tools read user-supplied PDF, Word or text; no document conversion form is exposed by CareerVista. Save the parsed base CV through this text API for later reuse; confirm useful factual competitive strengths and save the authorised subset in the profile's `demonstratedExperience`. The user may search without a CV; once a CV is supplied for intake, persist the parsed base rather than keeping it only in the conversation. See [agent workflow](agent-workflow.md).
+
+This optional lineage API accepts readable text (format `txt` or `paste`, up to one million characters) extracted by the host. PDF/Word binaries are not accepted by this text endpoint. Invalid/unsupported input is rejected without partial ingestion. The API performs no document parsing or model call.
 
 The original source is stored in the local domain database and private backups. Import creates a new immutable source version. It does not create or activate a profile. The import HTTP response omits original source text. The app never reads or sends unrelated notes, credentials or browser sessions.
 
@@ -8,11 +10,11 @@ The original source is stored in the local domain database and private backups. 
 
 The default `contacts-v1` redaction removes email addresses, phone-like numbers, URLs, street-address lines, explicit contact/name/date-of-birth fields and likely first-line names, including mixed name/role headers. Employment year ranges and ISO dates are preserved. Redaction is conservative and may remove useful headers or miss unusual contact formats; the preview explicitly asks you to inspect every line and edit the exact payload. This preview is the content to be analysed, rather than an assurance that arbitrary documents contain no personal information.
 
-Choose **Confirm reviewed payload** only after reviewing the text. Each confirmation saves an immutable reviewed payload. The agent-facing endpoint returns only that reviewed version, its IDs, source version, redaction version and review time. It does not include the original source, source label, unrelated notes or optional onboarding answers. Edited payloads can deliberately restore text removed by the default; confirmation authorises that exact content. No payload is automatically sent to a provider. Private backups intentionally retain original resume contact details and must be stored privately.
+Present the exact redacted text in the conversation and obtain explicit review confirmation before saving a reviewed payload. Each confirmation saves an immutable reviewed payload. The agent-facing endpoint returns only that reviewed version, its IDs, source version, redaction version and review time. It does not include the original source, source label, unrelated notes or optional onboarding answers. Edited payloads can deliberately restore text removed by the default; confirmation authorises that exact content. No payload is automatically sent to a provider. Private backups intentionally retain original resume contact details and must be stored privately.
 
 Any compatible agent/model can read the reviewed payload and submit grounded suggestions. Provider settings and optional credentials belong to the host. When unavailable, leave provider/model identity absent rather than inventing it. Ask the agent to quote demonstrated experience verbatim; the app rejects a generated achievement whose text is not an exact quote in the reviewed payload. Suggested career tracks/title variants/keywords need supporting quotes and a rationale, but remain possible directions, not proven qualifications or inferred aspirations.
 
-Choose **Refresh suggestions**, then **Choose directions & answer onboarding**. Correct factual experience, supply aspirations in your own words, choose tracks explicitly and set optional hard/soft/undecided preferences. No track is selected by default; missing aspirations/preferences can remain undecided. Creating a linked profile is a separate explicit action and produces an unapproved draft. Review its effective preferences in **Profile & search tracks**, edit as needed, then explicitly approve. The source → reviewed payload → proposal → profile relation remains stored. Subsequent profile edits use `basedOnVersion` ancestry and remain traceable to the source without automatically approving them.
+The agent presents proposals in the conversation. The user corrects facts, supplies aspirations, chooses tracks and confirms hard/soft/undecided preferences. A linked profile draft is a separate explicit action and remains unapproved; present its effective settings before approval. Source → reviewed payload → proposal → profile lineage remains stored. Later edits use `basedOnVersion` ancestry without automatic approval.
 
 Agent failures append safe codes and generic recovery guidance. Sources, reviewed payloads and earlier suggestions remain intact. Retrying an identical import/proposal/review identifier returns the existing operation; changed content needs a new identifier. Revised sources are separate imports, and revised payloads/proposals remain inspectable. Resume-profile draft creation and its source link are atomic through the profile service's SAVEPOINT transaction convention.
 
@@ -56,3 +58,38 @@ Metadata permits optional provider/model names and no credential fields. Aspirat
 Agents must get explicit user authorisation before confirming a reviewed payload, creating a user-reviewed draft or approving a profile. A boolean in the local API represents the host's assertion of that explicit review, not a separate authentication system. The app remains a local single-user tool.
 
 Synthetic nursing fixtures verify mixed contact redaction, preserved dates, unsupported formats, provider failure recovery, exact experience grounding, draft/approval separation, edited-profile ancestry, HTTP privacy and full private-backup recovery. These checks do not establish real-model quality or imply that the owner's resume has been imported.
+
+
+## Reusable base CV and separate tailored drafts
+
+The imported `resumes` text is an immutable local base version, not a disposable parsing result. List sources with `GET /api/v1/resumes`; read `/resumes/:id/history` and then the applicable `/resume-payloads/:id` to reuse reviewed text in a later session. Multiple bases require the user to choose or clarify the current version. The original PDF/Word binary is not stored; its parsed readable text is stored in the database and private backups. A corrected base is a new import, never an overwrite.
+
+`ResumeVariants(app)` stores tailored resumes, cover-letter drafts and recommendations in migration `020-resume-variants.sql`:
+
+| Method/path | Operation |
+| --- | --- |
+| `POST /api/v1/resume-variants` | Save an immutable draft; 201, or 200 for exact operationId retry |
+| `GET /api/v1/resume-variants?baseResumeId=SOURCE_ID` | List reusable drafts for a base, metadata without full draft text |
+| `GET /api/v1/resume-variants/:id` | Read a saved draft's full text and base/payload/parent/job lineage |
+
+POST example:
+
+```json
+{
+  "operationId":"host:cv-tailoring:1",
+  "baseResumeId":"SOURCE_ID",
+  "payloadId":"REVIEWED_PAYLOAD_ID",
+  "jobId":"OPTIONAL_SAVED_JOB_ID",
+  "kind":"resume",
+  "label":"Analytics engineering CV — employer A",
+  "text":"Full draft text for user review.",
+  "changeSummary":"Reordered the confirmed platform ownership experience; no new achievements added.",
+  "metadata":{"agent":"Compatible host","analysisVersion":"1"}
+}
+```
+
+Kinds: `resume`, `cover_letter`, `recommendations`. `jobId` and `parentVariantId` are optional and otherwise must identify saved records. Payload and parent must belong to the base CV. Each new alteration uses a new operationId and may identify its parent variant; an exact retry returns the existing draft, changed content with the same operationId returns 409. Every draft remains labelled `status:draft`; saving does not approve facts, send a letter or submit an application. The host keeps achievements grounded in the reviewed base and presents uncertain suggestions for confirmation.
+
+Full text is limited to one million characters; other text fields to 8000. Optional provider/model names in metadata must be actual available context, with no credentials. Lists omit full text; original base text remains outside agent payload endpoints until explicit payload review. Draft content is personal data and is included in private backups/JSON export, not the job-summary CSV.
+
+Job deletion clears the live job reference while retaining the reusable draft, base, parent chain and target title/company snapshot. Removing a job does not erase the reusable CV library. Installation-wide explicit data removal removes the library; existing backup/export copies remain separate. Backup restore retains variants and supports older snapshots whose schema predates the variant table.

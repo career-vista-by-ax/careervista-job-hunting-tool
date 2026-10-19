@@ -1,7 +1,7 @@
 import type { Analysis, AnalysisFailure, ExtractedField, ListingDetails } from '../extraction.ts';
 const names: Record<keyof ListingDetails, string> = { title: 'Title', company: 'Company', requirements: 'Requirements', benefits: 'Benefits', location: 'Location', workArrangement: 'Work arrangement', employment: 'Employment details' };
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, value: string) { const el = document.createElement(tag); el.textContent = value; return el; }
-export async function showExtraction(container: HTMLElement, jobId: string) {
+export async function showExtraction(container: HTMLElement, jobId: string, readOnly = false) {
   const section = document.createElement('section'); container.append(section);
   section.append(node('h3', 'Structured listing details'));
   const status = node('p', 'Loading analysis…'); status.setAttribute('role', 'status'); section.append(status);
@@ -31,6 +31,7 @@ export async function showExtraction(container: HTMLElement, jobId: string) {
       version.append(fields); older.append(version);
     }
     section.append(older);
+    if (readOnly) return;
     const form = document.createElement('form'); form.append(node('h4', 'Correct structured details'));
     form.append(node('p', 'Choose a field, enter a value and a verbatim supporting quote from saved evidence. Leave value and quote empty to mark it unknown. Corrections keep all previous versions.'));
     const select = document.createElement('select'); const label = node('label', 'Field '); label.append(select); form.append(label);

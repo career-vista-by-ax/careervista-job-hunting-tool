@@ -1,7 +1,7 @@
 import { defaultWorkspaceView, workspaceColumns, workspaceSorts } from './workspace-contract.ts';
 import type { WorkspaceView } from './workspace-contract.ts';
 import type { WorkspaceRow, WorkspaceResult } from '../workspace.ts';
-const columnLabels = { role: 'Role', company: 'Company', location: 'Location / workplace', compensation: 'Compensation', fit: 'Fit / confidence', review: 'Your review', application: 'Application', freshness: 'Availability / freshness', source: 'Source' };
+const columnLabels = { role: 'Role', company: 'Company', location: 'Location / workplace', compensation: 'Compensation', fit: 'Fit / shortlist reasons', review: 'Your review', application: 'Application', freshness: 'Availability / freshness', source: 'Source' };
 const fitLabels = { strong: 'Strong fit', promising: 'Promising', investigate: 'Investigate', low_fit: 'Low fit', excluded: 'Excluded · hard conflict' };
 const kindLabels = { advertised: 'Advertised', external_report: 'External report', model_estimate: 'Model estimate' };
 const sortLabels: Record<WorkspaceView['sort'],string> = { title: 'Role', company: 'Company', location: 'Location', workArrangement: 'Work arrangement', compensation: 'Compensation provenance / units', fit: 'Fit', confidence: 'Evidence confidence', review: 'Your review', application: 'Application stage', freshness: 'Evidence freshness', createdAt: 'Date saved', source: 'Source' };
@@ -43,7 +43,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     const label = node('label'); label.append(checkbox,document.createTextNode(columnLabels[key])); columns.append(label);
   }
   filters.append(columns,node('p','Compensation sorts by source and original units; currencies and contract rates are never silently converted.','muted'));
-  controls.append(savedControls,filters);
+  filters.append(savedControls); controls.append(filters);
   async function api<T>(path: string, options?: RequestInit): Promise<T> { const response = await fetch(`/api/v1/workspace${path}`,options); const result = await response.json(); if (!response.ok) throw new Error(result.error?.message ?? 'Workspace unavailable. Retry.'); return result as T; }
   function report(error: unknown) { status.textContent = error instanceof Error ? error.message : 'Could not load the workspace. Retry.'; status.className = 'error'; }
   function syncControls() {
@@ -70,6 +70,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     if (key === 'fit') {
       const td = cell(row.fit ? fitLabels[row.fit] : 'Not assessed',row.confidence ? `${human(row.confidence)} evidence confidence · profile v${row.profileVersion}` : 'Confidence unknown');
       if (row.fit) td.querySelector('.cell-primary')!.classList.add(`fit-${row.fit}`);
+      if (row.reasons.length) { const reason = node('span',row.reasons[0]!,'cell-reason'); reason.title = row.reasons.join('\n'); td.append(reason); }
       if (row.concerns.length) { const concern = node('span',row.concerns[0]!,'cell-concern'); concern.title=row.concerns.join('\n'); td.append(concern); if (row.concerns.length>1) td.append(node('span',`+${row.concerns.length-1} more concerns`,'cell-secondary')); }
       return td;
     }
@@ -85,11 +86,11 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     document.getElementById('results-summary')!.textContent=`${result.counts.visible} of ${result.counts.total} jobs · Select a role for details`;
     head.replaceChildren();
     for (const key of view.columns) { const th=node('th'); th.scope='col'; th.dataset.column=key; th.setAttribute('aria-sort',view.sort===columnSorts[key]?(view.direction==='asc'?'ascending':'descending'):'none'); const button=node('button',columnLabels[key]); button.type='button'; button.addEventListener('click',()=>{view.direction=view.sort===columnSorts[key]&&view.direction==='asc'?'desc':'asc';view.sort=columnSorts[key];syncControls();changed();}); th.append(button); head.append(th); }
-    const actionHead=node('th','Actions'); actionHead.scope='col'; head.append(actionHead);
+    const actionHead=node('th','Listing'); actionHead.scope='col'; head.append(actionHead);
     rows.replaceChildren();
-    for (const row of result.rows) { const tr=node('tr'); for (const key of view.columns) { const td=rowCell(row,key); td.dataset.column=key; tr.append(td); } const actions=node('td','','row-actions'); const detail=node('button','Details','quiet'); detail.type='button'; detail.setAttribute('aria-label',`Details for ${row.title}`); detail.addEventListener('click',()=>void openJob(row.id)); const link=node('a','Original'); link.href=row.sourceUrl; link.target='_blank'; link.rel='noopener noreferrer'; link.setAttribute('aria-label',`Open original listing for ${row.title}`); actions.append(detail,link); tr.append(actions); tr.addEventListener('click',event=>{if(event.target instanceof Element&&!event.target.closest('button,a')) void openJob(row.id);}); rows.append(tr); }
+    for (const row of result.rows) { const tr=node('tr'); for (const key of view.columns) { const td=rowCell(row,key); td.dataset.column=key; tr.append(td); } const actions=node('td','','row-actions'); const link=node('a','Original'); link.href=row.sourceUrl; link.target='_blank'; link.rel='noopener noreferrer'; link.setAttribute('aria-label',`Open original listing for ${row.title}`); actions.append(link); tr.append(actions); tr.addEventListener('click',event=>{if(event.target instanceof Element&&!event.target.closest('button,a')) void openJob(row.id);}); rows.append(tr); }
     if (focusedColumn) head.querySelector<HTMLButtonElement>(`[data-column="${CSS.escape(focusedColumn)}"] button`)?.focus();
-    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':'No saved jobs yet'; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':'Save a listing, or ask your agent to collect a batch. Your evidence stays readable offline.';
+    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':'Your next search starts with your agent'; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':'Describe the role you want. Your agent explores related titles, researches jobs and saves its reasons here.';
   }
   async function loadRows() { const request=++requestId; table.setAttribute('aria-busy','true'); status.textContent='Loading comparisons…'; status.className='muted'; const params=new URLSearchParams(Object.entries(view).filter(([key])=>key!=='columns').map(([key,value])=>[key,String(value)]));
     try { const result=await api<WorkspaceResult>(`?${params}`); if(request!==requestId)return; render(result); status.textContent=''; }

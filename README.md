@@ -1,8 +1,10 @@
 # CareerVista
 
-CareerVista is a private, local job-research assistant and application tracker for **any profession, industry or seniority**. Your browser-capable agent searches approved sources, saves the original evidence and explains what is known, uncertain or missing. You compare jobs in a table, open details in a modal and decide what to pursue.
+[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文（台灣用語）](README.zh-TW.md)
 
-- Approve your experience, aspirations, search tracks and hard/soft preferences.
+CareerVista is a private, local job-research assistant and application tracker for the **Australian job market, across any profession, industry or seniority**. Your browser-capable agent handles the conversation: it clarifies goals, expands related role titles, reads a supplied resume, searches approved sources and saves evidence-backed reasoning. You compare jobs in a table, open details in a modal and decide what to pursue.
+
+- Tell your agent what you want next; confirm competitive strengths, related role families and hard/soft preferences in that conversation.
 - Research SEEK, LinkedIn, employer listings and explicitly approved additional sources within a listing limit and spending budget.
 - Compare requirements, work arrangements, compensation provenance, fit/confidence and source freshness.
 - Save/dismiss jobs, review reversible preference proposals, reassess saved evidence and track application progress separately.
@@ -19,17 +21,26 @@ CareerVista is model and agent independent: any compatible host with browser too
 
 No Node, npm, mise, compiler, Git or Docker installation is needed. The default data location is `~/Library/Application Support/CareerVista`. The archive starts with an empty database; development sample jobs and profiles are not included.
 
-This is a **Mac arm64 preview**, tested in isolated installations on the maintainer's Mac. Clean-machine Gatekeeper/quarantine and notarization remain unverified; the archive is not notarized. Windows, Linux, Intel Mac and Chromebook builds remain unverified. See [release instructions and support limits](docs/release.md).
+This is a **Mac arm64 preview**, tested in isolated installations on the maintainer's Mac. Clean-machine Gatekeeper/quarantine and notarization remain unverified; the archive is not notarized. Linux, Intel Mac and Chromebook builds remain unverified. Windows x64 packaging and native CI are described below. See [release instructions and support limits](docs/release.md).
+
+## Install on Windows x64
+
+1. Download the `CareerVista-…-windows-x64.zip` preview from [Releases](https://github.com/allenhori/careervista-job-hunting-tool/releases) when available. Native CI builds are also attached to successful [Windows acceptance runs](https://github.com/allenhori/careervista-job-hunting-tool/actions/workflows/windows.yml).
+2. Use **Extract All** and keep the extracted folder. Open **CareerVista.cmd** from that folder, rather than from inside the ZIP.
+3. The launcher installs its bundled Node runtime and application under `%LOCALAPPDATA%\CareerVista` and opens the local webpage. No Node, npm, Git, WSL, Docker or administrator access is required.
+4. Reopen **CareerVista.cmd** to return to the same data. Each Windows/Mac installation has its own database; use private backup/restore to transfer records, never share a live SQLite file between computers.
+
+The Windows build is an unsigned x64 preview. The CI workflow tests the extracted ZIP, paths with spaces, bundled-runtime launch, persistence, forward upgrade and keep-data/removal behavior on a Windows runner. Clean-machine Explorer/SmartScreen behavior and a Windows agent host require separate verification; Windows ARM64 is not a tested target. See [release instructions](docs/release.md).
 
 ## First use
 
-1. Open **Profile & search tracks**. Enter your experience separately from what you want next, choose job titles/keywords and working preferences, then explicitly approve the profile and tracks. Optional **Import resume** accepts pasted text or a UTF-8 `.txt` file; review the redacted payload before allowing agent analysis. See [resume onboarding](docs/resume.md).
-2. To try manual capture, choose **Save a listing**, paste its URL and readable text, then select the saved role in the table. Original evidence remains available offline.
-3. For agent research, complete the setup below, then open **Research runs**. Select approved tracks and sources, choose a small listing limit and spending cap, and create a run. Copy its **Run reference**.
-4. Give your agent the run reference and the exact local URL from your browser's address bar. The installed app chooses a free port; use that URL rather than assuming port 4318.
-5. When the agent saves results, choose **Refresh** in the jobs table. Use **Filters & columns** and saved views to compare jobs; select a role to inspect evidence, unknowns, concerns and source links in the modal.
+1. Launch CareerVista and complete the agent setup below. Give the agent the exact local URL from your browser's address bar; the launcher chooses a free port.
+2. Describe your goal in the agent conversation. For example: “Find principal analytics engineer roles around Melbourne.” The agent considers related titles such as staff/lead analytics engineer and asks whether data engineering or data-management roles are relevant. This works for any profession in Australia.
+3. Optionally give the agent a PDF, Word resume or text. Its own document tools interpret the file; it saves the parsed base CV locally for later sessions, confirms useful competitive strengths with you and links the authorised facts to your profile. Tailored CVs, cover-letter drafts and change recommendations are saved separately with base/parent/job lineage; they never overwrite the base. The webpage has no resume-upload/parser form. Unsupported/scanned documents need the host's readable-text/OCR fallback, or you can search without a resume.
+4. Agree the role families, preferences, sources, batch size and spending boundary in the conversation. The agent saves the approved profile/run, searches across the agreed variants, analyses the evidence and records shortlist reasons, concerns and unknowns. It asks one question at a time with a recommendation, choices and custom input, covering work arrangement, base/super, equity, leave, benefits and review priorities as needed. It then asks which sites to use (SEEK, LinkedIn, Glassdoor, Indeed or your own choices), and may refine the search after discovery.
+5. When the batch is ready, the agent sends you to the webpage to browse. The table updates periodically while visible; **Refresh** updates immediately. Open a role for **Why this job is here**, the original evidence, compensation and history. **Filters & columns** contains optional display settings and saved views.
 
-Creating a run stores its boundaries and checkpoints. **Your agent performs the browsing and analysis**; the app does not launch an agent or call a model automatically. If collection fails, manual capture remains available.
+**The agent performs document reading, browsing and analysis.** CareerVista validates and stores its output; it never launches a model automatically. Return to the agent to refine the search, investigate a concern, save/dismiss a job or record application progress. **Agent setup** on the webpage contains a starter prompt and local backup/export/removal tools.
 
 ## Use it with an agent
 
@@ -41,22 +52,31 @@ For Codex, open Terminal in the extracted release folder and run:
 ./CareerVista.command register-skills --host codex
 ```
 
+On Windows, run the equivalent in PowerShell from the extracted folder:
+
+```powershell
+.\CareerVista.cmd register-skills --host codex
+```
+
 For a compatible host using `~/.agents/skills`, use `--host agents` instead. Registration uses the bundled runtime, records installation ownership and preserves unrelated skills. Reload skills in your host and start a new conversation. The skill's name is **careervista-capture**.
 
 If your host does not support skill registration, give the agent the extracted folder's `agent-skills/v1/careervista-capture/SKILL.md` file directly. It routes to the source and API instructions beside it.
 
-After creating a research run, replace the two placeholders in this starter prompt:
+Replace the local URL in this starter prompt; no pre-created run is required:
 
 ```text
-Use CareerVista at <LOCAL_URL>. Read the careervista-capture skill and
-its collection/source instructions, then carry out Research Run <RUN_ID>.
-Use its approved profile/tracks, selected sources, listing limit and budget.
-Save original readable evidence before extraction and fit analysis. Keep
-unknowns and source attribution visible, and preserve saved checkpoints.
-Pause for me to complete website sign-in or verification in the same browser.
-Show me the saved jobs and any limitations when finished.
+Use CareerVista at <LOCAL_URL> with the careervista-capture skill.
+Help me find principal analytics engineer roles. Expand related titles,
+including staff/lead roles, and clarify whether data engineering or data
+management is in scope. Ask about important goals and constraints; if I
+share a resume, confirm my competitive strengths from it. Agree sources,
+a batch limit and a budget with me, then search and analyse in this agent.
+Save original evidence, shortlist reasons, concerns and unknowns.
+When the batch is ready, send me to the webpage to browse the results.
 Do not submit applications or send messages.
 ```
+
+Change the example role to any occupation in Australia. The skill reads the running app's versioned workflow/API guides at `/api/v1/agent-guide`; it can create profiles, expanded tracks and bounded runs directly. No webpage onboarding forms are needed.
 
 Website sign-in happens directly on the website in the agent's controlled browser. Resume that same session after completing it. Budget reports distinguish known costs from conservative estimates; your host owns actual billing and may incur unrelated costs outside the run.
 
@@ -64,18 +84,16 @@ Website sign-in happens directly on the website in the agent's controlled browse
 
 The table includes employment/work arrangement, compensation provenance and units, fit/confidence/concerns, saved/applied dates, source freshness and independent review/application states. Full values, original observations and earlier reasoning stay available in the modal.
 
-- **Your decision:** save/pursue or dismiss a job, with an optional reason. This does not change the agent's assessment or your general preferences.
-- **Preference proposals:** explicitly apply, reject or reverse a suggested change; adding/restoring hard exclusions requires separate confirmation.
-- **Reassess saved jobs:** evaluate cached evidence under an approved profile revision, including previously excluded jobs.
-- **Diagnose results:** distinguish failed access, incomplete query coverage and evidenced preference conflicts before proposing changes.
-- **Application history:** record progress, existing document references and follow-up dates yourself. Opening an apply link does not record an application.
-- **Backup and restore:** keep private full-data backups. They include original resumes and evidence, but exclude host credentials/browser-session directories. External document files must be copied separately.
+- Tell the agent which jobs to save/pursue or dismiss and why. Your decision stays separate from its assessment and application status.
+- Ask the agent to investigate gaps, propose preference changes or reassess cached evidence. It confirms material changes, including hard exclusions, before applying them.
+- Report application progress to the agent; the modal displays its saved timeline. Opening a listing never records an application.
+- Use **Agent setup → Local data** for private backups, restore, export and explicit removal. Backups exclude host credentials/browser sessions; copy externally referenced documents separately.
 
 More detail: [agent/API interface](docs/agent-interface.md), [research runs](docs/runs.md), [feedback](docs/feedback.md), [reassessment](docs/reassessment.md), [company research](docs/company.md) and [additional sources](docs/custom-sources.md).
 
 ## Stop, storage and uninstall
 
-From Terminal in the extracted release folder:
+From Terminal in the extracted release folder (Windows: use `.\CareerVista.cmd` for each command):
 
 ```sh
 ./CareerVista.command stop
@@ -93,7 +111,7 @@ This is the source/developer workflow. End-user archive instructions are above; 
 1. Install [mise](https://mise.jdx.dev/getting-started.html), then run `mise trust` and `mise install` in this repository.
 2. Run `mise exec -- npm ci` and `mise exec -- npm run build`.
 3. Run `mise exec -- npm start` and open [CareerVista](http://127.0.0.1:4318).
-4. Choose **Save a listing**, enter the source URL and basic details, and paste the readable listing text. Choose its title in the table to read the evidence. Open **Profile & search tracks** to create, review and explicitly approve your search preferences; see [profile help](docs/profiles.md).
+4. Give a browser-capable agent the running URL and `agent-skills/v1/careervista-capture/SKILL.md`. Start the conversation-first workflow, then browse saved results in the table. See [agent workflow](docs/agent-workflow.md).
 5. Stop with Control+C. Start again to review stored records. After the build, launching and reviewing needs no network access or agent.
 
 The server binds exclusively to `127.0.0.1`; it rejects unexpected Host headers, foreign origins and cross-site browser requests. Open the exact address printed at launch. This is a local, single-user interface, not a remotely hosted service. Other processes running as your user can access it.
@@ -116,4 +134,4 @@ Never remove `data`, `sessions`, or `credentials` as cache cleanup. Do not manua
 
 `mise exec -- node --test tests/*.test.ts` runs behavioral tests through the public application and HTTP interfaces. `mise exec -- npm run build` checks and compiles backend/frontend TypeScript and copies local assets/migrations into `dist`. The HTTP test needs permission to bind a loopback port in restrictive sandboxes. The tests use temporary independent databases and deterministic inputs; they do not contact job sites or model services.
 
-Verification is on macOS arm64 with Node 26.12.0, including an isolated self-contained offline archive and supervised SEEK/LinkedIn workflows. Fresh-OS/Gatekeeper testing and Windows, Linux, Intel Mac and Chromebook support remain unverified. See the [validation record](docs/validation-2026-10-18.md) for exact scope. See [architecture and interface](docs/architecture.md) and [references/licenses](docs/references-and-licenses.md).
+Verification is on macOS arm64 with Node 26.12.0, including an isolated self-contained offline archive and supervised SEEK/LinkedIn workflows. Fresh-OS/Gatekeeper testing and Linux, Intel Mac and Chromebook support remain unverified. Windows x64 has a separate native acceptance workflow; fresh consumer installations and the Windows agent host remain unverified. See the [validation record](docs/validation-2026-10-18.md) for exact scope. See [architecture and interface](docs/architecture.md) and [references/licenses](docs/references-and-licenses.md).

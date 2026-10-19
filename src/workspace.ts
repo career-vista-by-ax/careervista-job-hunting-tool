@@ -24,6 +24,7 @@ export class WorkspaceService {
       const capturedAt = detail.observations.map(item => item.capturedAt).sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1)!;
       return { ...job, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
         compensation: compensation.summary(job.id), fit: assessment?.label ?? null, confidence: assessment?.confidence.level ?? null,
+        reasons: assessment?.reasonsToPursue.map(item => item.statement) ?? [],
         concerns: [...new Set([...reconciliation.differences,...(assessment?.concerns.map(item => item.statement) ?? []), ...Object.values(assessment?.axes ?? {}).flatMap(axis => axis.findings.filter(item => item.status === 'concern').map(item => item.statement))])],
         profileVersion: assessment?.profileVersion ?? null, review: new FeedbackService(this.app).history(job.id).decision,
         application: { status: application.status, appliedAt: application.events.findLast(item => item.status === 'applied')?.occurredAt ?? null, followUpOn: application.followUpOn },
