@@ -6,6 +6,10 @@ CareerVista 是專為**澳洲就業市場**設計的本機求職研究助手與�
 
 本工具不限定模型、服務供應商或 AI 代理。只要代理具備瀏覽器操作工具，並能存取本機 HTTP 介面，就能使用。開發驗證採用 Codex。模型設定、帳號、憑證及費用由執行代理的軟體管理，CareerVista 不會自行呼叫模型、投遞履歷或傳送訊息。
 
+## 升級現有安裝
+
+下載並解壓縮新版，在**新版解壓縮目錄**執行：Mac 使用 `./CareerVista.command upgrade`，Windows 使用 `.\CareerVista.cmd upgrade`。命令會保留職缺、檔案、履歷和申請紀錄，驗證資料庫遷移並重新開啟應用程式，無需解除安裝。重複執行同一版本會沿用已啟動的應用程式。加入 `--no-browser` 可只輸出本機網址；如使用自訂資料目錄，請傳入原來的 `--root`。此命令安裝目前下載的版本，不會自動下載更新。升級後請使用新版目錄中的啟動器。
+
 ## 安裝
 
 請從私人儲存庫的 [Releases 頁面](https://github.com/allenhori/careervista-job-hunting-tool/releases)下載對應的壓縮檔；下載時需要具備該儲存庫的 GitHub 存取權限。

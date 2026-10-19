@@ -34,6 +34,11 @@ From Terminal in this extracted folder:
   ./CareerVista.command clear-cache      Clear only owned disposable storage
   ./CareerVista.command uninstall        Keep evidence, credentials and sessions
   ./CareerVista.command install          Reinstall retained data after uninstall
+  ./CareerVista.command upgrade          Install this release, keep data, reopen app
+
+To upgrade, download and extract the newer release, then run its upgrade command
+from the NEW extracted folder. Add --no-browser to print the URL instead.
+Use the same --root if you chose a custom installation. No uninstall is needed.
 
 Permanent owned-data removal is explicit:
   ./CareerVista.command uninstall --remove-data --confirm REMOVE_OWNED_DATA

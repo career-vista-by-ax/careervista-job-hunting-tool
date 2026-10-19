@@ -6,6 +6,10 @@ CareerVista 是面向**澳大利亚就业市场**的本地求职研究助手与�
 
 它不绑定特定模型、服务商或智能体。只要智能体具有浏览器控制和访问本机 HTTP 接口的能力，就能使用。开发验证使用 Codex。模型配置、账号、凭据和费用由智能体宿主软件管理，CareerVista 不会自动调用模型或发送申请。
 
+## 升级现有安装
+
+下载并解压新版，在**新版解压目录**运行：Mac 使用 `./CareerVista.command upgrade`，Windows 使用 `.\CareerVista.cmd upgrade`。命令会保留职位、档案、简历和申请记录，验证数据库迁移并重新打开应用，无需卸载。重复运行同一版本会复用已启动的应用。添加 `--no-browser` 可只输出本地网址；如使用自定义数据目录，请传入原来的 `--root`。此命令安装当前下载的版本，不会自动下载更新。升级后请使用新版目录中的启动器。
+
 ## 安装
 
 从私有仓库的 [Releases 页面](https://github.com/allenhori/careervista-job-hunting-tool/releases)下载对应压缩包；下载需要该仓库的 GitHub 访问权限。

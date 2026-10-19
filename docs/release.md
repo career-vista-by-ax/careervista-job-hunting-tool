@@ -16,6 +16,7 @@ From Terminal in the extracted folder:
 ./CareerVista.command clear-cache
 ./CareerVista.command uninstall
 ./CareerVista.command install
+./CareerVista.command upgrade
 ./CareerVista.command launch --no-browser
 ./CareerVista.command uninstall --remove-data --confirm REMOVE_OWNED_DATA
 ```
@@ -23,6 +24,10 @@ From Terminal in the extracted folder:
 No command needs administrator access. `--root /absolute/path` selects a separate installation; each friend uses an independent root, database, provider settings and host session. Uninstall keeps `data/`, `credentials/` and `sessions/` by default, including resumes and evidence. Reinstall reuses them. Explicit removal deletes these owned persistent directories and unchanged packaged resources, preserving unknown/modified files, external exports/backups and the extracted download. A small ownership stub in `state/installation.json` remains for safe attribution/retry; this is not a claim that the installation root is completely removed. No shortcut or OS background service is installed. All unavoidable optional skill registrations are owned and recorded by the shared lifecycle.
 
 Repeated open reuses the authenticated instance. Stop never trusts a stored PID. Checksum failures leave the current release active; retry with an intact package. Locks and interrupted-stage handling are documented in the lifecycle contract. A stale lifecycle lock requires inspection before retry rather than automatically killing a process. A different release over a populated database first snapshots the closed owned database and tests the incoming migrations on a private copy. Only unchanged applied migrations plus additive migrations are accepted. Actual migration failure restores the snapshot and keeps the previous release active. Downgrades/rewritten applied migrations are refused. At most the active and previous unchanged release are retained; modified older files remain reported. See lifecycle-contract.md for interrupted-upgrade recovery.
+
+## Explicit upgrade
+
+From the newly downloaded and extracted release folder, use `./CareerVista.command upgrade` on Mac or `.\CareerVista.cmd upgrade` on Windows. This installs the bundled version if it differs from the active version, preserves persistent records, validates forward migrations using the existing snapshot/recovery path, and launches/opens the updated app. `--no-browser` prints the URL; a custom installation needs its original `--root` argument. Repeating upgrade from the same release reuses the running app. No release download is performed by this command. Keep the new folder as your launcher; running an older bundle is not a rollback mechanism.
 
 ## Optional agent setup
 

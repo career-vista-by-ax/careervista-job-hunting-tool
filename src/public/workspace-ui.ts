@@ -1,11 +1,11 @@
-import { defaultWorkspaceView, workspaceColumns, workspaceSorts } from './workspace-contract.ts';
+import { defaultWorkspaceView, comparisonColumns, workspaceColumns, workspaceSorts } from './workspace-contract.ts';
 import type { WorkspaceView } from './workspace-contract.ts';
 import type { WorkspaceRow, WorkspaceResult } from '../workspace.ts';
-const columnLabels = { role: 'Role', company: 'Company', location: 'Location / workplace', compensation: 'Compensation', fit: 'Fit / shortlist reasons', review: 'Your review', application: 'Application', freshness: 'Availability / freshness', source: 'Source' };
+const columnLabels = { role: 'Role', fit: 'Fit', company: 'Company', location: 'Location', compensation: 'Pay', workArrangement: 'Workplace', employment: 'Employment', confidence: 'Confidence', concerns: 'Concerns', unknowns: 'Unknowns', reasons: 'Why this role', review: 'Your review', application: 'Application', followUp: 'Follow-up', freshness: 'Availability', createdAt: 'Saved', source: 'Sources' };
 const fitLabels = { strong: 'Strong fit', promising: 'Promising', investigate: 'Investigate', low_fit: 'Low fit', excluded: 'Excluded · hard conflict' };
 const kindLabels = { advertised: 'Advertised', external_report: 'External report', model_estimate: 'Model estimate' };
-const sortLabels: Record<WorkspaceView['sort'],string> = { title: 'Role', company: 'Company', location: 'Location', workArrangement: 'Work arrangement', compensation: 'Compensation provenance / units', fit: 'Fit', confidence: 'Evidence confidence', review: 'Your review', application: 'Application stage', freshness: 'Evidence freshness', createdAt: 'Date saved', source: 'Source' };
-const columnSorts: Record<typeof workspaceColumns[number],WorkspaceView['sort']> = { role: 'title', company: 'company', location: 'location', compensation: 'compensation', fit: 'fit', review: 'review', application: 'application', freshness: 'freshness', source: 'source' };
+const sortLabels: Record<WorkspaceView['sort'],string> = { title: 'Role', company: 'Company', location: 'Location', workArrangement: 'Work arrangement', employment: 'Employment', concerns: 'Concern count', unknowns: 'Unknown count', followUp: 'Next follow-up', compensation: 'Compensation provenance / units', fit: 'Fit', confidence: 'Evidence confidence', review: 'Your review', application: 'Application stage', freshness: 'Evidence freshness', createdAt: 'Date saved', source: 'Source' };
+const columnSorts: Record<typeof workspaceColumns[number],WorkspaceView['sort']> = { role: 'title', workArrangement: 'workArrangement', employment: 'employment', confidence: 'confidence', concerns: 'concerns', unknowns: 'unknowns', reasons: 'fit', followUp: 'followUp', createdAt: 'createdAt', company: 'company', location: 'location', compensation: 'compensation', fit: 'fit', review: 'review', application: 'application', freshness: 'freshness', source: 'source' };
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, value = '', className?: string) { const el = document.createElement(tag); el.textContent = value; if (className) el.className = className; return el; }
 function controlLabel(title: string, input: HTMLElement) { const label = node('label',title); label.append(input); return label; }
 function date(value: string | null) { return value ? new Date(value).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : 'Not recorded'; }
@@ -14,6 +14,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   const controls = document.getElementById('workspace-controls')!, table = document.getElementById('jobs-table')!, rows = document.getElementById('job-rows')!, head = table.querySelector('thead tr')!;
   let view = structuredClone(defaultWorkspaceView), saved: {id:string;name:string;view:WorkspaceView}[] = [], requestId = 0, saveQueue = Promise.resolve();
   const search = document.getElementById('job-search') as HTMLInputElement;
+  controls.inert=true; search.disabled=true;
   const status = document.getElementById('workspace-status')!, summary = document.getElementById('workspace-summary')!;
   const savedSelect = node('select'); savedSelect.setAttribute('aria-label','Saved view');
   const name = node('input'); name.maxLength = 100; name.placeholder = 'Name this view'; name.setAttribute('aria-label','New saved view name');
@@ -29,12 +30,13 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     input.addEventListener('change', () => { Object.assign(view,{[key]:input.value}); changed(); }); fields.append(controlLabel(label,input)); return input;
   };
   select('availability','Listing availability',[['active','Active / unknown'],['all','All, including closed'],['closed','Confirmed closed only']]);
-  select('fit','Agent fit',[['all','All, including excluded'],['unassessed','Not assessed'],...Object.entries(fitLabels)]);
+  select('fit','Agent fit',[['all','All, including excluded'],['shortlist','Strong / promising'],['unassessed','Not assessed'],...Object.entries(fitLabels)]);
   select('provenance','Compensation source',[['all','All sources'],['unknown','Unknown'],...Object.entries(kindLabels)]);
   select('review','Your decision',[['all','All decisions'],['unreviewed','Unreviewed'],['saved','Saved'],['dismissed','Dismissed']]);
   select('application','Application stage',[['all','All stages'],['none','No event recorded'],...['applied','interview','offer','accepted','rejected','withdrawn','follow_up'].map(value => [value,human(value)] as [string,string])]);
   select('sort','Sort by',workspaceSorts.map(value => [value,sortLabels[value]]));
   select('direction','Sort direction',[['asc','Ascending'],['desc','Descending']]);
+  select('density','Row density',[['compact','Compact'],['comfortable','Comfortable']]);
   const columns = node('fieldset','','column-controls'); columns.append(node('legend','Visible columns'));
   const columnInputs = new Map<string,HTMLInputElement>();
   for (const key of workspaceColumns) {
@@ -43,54 +45,73 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     const label = node('label'); label.append(checkbox,document.createTextNode(columnLabels[key])); columns.append(label);
   }
   filters.append(columns,node('p','Compensation sorts by source and original units; currencies and contract rates are never silently converted.','muted'));
-  filters.append(savedControls); controls.append(filters);
+  const quickViews = node('div','','quick-views'); quickViews.setAttribute('role','group'); quickViews.setAttribute('aria-label','Quick views');
+  const quickButtons = new Map<string,HTMLButtonElement>();
+  for (const [key,label] of [['all','All jobs'],['shortlist','Shortlist'],['saved','Saved by you']] as const) {
+    const button=node('button',label,'quiet'); button.type='button'; quickButtons.set(key,button);
+    button.addEventListener('click',()=>{view.fit=key==='shortlist'?'shortlist':'all';view.review=key==='saved'?'saved':'all';syncControls();changed();}); quickViews.append(button);
+  }
+  const comparison=node('button','Comparison columns','quiet'); comparison.type='button'; comparison.title='Show fit, pay, workplace, confidence and concerns in compact rows';
+  comparison.addEventListener('click',()=>{view.columns=[...comparisonColumns];view.density='compact';view.sort='fit';view.direction='asc';syncControls();changed();});quickViews.append(comparison);
+  const legend=node('span','Green: strong · Teal: promising · Amber: investigate · Red: low fit / excluded','fit-legend'); quickViews.append(legend);
+  filters.append(savedControls); controls.append(quickViews,filters);
   async function api<T>(path: string, options?: RequestInit): Promise<T> { const response = await fetch(`/api/v1/workspace${path}`,options); const result = await response.json(); if (!response.ok) throw new Error(result.error?.message ?? 'Workspace unavailable. Retry.'); return result as T; }
   function report(error: unknown) { status.textContent = error instanceof Error ? error.message : 'Could not load the workspace. Retry.'; status.className = 'error'; }
   function syncControls() {
     search.value = view.query;
+    table.dataset.density=view.density;
+    for(const [key,button] of quickButtons) button.setAttribute('aria-pressed',String(key==='saved'?view.review==='saved':view.review==='all'&&view.fit===key));
     for (const [key,input] of Object.entries(inputs)) input.value = String(view[key as keyof WorkspaceView]);
     for (const [key,input] of columnInputs) input.checked = view.columns.includes(key as typeof workspaceColumns[number]);
   }
   function listSaved() { const selected = savedSelect.value; savedSelect.replaceChildren(); const blank = node('option','Current filters'); blank.value = ''; savedSelect.append(blank); for (const item of saved) { const option = node('option',item.name); option.value = item.id; savedSelect.append(option); } savedSelect.value = selected; remove.disabled = !savedSelect.value; }
   function changed() {
-    savedSelect.value = ''; remove.disabled = true; const snapshot = structuredClone(view);
+    syncControls(); savedSelect.value = ''; remove.disabled = true; const snapshot = structuredClone(view);
     saveQueue = saveQueue.catch(() => {}).then(async () => { await api('/views/current',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)}); });
     void saveQueue.catch(report); void loadRows().catch(report);
   }
-  function cell(primary: string, secondary?: string | null) { const td = node('td'); td.append(node('span',primary,'cell-primary')); if (secondary) td.append(node('span',secondary,'cell-secondary')); return td; }
+  function cell(primary: string, secondary?: string | null) { const td = node('td'); td.append(node('span',primary,'cell-primary')); if (secondary) td.append(node('span',secondary,'cell-secondary')); td.title=[primary,secondary].filter(Boolean).join('\n'); return td; }
   function rowCell(row: WorkspaceRow, key: typeof workspaceColumns[number]) {
     if (key === 'role') {
-      const td = node('td','','identity-cell'); const button = node('button',row.title,'job-title'); button.type='button'; button.dataset.jobId=row.id; button.setAttribute('aria-haspopup','dialog'); button.setAttribute('aria-label',`View ${row.title} at ${row.company}`); button.addEventListener('click',()=>void openJob(row.id));
-      const employment=node('span',row.employment ?? 'Employment unknown','cell-secondary role-employment'); employment.title=row.employment ?? 'Employment unknown';
-      td.append(button,employment,node('span',`Saved ${date(row.createdAt)}`,'cell-secondary')); return td;
+      const td = node('td','','identity-cell'); const button = node('button',row.title,'job-title'); button.type='button'; button.dataset.jobId=row.id; button.title=row.title; button.setAttribute('aria-haspopup','dialog'); button.setAttribute('aria-label',`View ${row.title} at ${row.company}`); button.addEventListener('click',()=>void openJob(row.id));
+      td.append(button); return td;
     }
     if (key === 'company') return cell(row.company);
-    if (key === 'location') return cell(row.location ?? 'Location unknown',row.workArrangement ?? 'Workplace unknown');
-    if (key === 'compensation') { const td = cell(row.compensation.label,row.compensation.provenance ? kindLabels[row.compensation.provenance as keyof typeof kindLabels] : 'No figure recorded'); if (row.compensation.adjustment) td.append(node('span','Personal adjustment available','cell-secondary')); return td; }
+    if (key === 'location') return cell(row.location ?? 'Unknown');
+    if (key === 'workArrangement') return cell(row.workArrangement ?? 'Unknown');
+    if (key === 'employment') return cell(row.employment ?? 'Unknown');
+    if (key === 'confidence') { const td=cell(row.confidence ? human(row.confidence) : 'Unassessed'); td.querySelector('span')!.className=`status-badge confidence-${row.confidence ?? 'unknown'}`; td.title=`Evidence confidence: ${row.confidence ?? 'not assessed'}`; return td; }
+    if (key === 'createdAt') return cell(date(row.createdAt));
+    if (key === 'followUp') return cell(row.application.followUpOn ?? 'None scheduled');
+    if (key === 'compensation') { const td = cell(row.compensation.label,row.compensation.provenance ? kindLabels[row.compensation.provenance as keyof typeof kindLabels] : 'Undisclosed'); if(row.compensation.provenance==='model_estimate')td.classList.add('estimated-pay'); if (row.compensation.adjustment) td.append(node('span','Personal adjustment','cell-secondary')); return td; }
     if (key === 'fit') {
-      const td = cell(row.fit ? fitLabels[row.fit] : 'Not assessed',row.confidence ? `${human(row.confidence)} evidence confidence · profile v${row.profileVersion}` : 'Confidence unknown');
-      if (row.fit) td.querySelector('.cell-primary')!.classList.add(`fit-${row.fit}`);
-      if (row.reasons.length) { const reason = node('span',row.reasons[0]!,'cell-reason'); reason.title = row.reasons.join('\n'); td.append(reason); }
-      if (row.concerns.length) { const concern = node('span',row.concerns[0]!,'cell-concern'); concern.title=row.concerns.join('\n'); td.append(concern); if (row.concerns.length>1) td.append(node('span',`+${row.concerns.length-1} more concerns`,'cell-secondary')); }
+      const td = cell(row.fit === 'excluded' ? 'Excluded' : row.fit ? fitLabels[row.fit] : 'Unassessed'); td.querySelector('span')!.className=`status-badge fit-${row.fit ?? 'unknown'}`;
+      td.title=[row.fit ? fitLabels[row.fit] : 'Unassessed',...row.reasons].join('\n'); return td;
+    }
+    if (key === 'reasons' || key === 'concerns' || key === 'unknowns') {
+      const items=row[key]; const td=cell(items.length ? items[0]! : key==='reasons'?'Not assessed':row.fit?'None recorded':'Not assessed',items.length>1?`+${items.length-1} more`:null);
+      td.title=items.join('\n') || td.title;
+      if(key==='concerns'&&items.length)td.classList.add('has-concerns');
       return td;
     }
     if (key === 'review') return cell(human(row.review));
-    if (key === 'application') { const td = cell(row.application.status ? human(row.application.status) : 'No application recorded',row.application.appliedAt ? `Applied ${date(row.application.appliedAt)}` : null); if (row.application.followUpOn) td.append(node('span',`Follow up ${row.application.followUpOn}`,'cell-secondary')); return td; }
-    if (key === 'freshness') return cell(row.availability.status==='confirmed_closed'?'Confirmed closed':row.availability.status==='active'?'Verified active':'Availability unknown',`${row.availability.checkedAt ? 'Checked' : 'Captured'} ${date(row.availability.checkedAt ?? row.capturedAt)}${row.availability.lastAttempt==='could_not_verify'?' · latest check failed':''}`);
-    return cell(row.sources?.join(', ') || 'Unknown source');
+    if (key === 'application') { const td = cell(row.application.status ? human(row.application.status) : 'Not applied',row.application.appliedAt ? `Applied ${date(row.application.appliedAt)}` : null); if (row.application.followUpOn) td.append(node('span',`Follow up ${row.application.followUpOn}`,'cell-secondary')); return td; }
+    if (key === 'freshness') return cell(row.availability.status==='confirmed_closed'?'Closed':row.availability.status==='active'?'Verified active':'Unverified',`${row.availability.checkedAt ? 'Checked' : 'Captured'} ${date(row.availability.checkedAt ?? row.capturedAt)}${row.availability.lastAttempt==='could_not_verify'?' · latest check failed':''}`);
+    return cell(row.sourceLabels.join(', ') || 'Unknown source');
   }
   function render(result: WorkspaceResult) {
     const focusedColumn = document.activeElement?.closest('th')?.dataset.column;
     document.getElementById('count')!.textContent = `${result.counts.total} saved`;
-    summary.textContent = `${result.counts.newLastSevenDays} saved in the last 7 days · ${result.counts.attention} applications need follow-up · ${result.counts.excluded} agent-excluded · ${result.counts.closed} confirmed closed`;
+    summary.textContent = `${result.counts.shortlisted} strong / promising · ${result.counts.lowFit} low fit · ${result.counts.newLastSevenDays} saved in the last 7 days · ${result.counts.attention} applications need follow-up · ${result.counts.excluded} agent-excluded · ${result.counts.closed} confirmed closed`;
     document.getElementById('results-summary')!.textContent=`${result.counts.visible} of ${result.counts.total} jobs · Select a role for details`;
     head.replaceChildren();
     for (const key of view.columns) { const th=node('th'); th.scope='col'; th.dataset.column=key; th.setAttribute('aria-sort',view.sort===columnSorts[key]?(view.direction==='asc'?'ascending':'descending'):'none'); const button=node('button',columnLabels[key]); button.type='button'; button.addEventListener('click',()=>{view.direction=view.sort===columnSorts[key]&&view.direction==='asc'?'desc':'asc';view.sort=columnSorts[key];syncControls();changed();}); th.append(button); head.append(th); }
     const actionHead=node('th','Listing'); actionHead.scope='col'; head.append(actionHead);
     rows.replaceChildren();
-    for (const row of result.rows) { const tr=node('tr'); for (const key of view.columns) { const td=rowCell(row,key); td.dataset.column=key; tr.append(td); } const actions=node('td','','row-actions'); const link=node('a','Original'); link.href=row.sourceUrl; link.target='_blank'; link.rel='noopener noreferrer'; link.setAttribute('aria-label',`Open original listing for ${row.title}`); actions.append(link); tr.append(actions); tr.addEventListener('click',event=>{if(event.target instanceof Element&&!event.target.closest('button,a')) void openJob(row.id);}); rows.append(tr); }
+    for (const row of result.rows) { const tr=node('tr'); tr.dataset.fit=row.fit ?? 'unknown'; for (const key of view.columns) { const td=rowCell(row,key); td.dataset.column=key; tr.append(td); } const actions=node('td','','row-actions'); const link=node('a','Original'); link.href=row.sourceUrl; link.target='_blank'; link.rel='noopener noreferrer'; link.setAttribute('aria-label',`Open original listing for ${row.title}`); actions.append(link); tr.append(actions); tr.addEventListener('click',event=>{if(event.target instanceof Element&&!event.target.closest('button,a')) void openJob(row.id);}); rows.append(tr); }
+    syncControls();
     if (focusedColumn) head.querySelector<HTMLButtonElement>(`[data-column="${CSS.escape(focusedColumn)}"] button`)?.focus();
-    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':'Your next search starts with your agent'; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':'Describe the role you want. Your agent explores related titles, researches jobs and saves its reasons here.';
+    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':'Your next search starts with your agent'; empty.querySelectorAll('p')[1]!.hidden=result.counts.total>0; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':'Describe the role you want. Your agent explores related titles, researches jobs and saves its reasons here.';
   }
   async function loadRows() { const request=++requestId; table.setAttribute('aria-busy','true'); status.textContent='Loading comparisons…'; status.className='muted'; const params=new URLSearchParams(Object.entries(view).filter(([key])=>key!=='columns').map(([key,value])=>[key,String(value)]));
     try { const result=await api<WorkspaceResult>(`?${params}`); if(request!==requestId)return; render(result); status.textContent=''; }
@@ -101,7 +122,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   save.addEventListener('click',()=>{if(!name.value.trim()){name.focus();status.textContent='Name this view before saving.';return;} save.disabled=true;void api<{id:string;name:string;view:WorkspaceView}>('/views',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.value,view})}).then(item=>{saved.push(item);listSaved();savedSelect.value=item.id;remove.disabled=false;name.value='';status.textContent='View saved on this computer.';}).catch(report).finally(()=>{save.disabled=false;});});
   remove.addEventListener('click',()=>{const id=savedSelect.value;if(!id)return;remove.disabled=true;void api(`/views/${encodeURIComponent(id)}`,{method:'DELETE'}).then(()=>{saved=saved.filter(item=>item.id!==id);listSaved();status.textContent='Saved view deleted. Current filters remain.';}).catch(report).finally(()=>{remove.disabled=!savedSelect.value;});});
   let initialized = false;
-  async function initialize() { if (initialized) return; const state = await api<{current:WorkspaceView;saved:typeof saved}>('/views'); view=state.current;saved=state.saved;syncControls();listSaved();initialized=true; }
+  async function initialize() { if (initialized) return; const state = await api<{current:WorkspaceView;saved:typeof saved}>('/views'); view=state.current;saved=state.saved;syncControls();listSaved();initialized=true;controls.inert=false;search.disabled=false; }
   const retry=document.getElementById('refresh-jobs')!; retry.addEventListener('click',()=>void refresh().catch(report));
   async function refresh(){await initialize();await loadRows();}
   return {refresh};

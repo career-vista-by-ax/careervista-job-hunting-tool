@@ -7,8 +7,8 @@ import { ProfilesService } from './profiles.ts';
 import type { ApiRoute } from './server.ts';
 export type RunStatus = 'running' | 'paused' | 'stopped' | 'cancelled' | 'completed' | 'budget-exhausted' | 'waiting-user-signin' | 'waiting-user-verification' | 'session-expired';
 export type WorkStatus = 'pending' | 'working' | 'collected' | 'assessed' | 'excluded' | 'duplicate' | 'failed' | 'searched';
-export interface RunInput { requestId: string; profileVersion: number; trackIds: string[]; sources: string[]; limit?: number; budget: { amount: number; currency: string } }
-export interface RunWork { workKey: string; trackId: string; source: string; url: string; ingestionId: string; status: WorkStatus; jobId?: string; captured: boolean; assessed: boolean; attempts: number; errorCode?: string; modelReservationId?: string; deleted?: boolean }
+export interface RunInput { requestId: string; profileVersion: number; trackIds: string[]; sources: string[]; limit?: number; discoveryLimit?: number; budget: { amount: number; currency: string } }
+export interface RunWork { workKey: string; trackId: string; source: string; url: string; kind?: 'search' | 'listing'; ingestionId: string; status: WorkStatus; jobId?: string; captured: boolean; assessed: boolean; attempts: number; errorCode?: string; modelReservationId?: string; deleted?: boolean }
 export interface Reservation { id: string; operationId: string; workKey: string; estimate: number; currency: string; status: 'reserved' | 'settled'; actual: number | null; used: boolean }
 export interface ResearchRun extends RunInput {
  id: string; limit: number; status: RunStatus; createdAt: string; updatedAt: string;
@@ -42,7 +42,7 @@ export class RunsService {
  list(): ResearchRun[] { return this.app.database.prepare('SELECT id FROM research_runs ORDER BY rowid DESC').all().map(row => this.get(String(row.id))); }
  create(input: RunInput): ResearchRun {
   object(input);
-  if (Object.keys(input).some(key => !['requestId','profileVersion','trackIds','sources','limit','budget'].includes(key))) throw new AppError('Unsupported run settings.');
+  if (Object.keys(input).some(key => !['requestId','profileVersion','trackIds','sources','limit','discoveryLimit','budget'].includes(key))) throw new AppError('Unsupported run settings.');
   text(input.requestId, 'requestId'); object(input.budget);
   if (Object.keys(input.budget).some(key => !['amount','currency'].includes(key))) throw new AppError('Budget accepts amount and currency only.');
   money(input.budget.amount);
@@ -53,6 +53,7 @@ export class RunsService {
   for (const key of ['trackIds','sources'] as const) { if (!Array.isArray(input[key]) || !input[key].length || input[key].length > 50 || new Set(input[key]).size !== input[key].length) throw new AppError(`${key} must contain between one and 50 distinct selected entries.`); for (const value of input[key]) text(value, key); }
   if (input.trackIds.some(id => !profile.tracks.some(t => t.id === id))) throw new AppError('Choose tracks from the approved profile revision.');
   const limit = input.limit ?? 25; if (!Number.isInteger(limit) || limit < 1 || limit > 500) throw new AppError('Listing limit must be an integer between 1 and 500; 25 is suggested.');
+  if (input.discoveryLimit !== undefined && (!Number.isInteger(input.discoveryLimit) || input.discoveryLimit < 1 || input.discoveryLimit > 5000)) throw new AppError('Discovery limit must be an integer between 1 and 5000; 200 is suggested.');
   const existing = this.app.database.prepare('SELECT id,input_json FROM research_runs WHERE request_id=?').get(input.requestId);
   if (existing) { if (!isDeepStrictEqual(JSON.parse(String(existing.input_json)), input)) throw new AppError('Run request identifier already has different settings.', 409, 'idempotency_conflict'); return this.get(String(existing.id)); }
   const now = new Date().toISOString();
@@ -63,7 +64,7 @@ export class RunsService {
  private change(id: string, operation: unknown, kind: string, update: (run: StoredRun, input: Record<string,any>) => void): ResearchRun {
   object(operation); text(operation.operationId, 'operationId'); const input: Record<string,any> = { ...operation, kind };
   if (kind === 'control' && operation.pageUrl !== undefined) { const page = new URL(webUrl(operation.pageUrl)); input.pageUrl = page.origin + page.pathname; }
-  const allowed: Record<string,string[]> = {queue:['operationId','workKey','trackId','source','url'],authorize:['operationId','workKey','modelWork','reservationId'],checkpoint:['operationId','workKey','status','jobId','errorCode'],reservation:['operationId','workKey','estimate','currency'],cost:['operationId','reservationId','actual'],control:['operationId','action','workKey','sessionRef','pageUrl','userConfirmed','amount','currency']};
+  const allowed: Record<string,string[]> = {queue:['operationId','workKey','trackId','source','url','workKind'],authorize:['operationId','workKey','modelWork','reservationId'],checkpoint:['operationId','workKey','status','jobId','errorCode'],reservation:['operationId','workKey','estimate','currency'],cost:['operationId','reservationId','actual'],control:['operationId','action','workKey','sessionRef','pageUrl','userConfirmed','amount','currency']};
   if (Object.keys(operation).some(key => !allowed[kind]?.includes(key))) throw new AppError('Unsupported run operation fields. Send no raw provider output, passwords or session secrets.');
   const db = this.app.database; db.exec('BEGIN IMMEDIATE');
   try {
@@ -83,17 +84,18 @@ export class RunsService {
   this.active(run); text(value.workKey, 'workKey'); text(value.trackId,'trackId'); text(value.source,'source'); webUrl(value.url);
   if (!run.trackIds.includes(value.trackId)) throw new AppError('Use a selected track from this run.');
   if (!run.sources.includes(value.source)) throw new AppError('Use a selected source from this run.');
+  if (value.workKind !== undefined && !['search','listing'].includes(value.workKind)) throw new AppError('Work kind must be search or listing.');
   const prior = run.work.find(w => w.workKey === value.workKey);
-  if (prior) { if (prior.url !== value.url || prior.source !== value.source || prior.trackId !== value.trackId) throw new AppError('Work key already identifies different queued work.', 409, 'idempotency_conflict'); return; }
-  if (run.work.length >= Math.min(5000, run.limit * 20)) throw new AppError('Run queue cap reached. Review partial results before starting another run.');
-  run.work.push({ workKey: value.workKey, trackId: value.trackId, source: value.source, url: value.url, ingestionId: `run:${run.id}:${randomUUID()}`, status: 'pending', captured: false, assessed: false, attempts: 0 });
+  if (prior) { if (prior.url !== value.url || prior.source !== value.source || prior.trackId !== value.trackId || (prior.kind ?? 'listing') !== (value.workKind ?? 'listing')) throw new AppError('Work key already identifies different queued work.', 409, 'idempotency_conflict'); return; }
+  if (run.work.length >= Math.min(5000, Math.max(200, run.limit * 20))) throw new AppError('Run queue cap reached. Review partial results before starting another run.');
+  run.work.push({ workKey: value.workKey, trackId: value.trackId, source: value.source, url: value.url, ...(value.workKind ? {kind:value.workKind} : {}), ingestionId: `run:${run.id}:${randomUUID()}`, status: 'pending', captured: false, assessed: false, attempts: 0 });
  }); }
  authorize(id: string, input: unknown): ResearchRun { return this.change(id, input, 'authorize', (run, value) => {
   this.active(run); const work = this.work(run,value.workKey);
   if (work.deleted) throw new AppError('This saved job was permanently deleted. Its work cannot be replayed.');
   if (typeof value.modelWork !== 'boolean') throw new AppError('Declare modelWork true or false before work begins.');
   if (['assessed','excluded','duplicate','searched'].includes(work.status)) throw new AppError('This work is complete. Preserve its checkpoint.');
-  if (!work.captured && work.status !== 'working' && run.newJobIds.length + (run.removedNewJobs ?? 0) + run.work.filter(w => w.status === 'working' && !w.captured).length >= run.limit) throw new AppError('New-listing limit reached. Review collected work; duplicates and failed uncaptured work release their slots.', 409, 'listing_limit');
+  if (work.kind !== 'search' && !work.captured && work.status !== 'working' && run.newJobIds.length + (run.removedNewJobs ?? 0) + run.work.filter(w => w.kind !== 'search' && w.status === 'working' && !w.captured).length >= run.limit) throw new AppError('New-listing limit reached. Review collected work; duplicates and failed uncaptured work release their slots.', 409, 'listing_limit');
   if (run.work.reduce((sum,w) => sum + w.attempts,0) >= Math.max(100,run.limit * 10)) throw new AppError('Attempt limit reached. Review failed work before creating another run.');
   if (value.modelWork) { const reservation = run.reservations.find(r => r.id === value.reservationId && r.workKey === work.workKey && r.status === 'reserved' && !r.used); if (!reservation) throw new AppError('Reserve an estimate for this model work before starting. Use one fresh reservation per model operation.'); reservation.used = true; work.modelReservationId = reservation.id; }
   work.status = 'working'; work.attempts++; delete work.errorCode;
@@ -106,6 +108,7 @@ export class RunsService {
   if (work.status !== 'working') throw new AppError('Authorize the work before submitting its next checkpoint.');
   if (value.jobId !== undefined) { text(value.jobId,'jobId'); this.app.getJob(value.jobId); if (work.jobId && work.jobId !== value.jobId) throw new AppError('A work item cannot replace its linked saved job.'); }
   const jobId = value.jobId ?? work.jobId;
+  if (work.kind === 'search' && (jobId || !['searched','failed'].includes(value.status))) throw new AppError('Search work accepts searched or failed checkpoints without a job. Queue a listing to capture evidence.');
   if (['collected','assessed','excluded','duplicate'].includes(value.status) && !jobId) throw new AppError('Save evidence first and supply its jobId for this checkpoint.');
   if (value.errorCode !== undefined && !Object.hasOwn(errorMessages,value.errorCode)) throw new AppError('Use a supported safe errorCode, without raw provider output or credentials.');
   let status: WorkStatus = value.status;
@@ -186,6 +189,8 @@ export class RunsService {
     if (run.newJobIds.includes(jobId)) { run.newJobIds = run.newJobIds.filter(id => id !== jobId); run.removedNewJobs = (run.removedNewJobs ?? 0) + 1; }
     run.baselineJobIds = run.baselineJobIds.filter(id => id !== jobId);
     if (keys.size) {
+     for (const key of keys.keys()) db.prepare('DELETE FROM collection_candidates WHERE run_id=? AND work_key=?').run(run.id,key);
+     db.prepare('DELETE FROM collection_selections WHERE run_id=?').run(run.id);
      for (const cost of run.reservations) if (keys.has(cost.workKey)) cost.workKey = keys.get(cost.workKey)!;
      for (const error of run.errors) if (error.workKey && keys.has(error.workKey)) error.workKey = keys.get(error.workKey)!;
      if (run.waiting && keys.has(run.waiting.workKey)) delete run.waiting;

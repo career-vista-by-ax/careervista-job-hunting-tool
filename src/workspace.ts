@@ -22,9 +22,12 @@ export class WorkspaceService {
       const detail = this.app.getJob(job.id), analysis = extraction.history(job.id).analyses.at(-1), assessment = assessments.history(job.id).at(-1), application = applications.timeline(job.id), checks = availability.history(job.id);
       const reconciliation = new Reconciliation(this.app).detail(job.id);
       const capturedAt = detail.observations.map(item => item.capturedAt).sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1)!;
-      return { ...job, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
+      const sourceNames: Record<string,string> = {seek:'SEEK',linkedin:'LinkedIn',glassdoor:'Glassdoor',employer:'Employer',manual:'Manual'};
+      const sourceLabels=(job.sources??[]).map(source=>sourceNames[source]??new URL(detail.observations.find(item=>item.source===source)!.sourceUrl).hostname.replace(/^www\./,''));
+      return { ...job, sourceLabels, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
         compensation: compensation.summary(job.id), fit: assessment?.label ?? null, confidence: assessment?.confidence.level ?? null,
         reasons: assessment?.reasonsToPursue.map(item => item.statement) ?? [],
+        unknowns: assessment?.unknowns.map(item => item.explanation) ?? [],
         concerns: [...new Set([...reconciliation.differences,...(assessment?.concerns.map(item => item.statement) ?? []), ...Object.values(assessment?.axes ?? {}).flatMap(axis => axis.findings.filter(item => item.status === 'concern').map(item => item.statement))])],
         profileVersion: assessment?.profileVersion ?? null, review: new FeedbackService(this.app).history(job.id).decision,
         application: { status: application.status, appliedAt: application.events.findLast(item => item.status === 'applied')?.occurredAt ?? null, followUpOn: application.followUpOn },
@@ -36,16 +39,16 @@ export class WorkspaceService {
     if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !Object.hasOwn(defaultWorkspaceView, key))) throw new AppError('Use only documented workspace filters, sort and columns.');
     const view = { ...defaultWorkspaceView, ...input };
     if (typeof view.query !== 'string' || view.query.length > 8000) throw new AppError('Search must be text up to 8000 characters.');
-    const options = { availability: ['active','all','closed'], fit: ['all','unassessed',...fitLabels], provenance: ['all','unknown','advertised','external_report','model_estimate'], review: ['all','unreviewed','saved','dismissed'], application: ['all','none','applied','interview','offer','accepted','rejected','withdrawn','follow_up'], sort: workspaceSorts, direction: ['asc','desc'] };
+    const options = { availability: ['active','all','closed'], fit: ['all','shortlist','unassessed',...fitLabels], provenance: ['all','unknown','advertised','external_report','model_estimate'], review: ['all','unreviewed','saved','dismissed'], application: ['all','none','applied','interview','offer','accepted','rejected','withdrawn','follow_up'], sort: workspaceSorts, direction: ['asc','desc'], density: ['compact','comfortable'] };
     for (const [key, values] of Object.entries(options)) if (!(values as readonly unknown[]).includes(view[key as keyof WorkspaceView])) throw new AppError(`Unsupported ${key} filter. Select a documented option.`);
     if (!Array.isArray(view.columns) || !view.columns.includes('role') || new Set(view.columns).size !== view.columns.length || view.columns.some(column => !workspaceColumns.includes(column))) throw new AppError('Visible columns must be unique supported columns and include role.');
     return view;
   }
   query(input: Partial<WorkspaceView> = {}) {
     const view = this.validate(input), all = this.summaries(), query = view.query.toLocaleLowerCase().trim();
-    const rows = all.filter(row => (!query || [row.title,row.company,row.location ?? '',row.workArrangement ?? '',row.employment ?? '',...(row.sources ?? [])].some(value => value.toLocaleLowerCase().includes(query)))
+    const rows = all.filter(row => (!query || [row.title,row.company,row.location ?? '',row.workArrangement ?? '',row.employment ?? '',...(row.sources ?? []),...row.sourceLabels].some(value => value.toLocaleLowerCase().includes(query)))
       && (view.availability === 'all' || (row.availability.status === 'confirmed_closed') === (view.availability === 'closed'))
-      && (view.fit === 'all' || (view.fit === 'unassessed' ? row.fit === null : row.fit === view.fit))
+      && (view.fit === 'all' || (view.fit === 'shortlist' ? row.fit === 'strong' || row.fit === 'promising' : view.fit === 'unassessed' ? row.fit === null : row.fit === view.fit))
       && (view.provenance === 'all' || (row.compensation.provenance ?? 'unknown') === view.provenance)
       && (view.review === 'all' || row.review === view.review)
       && (view.application === 'all' || (row.application.status ?? 'none') === view.application));
@@ -54,6 +57,9 @@ export class WorkspaceService {
         case 'compensation': return row.compensation.provenance === null ? null : `${row.compensation.provenance} ${row.compensation.label}`;
         case 'fit': return row.fit === null ? null : String(fitLabels.indexOf(row.fit));
         case 'confidence': return row.confidence === null ? null : String(['high','medium','low'].indexOf(row.confidence));
+        case 'concerns': return row.concerns.length;
+        case 'unknowns': return row.unknowns.length;
+        case 'followUp': return row.application.followUpOn;
         case 'application': return row.application.status;
         case 'freshness': return row.availability.checkedAt ?? row.capturedAt;
         case 'source': return row.sources?.join(', ') ?? null;
@@ -64,6 +70,8 @@ export class WorkspaceService {
       return (view.direction === 'asc' ? 1 : -1) * String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' }) || a.id.localeCompare(b.id); });
     const today = new Date().toISOString().slice(0,10);
     return { rows, view, counts: { total: all.length, visible: rows.length, newLastSevenDays: all.filter(row => Date.now() - Date.parse(row.createdAt) <= 7*86400000).length,
+      shortlisted: all.filter(row => row.fit === 'strong' || row.fit === 'promising').length,
+      lowFit: all.filter(row => row.fit === 'low_fit').length,
       excluded: all.filter(row => row.fit === 'excluded').length, closed: all.filter(row => row.availability.status === 'confirmed_closed').length,
       attention: all.filter(row => row.application.followUpOn && row.application.followUpOn <= today && !['accepted','rejected','withdrawn'].includes(row.application.status ?? '')).length } };
   }

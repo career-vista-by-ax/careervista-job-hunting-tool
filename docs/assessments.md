@@ -99,3 +99,7 @@ Company size, startup status, marketing language, and a contextual review do not
 ## Review and evaluation
 
 The job modal shows the latest assessment, independent confidence, all three axes, reasons, concerns, unknowns, hard conflict evidence, source links/capture dates, investigation questions and immutable previous versions. Existing review/application controls remain separate. See [evaluation cases](evaluations/fit-v1.md). Deterministic fixtures validate the contract and rules; they do not establish model judgement quality or measured time savings. A real host/model evaluation is recorded separately by the integration coordinator.
+
+## Fit rule version 2
+
+New assessments use `fit-v2`. Hard conflicts still exclude; concerns on two or more axes still give low fit. Strong fit retains the strict evidence requirements. Promising now requires a qualifications match and no practical-constraints concern. Otherwise the result is investigate. Unknown salary/eligibility remains unknown. Earlier assessments retain their rule version and label until an explicitly requested new assessment.
