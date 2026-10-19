@@ -1,7 +1,7 @@
 import type {CompanyResearch} from '../company.ts';
 type History=ReturnType<CompanyResearch['history']>;
 function el<K extends keyof HTMLElementTagNameMap>(tag:K,value=''){const n=document.createElement(tag);n.textContent=value;return n;}
-export async function showCompany(container:HTMLElement,jobId:string){
+export async function showCompany(container:HTMLElement,jobId:string,readOnly=false){
  const section=el('section'),message=el('p');message.setAttribute('role','status');section.append(el('h3','Focused company research'),el('p','Reports describe a particular author, team and time. Company matches and conflicts remain visible; summaries are agent inference.'),message);container.append(section);
  const endpoint=`/api/v1/jobs/${encodeURIComponent(jobId)}/company`;
  async function api(path:string,input?:unknown){const response=await fetch(endpoint+path,input?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)}:{});const data=await response.json();if(!response.ok)throw new Error(data.error?.message??'Company research unavailable.');return data;}
@@ -11,6 +11,7 @@ export async function showCompany(container:HTMLElement,jobId:string){
  for(const access of history.access)section.append(el('p',`Source access: ${access.status} · ${access.sourceUrl}${access.sessionRef?' · Resume through your agent in the same browser session.':''}`));
  for(const report of history.reports){const d=el('details');d.append(el('summary',`${report.topic} · ${report.kind.replaceAll('_',' ')} · company match: ${report.linkage}`),el('p',`${report.companyName} · ${report.linkageReason}`),el('p',`${report.context} · Captured ${new Date(report.capturedAt).toLocaleString()}`));const a=el('a','Report source');a.href=report.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';d.append(a,el('blockquote',report.quote),el('pre',report.text));section.append(d);}
  for(const summary of history.summaries)section.append(el('h4','Agent inference'),el('p',summary.summary),el('p',`Unknowns: ${summary.unknowns.join('; ')||'None supplied'} · Agent: ${summary.agent}${summary.model?` · Model: ${summary.model}`:''} · Supporting report IDs: ${summary.evidenceIds.join(', ')}`));
+ if(readOnly)return;
  function field(form:HTMLFormElement,label:string,control:HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement){const l=el('label',label);l.append(control);form.append(l);return control;}
  function select(form:HTMLFormElement,label:string,values:string[]){const s=el('select');for(const value of values){const o=el('option',value.replaceAll('_',' '));o.value=value;s.append(o);}field(form,label,s);return s;}
  function area(form:HTMLFormElement,label:string,required=true){const a=el('textarea');a.rows=2;a.required=required;field(form,label,a);return a;}

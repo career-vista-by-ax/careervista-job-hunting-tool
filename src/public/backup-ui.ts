@@ -1,6 +1,6 @@
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text = '') { const item = document.createElement(tag); item.textContent = text; return item; }
-export function mountBackupTools() {
-  const host = document.querySelector('main'); if (!host) return;
+export function mountBackupTools(target?: HTMLElement) {
+  const host = target ?? document.querySelector('main'); if (!host) return;
   const tools = element('details'); tools.id = 'backup-tools';
   tools.append(element('summary', 'Backup and restore'));
   tools.append(element('p', 'Keep a private recovery copy of saved jobs, evidence, profiles, assessments and application history. Backups contain personal data. Store them somewhere you trust.'));

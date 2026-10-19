@@ -2,9 +2,9 @@
 
 Save, dismiss and unreviewed are personal review decisions. They are independent of an agent's fit assessment, listing availability and actual application progress. You can save a low-fit or excluded candidate without changing its assessment. Opening a listing never records a review or changes a profile. Reasons are optional and belong to that one decision until an explicit general preference proposal is reviewed.
 
-The detail UI records a decision with an optional explanation and retains its history. A nonempty explanation can support **Propose a general preference from this feedback**. A proposal shows its scope, before/after preference, base profile revision, rationale and supporting job decisions/reasons. It remains pending and does not affect searches. Any compatible agent may propose a change via the same API; no provider or model key is required and no reason is sent to a provider automatically.
+The agent records a decision and optional explanation only when the user requests it in the conversation. A nonempty explanation can support a pending general-preference proposal; show its scope, before/after setting, base profile revision, rationale and supporting decisions before applying it. Individual decisions remain separate from general preferences. The jobs table displays the saved decision. No provider key is required by the app.
 
-Choose **Apply change** only after reviewing the supporting feedback and proposed generalisation. Adding a hard preference requires a second explicit hard-exclusion confirmation. Accepting creates and activates a new approved profile revision, preserving the prior revision and profile ancestry. A rejection records its history without changing preferences. Individual dismissals never silently harden filters.
+Apply a change through the API only after the user explicitly reviews the supporting feedback and proposed generalisation. Adding a hard preference requires a second explicit hard-exclusion confirmation. Accepting creates and activates a new approved profile revision, preserving the prior revision and profile ancestry. A rejection records its history without changing preferences. Individual dismissals never silently harden filters.
 
 **Reverse this change** restores only the affected shared preference or track override, creating another approved revision. Unrelated later preference edits are preserved. If the affected key was changed again, reversal rejects with a conflict instead of overwriting the user's newer choice. Reinstating a hard requirement—including removal of an override that reveals an inherited hard requirement—requires explicit hard-exclusion confirmation. Earlier assessments remain linked to their original profile revisions and are not recomputed by feedback actions.
 
@@ -51,16 +51,9 @@ Register `feedbackRoutes` with the server composition root:
 
 Local single-user trust applies. A compatible agent must obtain the user's explicit instruction before asserting action confirmation or hard-exclusion confirmation. Explanations are local personal data; ordinary collection/assessment permission does not authorise sharing unrelated review notes with cloud providers.
 
-## Composition instructions
+## Presentation
 
-This ticket intentionally leaves `src/main.ts` and `src/public/client.ts` unchanged for the integration coordinator:
-
-1. Import `feedbackRoutes` from `./feedback.ts` into main and append it to `startServer` routes.
-2. Import `showFeedback` and `installFeedbackUI` from `./feedback-ui.ts` into the browser client.
-3. Call `installFeedbackUI(refresh)` after `installProfilesUI()` has created `.toolbar-actions`.
-4. Add `showFeedback(overview, id, refresh)` to the detail's Promise.all operations, or use an equivalent review section near the top of the modal. The module attaches to the supplied container and reads no global selected job state.
-
-`WorkspaceService` now projects the actual review decision, so existing saved/dismissed filters and review sorting work after a refresh. The toolbar module displays preference proposals and dispatches the existing profile-review event after successful profile changes.
+The jobs table and modal show saved decisions; all feedback/proposal mutations use the API from the agent conversation. Historical browser-form modules remain source references and are not mounted by the browsing client.
 
 ## Lifecycle and validation
 
@@ -68,4 +61,4 @@ Private backups and full JSON exports include decisions, proposals, support rela
 
 Synthetic teaching fixtures verify decision independence, pursuit of low-rated candidates, proposal acceptance/rejection/reversal, hard-confirmation boundaries (including inherited exclusions), immutable history, idempotency, backup recovery and explicit deletion. UI/model evaluation remains an integration validation step.
 
-Vacancy-group history aggregates all member decisions by default and retains each event’s original source job ID. Passing `sourceOnly=true` shows one source, and splitting a group restores its separate review state without moving rows. New UI actions target the canonical job; the public API preserves an explicitly supplied source ID, consistent with other domain histories. Reconciliation detail includes per-member review histories.
+Vacancy-group history aggregates all member decisions by default and retains each event’s original source job ID. Passing `sourceOnly=true` shows one source, and splitting a group restores its separate review state without moving rows. Agent actions should target the canonical job; the public API preserves an explicitly supplied source ID, consistent with other domain histories. Reconciliation detail includes per-member review histories.

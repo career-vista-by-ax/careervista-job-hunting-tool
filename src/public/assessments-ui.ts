@@ -9,7 +9,7 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, value = '') { const
 
 export async function showAssessments(parent: HTMLElement, jobId: string, observations: Observation[]) {
   const section = node('section'); section.className = 'assessments'; section.setAttribute('aria-label', 'Evidence-based fit assessments');
-  section.append(node('h3', 'Fit assessment')); parent.append(section);
+  section.append(node('h3', 'Agent recommendation')); parent.append(section);
   try {
     const response = await fetch(`/api/v1/jobs/${encodeURIComponent(jobId)}/assessments`);
     if (!response.ok) throw new Error('Could not load fit history. Close this job and try again.');
@@ -47,9 +47,9 @@ export async function showAssessments(parent: HTMLElement, jobId: string, observ
       const details = node('details'); details.open = index === 0;
       const summary = node('summary', `${index === 0 ? 'Latest' : 'Historical'}: ${labelNames[assessment.label]} · profile v${assessment.profileVersion} · ${new Date(assessment.createdAt).toLocaleString()}`);
       details.append(summary, node('p', `Search track: ${assessment.trackId}. Rules: ${assessment.rulesVersion}. Profile revision and evidence remain attached to this historical assessment.`));
+      findings(details, 'Why it may be worth pursuing', assessment.reasonsToPursue); findings(details, 'Concerns', assessment.concerns);
       const confidence = node('div'); confidence.className = 'assessment-confidence'; confidence.append(node('h4', `Evidence confidence: ${assessment.confidence.level}`), node('p', assessment.confidence.explanation)); details.append(confidence);
       for (const name of ['qualifications','preferences','practicalConstraints'] as const) axis(details, axisNames[name], assessment.axes[name]);
-      findings(details, 'Reasons to pursue', assessment.reasonsToPursue); findings(details, 'Concerns', assessment.concerns);
       if (assessment.hardConflicts.length) {
         details.append(node('h4', 'Confirmed hard conflicts · candidate retained'));
         for (const conflict of assessment.hardConflicts) {

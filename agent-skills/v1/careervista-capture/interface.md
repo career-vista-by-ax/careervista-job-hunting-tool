@@ -2,7 +2,9 @@
 
 Any agent or model can use the local HTTP application interface. No proprietary SDK, model key, cloud provider or app account is required. The agent host owns its model/provider settings and any credentials. CareerVista accepts resulting JSON and records optional provenance; it never calls a provider during extraction or sends unrelated notes, resumes or preferences. Change providers/models in the selected host. Do not include API keys or tokens in metadata.
 
-First POST `/api/v1/observations` with this capture envelope:
+For goal intake, role expansion, resume-derived strengths or a new search, first GET `/api/v1/agent-guide/agent-workflow`. GET `/api/v1/agent-guide` lists the installed API guides, including profile, run, fit, feedback and application contracts. These read-only endpoints return Markdown as JSON and require no webpage form interaction.
+
+For listing capture, POST `/api/v1/observations` with this capture envelope:
 
 ```json
 {"ingestionId":"agent:run1:listing1","source":"employer","sourceUrl":"https://example.com/jobs/42","capturedAt":"2026-10-18T01:00:00Z","text":"Teacher. Full readable listing text here.","title":"Teacher","company":"School","context":{"method":"browser-agent"}}
@@ -32,7 +34,7 @@ Metadata optionally includes `model` and `provider` names if the host exposes th
 
 Returns 201 `{analysis,replayed:false}`; exact retry returns 200 with `replayed:true`. Changed content with an existing submissionId returns 409. Invalid analyses return an actionable 400 and append a safe failure record when jobId/submissionId identify the saved job. Evidence remains unchanged. All requests retain the origin, size and JSON protections documented in architecture.md.
 
-GET `/api/v1/jobs/:id/analyses` returns `{analyses,failures}` in append order. Analyses include immutable `id` and `createdAt`. Corrections use the same schema with a new submissionId, `supersedesId` and non-empty `reason`; the original remains accessible. The detail UI displays the latest submitted analysis, its evidence and all previous versions, with a correction form. Corrections of factual values must cite saved evidence; add a new observation first if source evidence itself changed.
+GET `/api/v1/jobs/:id/analyses` returns `{analyses,failures}` in append order. Analyses include immutable `id` and `createdAt`. Corrections use the same schema with a new submissionId, `supersedesId` and non-empty `reason`; the original remains accessible. The detail UI displays the latest submitted analysis, its evidence and all previous versions, as a read-only presentation; submit corrections through the API from the agent. Corrections of factual values must cite saved evidence; add a new observation first if source evidence itself changed.
 
 POST `/api/v1/analysis-failures` with `{jobId,submissionId,code}` where code is `provider_failure` or `malformed_output`. This operation stores only its supported code and a generic actionable message. Never submit raw exception text, provider output or credentials. Failure retries are idempotent. Malformed HTTP JSON cannot identify a job safely and is rejected before recording an attempt.
 

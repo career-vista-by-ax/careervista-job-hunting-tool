@@ -1,4 +1,4 @@
-# Self-contained Mac archive
+# Self-contained Mac and Windows archives
 
 Extract `CareerVista-<version>-macos-arm64.tar.gz` and double-click **CareerVista.command**. It installs under `~/Library/Application Support/CareerVista`, starts the app and opens the exact localhost URL in your normal browser. No application account, Node, mise, package manager, compiler, Git, Docker or internet download is needed for local review. Keep the extracted folder as your launcher and uninstall tool. Downloads/archives are separate copies outside the owned installation root.
 
@@ -47,3 +47,14 @@ The default builder freshly compiles source into an operation-owned temporary di
 On 2026-10-18, macOS 27.0.1 arm64, Node 26.12.0, automated acceptance creates/extracts a real archive into a folder with spaces. The extracted launcher runs with PATH excluding Node/npm/mise/Git/compiler and under a macOS sandbox denying all non-loopback networking. A direct external HTTP request is verified to fail with EPERM/EACCES, while the local HTTP UI/assets and evidence interface work. The test saves evidence, repeats launch, restarts/reviews it, rejects a corrupted package without replacing the install, retries install, uninstalls keeping data, reinstalls/reviews retained evidence, upgrades a populated database with an additive migration, rejects a broken migration/downgrade while retaining data, then explicitly removes owned data/resources. A separate controlled migration writes to the owned database before failing and verifies snapshot rollback. Disposable storage stays at zero through these repeated sessions; lifecycle tests separately verify bounded cache cleanup and protected sessions/credentials.
 
 This is an isolated installation on the maintainer's native Mac, **not a fresh OS image**. It does not establish all minimum supported macOS versions, real download/quarantine, Gatekeeper/notarization, Finder double-click launch on a clean machine, optional host installation, model quality or complete real-source workflows. No global security setting is changed or quarantine removed automatically. The archive is not notarized. Windows, Linux, Intel Mac and Chromebook archives/host workflows remain unverified and are not advertised as supported. Parent workflow evaluation tracks real model/source checks and baseline comparison separately.
+
+
+## Windows x64 preview
+
+Build natively on Windows x64 with the pinned Node 26.12.0 runtime and `node scripts/package-release.mjs`. The same packager emits a ZIP containing `CareerVista.cmd`, `runtime/node.exe`, full licenses, compiled app, agent skills and documentation. It uses Windows's built-in tar for ZIP packaging/extraction. The Windows launcher opens the default browser with the OS PowerShell `Start-Process` facility; there is no policy bypass or global configuration change.
+
+Extract All before opening `CareerVista.cmd`. Default data root: `%LOCALAPPDATA%\CareerVista`. PowerShell examples: `.\CareerVista.cmd --no-browser`, `.\CareerVista.cmd stop`, `.\CareerVista.cmd register-skills --host codex`, `.\CareerVista.cmd uninstall`. Use the same explicit confirmation for permanent owned-data removal. Administrator access, WSL and a separate Node installation are unnecessary. No Windows service is installed.
+
+`.github/workflows/windows.yml` builds and tests on a native Windows x64 runner, including the actual CMD wrapper with spaces in paths and no developer tools on PATH, local HTTP, persistent records, forward migration, shutdown and removal. Successful runs upload the ZIP and SHA-256 as private build artifacts. This is automated runner coverage, not a fresh consumer Windows installation or a Windows browser-agent validation. The preview is unsigned; Explorer/SmartScreen and Windows ARM64 remain unverified. Use a compatible external agent host on Windows; no Mac host capability is assumed portable.
+
+Each computer has its own database and host configuration. Transfer records using private JSON backup/restore into an empty installation; copy referenced external documents separately. Avoid syncing an open SQLite file between machines.

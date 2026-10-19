@@ -1,7 +1,7 @@
 import type { CompensationAmount, CompensationRecord } from '../compensation.ts';
 const kinds = { advertised: 'Advertised', external_report: 'External report', model_estimate: 'Model estimate (not an employer commitment)', user_adjustment: 'User adjustment (not a source fact)' };
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, value = '') { const element = document.createElement(tag); element.textContent = value; return element; }
-export async function showCompensation(jobId: string, container: HTMLElement, previous?: HTMLElement) {
+export async function showCompensation(jobId: string, container: HTMLElement, previous?: HTMLElement, readOnly = false) {
   const section = node('section'); section.setAttribute('aria-label', 'Compensation'); if (previous) previous.replaceWith(section); else container.append(section);
   const message = node('p'); message.setAttribute('role', 'status');
   try {
@@ -22,6 +22,7 @@ export async function showCompensation(jobId: string, container: HTMLElement, pr
       }
       section.append(item);
     }
+    if (readOnly) return;
     const details = node('details'); details.append(node('summary', 'Record a personal compensation adjustment'));
     const form = node('form'); const fields = node('div'); fields.className = 'fields'; form.append(fields);
     const label = (title: string, field: HTMLElement) => { const wrapper = node('label', title); wrapper.append(field); fields.append(wrapper); return field; };

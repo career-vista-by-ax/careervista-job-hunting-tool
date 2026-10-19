@@ -88,7 +88,7 @@ test('disposable run storage is capped and stale crash artifacts are removed whi
   const saved = capture(app,'retained'); const service = new RunsService(app);
   const directory = join(app.paths.temp,'runs'); mkdirSync(directory,{recursive:true});
   writeFileSync(join(app.paths.sessions,'session.txt'),'retained session');
-  symlinkSync(app.paths.sessions,join(directory,'session-link'));
+  symlinkSync(app.paths.sessions,join(directory,'session-link'),process.platform==='win32'?'junction':'dir');
   writeFileSync(join(directory,'crashed-run.txt'),'stale'); utimesSync(join(directory,'crashed-run.txt'),new Date(0),new Date(0));
   writeFileSync(join(directory,'older.bin'),Buffer.alloc(9 * 1024 * 1024));
   writeFileSync(join(directory,'newer.bin'),Buffer.alloc(9 * 1024 * 1024));

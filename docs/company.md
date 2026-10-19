@@ -1,6 +1,6 @@
 # Focused company investigation
 
-Open a job's Company research disclosure, approve a topic and selected source URLs, then use your browser agent or add a report manually. Supported topics are benefits, salary, interviews and workplace conditions. No source is fetched by the app. Accessible Glassdoor reports and other sources use the same evidence interface; login, paywalls, blocked access and missing reports never become invented answers.
+Agree a focused investigation topic and source URLs in the agent conversation, save the request through the API, then research with the host browser or a suitable connected MCP. The modal presents saved reports and summaries. Supported topics are benefits, salary, interviews and workplace conditions. No source is fetched by the app. Accessible Glassdoor reports and other sources use the same evidence interface; login, paywalls, blocked access and missing reports never become invented answers.
 
 Public API: `GET /api/v1/jobs/:id/company`; POST its `/requests`, `/reports`, `/summaries`, `/access` subresources. See the exported input interfaces in `src/company.ts`. Every mutation requires an operationId; identical retries preserve the record and changed retries fail. Job deletion and ordinary backups/exports include this history. Original reports are retained before agent summaries.
 

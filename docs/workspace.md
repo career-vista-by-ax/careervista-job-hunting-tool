@@ -17,3 +17,8 @@ HTTP: `GET /api/v1/workspace` accepts scalar filter/sort query parameters; `GET 
 ## Validation
 
 Public-interface tests cover facts/unknowns and source units, independent statuses, closed/excluded retrieval, application dates, view validation, restart persistence, private-backup recovery and HTTP behavior. Desktop and 390 px mobile Chrome verification uses an isolated synthetic fixture root, with no real user resume/credentials. It checks table overflow, sticky role, saved views, filtering, modal disclosure order, Escape/focus and explicit empty states. This validates UI behavior; it does not claim real-model judgement quality or source collection support.
+
+
+## Conversation-first browsing
+
+The default page is now a presentation layer: jobs table, local search, refresh, collapsed filters/columns/saved views, and a details modal. Intake, resume interpretation, role expansion, run controls, feedback and analysis happen in the agent via HTTP. No profile, run, resume, manual capture or analysis-edit forms are mounted on the jobs page. The Agent setup dialog provides a starter prompt and local backup/export/removal controls. The table shows the first saved shortlist reason; the modal leads with reasons and concerns, with original evidence and history preserved. Data schemas and prior records remain compatible.
