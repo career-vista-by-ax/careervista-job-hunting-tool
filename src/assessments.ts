@@ -23,7 +23,7 @@ export interface AssessmentInput {
 export const fitLabels = ['strong', 'promising', 'investigate', 'low_fit', 'excluded'] as const;
 export type FitLabel = typeof fitLabels[number];
 export interface Assessment extends AssessmentInput { id: string; createdAt: string; label: FitLabel; rulesVersion: string }
-const rulesVersion = 'fit-v1';
+const rulesVersion = 'fit-v2';
 
 function object(value: unknown, name: string, keys: readonly string[]): asserts value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !keys.includes(key))) throw new AppError(`${name} must be an object containing only documented fields.`);
@@ -42,7 +42,7 @@ function fitLabel(input: AssessmentInput): FitLabel {
   const directlySupported = axes.every(axis => axis.findings.some(finding => finding.status === 'supports' && ['employer_claim','user_confirmed'].includes(finding.attribution)));
   const openFindings = axes.some(axis => axis.findings.some(finding => finding.status !== 'supports'));
   if (axes.every(axis => axis.status === 'match') && directlySupported && !openFindings && !input.unknowns.length && !input.concerns.length) return 'strong';
-  return axes.some(axis => axis.status === 'match') ? 'promising' : 'investigate';
+  return input.axes.qualifications.status === 'match' && input.axes.practicalConstraints.status !== 'concern' ? 'promising' : 'investigate';
 }
 
 export class AssessmentsService {

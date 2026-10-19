@@ -22,3 +22,7 @@ Public-interface tests cover facts/unknowns and source units, independent status
 ## Conversation-first browsing
 
 The default page is now a presentation layer: jobs table, local search, refresh, collapsed filters/columns/saved views, and a details modal. Intake, resume interpretation, role expansion, run controls, feedback and analysis happen in the agent via HTTP. No profile, run, resume, manual capture or analysis-edit forms are mounted on the jobs page. The Agent setup dialog provides a starter prompt and local backup/export/removal controls. The table shows the first saved shortlist reason; the modal leads with reasons and concerns, with original evidence and history preserved. Data schemas and prior records remain compatible.
+
+## Compact comparisons
+
+The comparison preset places labelled fit colours beside the role, with separate confidence, workplace, employment, concerns, unknowns, reasons, saved date and follow-up columns available. Quick views select all jobs, strong/promising jobs, or jobs saved by the user. `fit:shortlist` filters strong/promising without asserting verified eligibility; confidence and practical unknowns remain separate. `density:compact|comfortable` persists with each view and defaults to compact for older saved views. Existing column choices are preserved; Comparison columns applies the new preset. Full text remains in details and cell tooltips. Sorts additionally support employment, concern/unknown counts and next follow-up.

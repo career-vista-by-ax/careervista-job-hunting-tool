@@ -6,6 +6,7 @@ CareerVista is a private, local job-research assistant and application tracker f
 
 - Tell your agent what you want next; confirm competitive strengths, related role families and hard/soft preferences in that conversation.
 - Research SEEK, LinkedIn, employer listings and explicitly approved additional sources within a listing limit and spending budget.
+- Discover compact candidates before detailed assessment, using batch host search tools or the public Greenhouse/Lever collector; see [efficient collection](docs/collection.md).
 - Compare requirements, work arrangements, compensation provenance, fit/confidence and source freshness.
 - Save/dismiss jobs, review reversible preference proposals, reassess saved evidence and track application progress separately.
 - Keep records in your own SQLite database, review them offline, and export or restore private backups.
@@ -31,6 +32,24 @@ This is a **Mac arm64 preview**, tested in isolated installations on the maintai
 4. Reopen **CareerVista.cmd** to return to the same data. Each Windows/Mac installation has its own database; use private backup/restore to transfer records, never share a live SQLite file between computers.
 
 The Windows build is an unsigned x64 preview. The CI workflow tests the extracted ZIP, paths with spaces, bundled-runtime launch, persistence, forward upgrade and keep-data/removal behavior on a Windows runner. Clean-machine Explorer/SmartScreen behavior and a Windows agent host require separate verification; Windows ARM64 is not a tested target. See [release instructions](docs/release.md).
+
+## Upgrade an existing installation
+
+Download the newer release and extract it into a new folder. From Terminal or PowerShell **in that new folder**, run:
+
+```sh
+# Mac
+./CareerVista.command upgrade
+```
+
+```powershell
+# Windows
+.\CareerVista.cmd upgrade
+```
+
+The command installs the version in that folder, safely stops the previous app, preserves your jobs, profiles, resumes and application history, validates any database migration, and reopens CareerVista. It needs no uninstall. Repeating it for the already installed version reuses the running app. Add `--no-browser` to print the new local URL instead of opening it. If you originally chose a custom data root, pass the same `--root /path/to/your/root`.
+
+`upgrade` uses the release you downloaded; it does not automatically download updates. Double-clicking the new launcher also upgrades when needed. Keep the newer extracted folder as your launcher afterward. Migration failure restores the installer's private snapshot and keeps the previous release selected.
 
 ## First use
 

@@ -68,7 +68,10 @@ test('a restrictive startup is excluded only for evidenced effective hard confli
     assert.throws(() => service.submitAssessment({ ...restricted, submissionId: 'invented-evidence', hardConflicts: [{ ...restricted.hardConflicts[0]!, evidence: [{ observationId: saved.observation.id, quote: 'We reject all independent decisions.' }] }] }), /verbatim/i);
     const investigate = service.submitAssessment({ ...base, submissionId: 'unknown-practical', unknowns: restricted.unknowns, axes: { ...base.axes, practicalConstraints: { status: 'unknown', explanation: 'Salary and work arrangement need investigation.', findings: [{ dimension: 'compensation', status: 'unknown', statement: 'Not advertised', attribution: 'model_inference', evidence: [] }] } } }).assessment;
     assert.equal(investigate.label, 'promising');
-    assert.equal(service.history(saved.job.id).length, 2);
+    const unprovenQualifications=service.submitAssessment({...base,submissionId:'preferences-alone',axes:{...base.axes,qualifications:{status:'unknown',explanation:'Qualifications not yet established.',findings:[]},practicalConstraints:{status:'unknown',explanation:'Practical constraints not verified.',findings:[]}}}).assessment;
+    assert.equal(unprovenQualifications.label,'investigate');
+    assert.equal(unprovenQualifications.rulesVersion,'fit-v2');
+    assert.equal(service.history(saved.job.id).length, 3);
     assert.equal(service.history(saved.job.id)[0]?.label, 'excluded');
     assert.equal(app.listJobs().length, 1);
   } finally { app.close(); rmSync(root, { recursive: true, force: true }); }
