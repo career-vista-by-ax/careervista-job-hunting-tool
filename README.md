@@ -1,6 +1,6 @@
 # CareerVista
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文（台灣用語）](README.zh-TW.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
 
 CareerVista is a private, local job-research assistant and application tracker for the **Australian job market, across any profession, industry or seniority**. Your browser-capable agent handles the conversation: it clarifies goals, expands related role titles, reads a supplied resume, searches approved sources and saves evidence-backed reasoning. You compare jobs in a table, open details in a modal and decide what to pursue.
 

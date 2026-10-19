@@ -1,6 +1,6 @@
 # CareerVista
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文（台灣用語）](README.zh-TW.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
 
 CareerVista 是專為**澳洲就業市場**設計的本機求職研究助手與應徵紀錄工具，適用於澳洲各種職業、產業及職級。AI 代理程式（下稱代理）負責提問、閱讀履歷、延伸相關職稱、操作求職網站及分析適合程度；網頁則以表格與詳細資料視窗，呈現職缺、推薦理由、疑慮及原始佐證。
 
@@ -47,7 +47,7 @@ Windows：
 2. 直接描述目標，例如「幫我找墨爾本的 principal analytics engineer 職缺」。代理應延伸 staff／lead 等相關職稱，並先確認你是否也考慮資料工程或資料團隊管理，而不是只搜尋原始職稱。
 3. 視需要提供 PDF、Word 履歷或文字，由代理自己的文件工具閱讀。它會與你確認事實及競爭優勢，再將你同意保存的基礎履歷、已確認內容與個人資料存入資料庫，供後續對話重複使用。為個別職缺調整的履歷、求職信草稿與修改建議會另存版本，不覆寫基礎履歷。掃描檔或不支援的格式可能需要代理軟體提供 OCR／可讀文字，也可以不提供履歷繼續搜尋。網頁不負責解析文件。
 4. 代理**一次只問一個問題**，說明建議與取捨，提供選項及自行輸入答案的方式，並等待回覆。它會視需要確認澳洲地點、遠端／混合／現場工作、薪資、股權、年假、福利、工作內容及員工評價的關注面向，避免重複詢問已知資訊。
-5. 薪資以澳幣 AUD 為準，並釐清是「不含 super 的本薪」或「包含 super 的整體薪酬」，保留年薪、時薪或承攬報酬等原始計價方式。Superannuation 是澳洲退休金制度，不等同於台灣的勞退制度。
+5. 薪資以澳幣 AUD 為準，並釐清是「不含 super 的本薪」或「包含 super 的整體薪酬」，保留年薪、時薪或承攬報酬等原始計價方式。Superannuation 是澳洲退休金制度。
 6. 偏好討論完成後，代理會問你要搜尋哪些網站：SEEK、LinkedIn、Glassdoor、Indeed、雇主徵才頁面，或你指定的網址。接著與你確認職務範圍、必要條件／可協調偏好、搜尋數量及預算，再搜尋、分析並保存佐證、推薦理由、疑慮與待確認事項。
 7. 這一批結果完成後，代理會提供網頁連結。表格在畫面開啟時會定期更新，也可以按 **Refresh** 立即更新。點選職缺，在 **Why this job is here** 中查看推薦理由與佐證。**Filters & columns** 內提供篩選、顯示欄位及已儲存的檢視設定。
 
@@ -112,4 +112,4 @@ Windows 也可使用相同固定版本的 Node 執行 npm 指令；發行套件�
 
 服務僅繫結至 `127.0.0.1`，並拒絕異常 Host、外部 Origin 及跨網站資料請求。這是本機單人使用的應用程式，不是遠端代管服務；以同一系統使用者身分執行的其他處理程序，仍可能存取它。可用 `CAREERVISTA_ROOT` 指定獨立資料目錄，用 `CAREERVISTA_PORT` 指定連接埠，0 代表自動選擇。請勿將 `data`、`sessions` 或 `credentials` 當作快取刪除，也不要手動清理使用中的 SQLite WAL／journal 檔案。
 
-更多說明：[代理工作流程](docs/agent-workflow.md)、[逐題訪談](docs/agent-intake.md)、[履歷](docs/resume.md)、[個人資料](docs/profiles.md)、[研究任務](docs/runs.md)、[系統架構](docs/architecture.md)、[授權與來源](docs/references-and-licenses.md)。這些技術文件目前為英文。本 README 採台灣慣用語，不表示網頁介面已在地化，也不會將產品範圍擴大至澳洲以外的就業市場。
+更多說明：[代理工作流程](docs/agent-workflow.md)、[逐題訪談](docs/agent-intake.md)、[履歷](docs/resume.md)、[個人資料](docs/profiles.md)、[研究任務](docs/runs.md)、[系統架構](docs/architecture.md)、[授權與來源](docs/references-and-licenses.md)。這些技術文件目前為英文。繁體中文 README 不表示網頁介面已在地化；產品仍專注於澳洲就業市場。

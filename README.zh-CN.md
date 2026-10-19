@@ -1,6 +1,6 @@
 # CareerVista
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文（台灣用語）](README.zh-TW.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
 
 CareerVista 是面向**澳大利亚就业市场**的本地求职研究助手与申请记录工具，适用于澳洲的任何职业、行业和职级。智能体负责提问、理解简历、扩展相关职位名称、操作招聘网站和分析匹配情况；网页负责用表格和详情弹窗展示结果、入选理由、疑虑及原始证据。
 

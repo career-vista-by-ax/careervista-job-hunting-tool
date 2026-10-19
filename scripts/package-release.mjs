@@ -86,7 +86,7 @@ agent-skills/v1/careervista-capture/SKILL.md and sibling instructions directly.
 The agent needs browser tools and local HTTP access on the same computer.
 
 Full READMEs: app/README.md (English), app/README.zh-CN.md (Simplified Chinese),
-and app/README.zh-TW.md (Traditional Chinese, Taiwan wording).
+and app/README.zh-TW.md (Traditional Chinese).
 
 Read app/docs/release.md for support and validation limitations, installation
 recovery, upgrade restrictions, build provenance and privacy. This archive is
