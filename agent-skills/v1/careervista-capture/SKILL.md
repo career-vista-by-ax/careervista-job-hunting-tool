@@ -5,6 +5,8 @@ description: Run CareerVista job searches from a conversation: clarify goals, re
 
 For a new search, resume/strengths intake, title expansion or result refinement, first GET `/api/v1/agent-guide/agent-workflow` at the user-supplied local origin and follow its conversation-first workflow. For intake/refinement, also GET `/api/v1/agent-guide/agent-intake`: ask one question at a time with a reasoned recommendation, suggested choices and custom input, then wait. Cover compensation base/super, equity, leave, benefits, reviews and flexible source selection as relevant. The webpage is for browsing saved results; handle inputs, document reading and reasoning in this agent. Discover the installed API guides with GET `/api/v1/agent-guide`.
 
+For CV enhancement or tailoring, GET `/api/v1/agent-guide/ax-cv` and follow **老徐的简历修改**. The portable `ax-cv` skill also works independently of CareerVista. Keep parsed bases and tailored variants separate through the resume API.
+
 For a bounded SEEK research run, read `seek.md` and `collection.md` first. For a directly supplied listing, follow the steps below.
 
 Use the local origin supplied by the running CareerVista app. Read `interface.md` beside this file for the version 1 JSON contract before submitting.

@@ -25,6 +25,7 @@ test('Windows zip installs, starts and upgrades with its own runtime and preserv
     cli=(...args:string[])=>JSON.parse(execFileSync(process.env.ComSpec??'C:\\Windows\\System32\\cmd.exe',['/d','/s','/c',`""${join(bundle,'CareerVista.cmd')}" --root "${installRoot}" ${args.map(arg=>`"${arg}"`).join(' ')}"`],{env,encoding:'utf8',timeout:30_000,windowsVerbatimArguments:true,windowsHide:true}));
     const launched=cli('open','--no-browser');assert.match(launched.url,/^http:\/\/127\.0\.0\.1:/);assert.equal(cli('open','--no-browser').alreadyRunning,true);
     assert.equal((await fetch(launched.url)).status,200);
+    const cvSkill=await(await fetch(`${launched.url}/api/v1/agent-guide/ax-cv`)).json();assert.equal(cvSkill.markdown,readFileSync(join(bundle,'agent-skills/v1/ax-cv/SKILL.md'),'utf8'));
     const workflow=await(await fetch(`${launched.url}/api/v1/agent-guide/agent-intake`)).json() as {markdown:string};assert.match(workflow.markdown,/one question at a time/i);
     const savedResponse=await fetch(`${launched.url}/api/v1/observations`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ingestionId:'windows-nurse',title:'Nurse',company:'Test clinic',source:'manual',sourceUrl:'https://example.com/windows',capturedAt:'2026-10-19T00:00:00Z',text:'Synthetic Windows evidence retained across upgrades.'})});assert.equal(savedResponse.status,201);
     const saved=await savedResponse.json();assert.equal(cli('stop').stopped,true);

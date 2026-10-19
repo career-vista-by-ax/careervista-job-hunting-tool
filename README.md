@@ -80,6 +80,12 @@ Change the example role to any occupation in Australia. The skill reads the runn
 
 Website sign-in happens directly on the website in the agent's controlled browser. Resume that same session after completing it. Budget reports distinguish known costs from conservative estimates; your host owns actual billing and may incur unrelated costs outside the run.
 
+## Standalone CV skill: `/ax-cv`
+
+**老徐的简历修改** is a self-contained, model-independent [CV skill](https://github.com/allenhori/careervista-job-hunting-tool/tree/main/agent-skills/v1/ax-cv). Its one-file folder is `agent-skills/v1/ax-cv/SKILL.md`, also included in the extracted release. Copy the `ax-cv` folder into your agent host's documented skill directory, or let any agent read the Markdown directly. `/ax-cv` is the shorthand; actual slash/skill invocation depends on the host. It needs no CareerVista server or LinkedIn plugin. Document rendering uses the host's available tools.
+
+CareerVista's job-hunting skill loads the same rules through `/api/v1/agent-guide/ax-cv` when enhancing a CV. The core skill preserves a reusable factual base, tailors highlights most, uses human achievement-led language and requires rendered CVs to stay within four pages with accurate page numbering. Connected use saves base CVs and separate tailored variants through the app API; standalone use saves agreed local versions.
+
 ## Daily review and follow-up
 
 The table includes employment/work arrangement, compensation provenance and units, fit/confidence/concerns, saved/applied dates, source freshness and independent review/application states. Full values, original observations and earlier reasoning stay available in the modal.

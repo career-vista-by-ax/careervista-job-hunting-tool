@@ -16,6 +16,8 @@ Agree the proposed families and material boundaries in the conversation, using a
 
 ## 2. Optional resume, handled by the agent
 
+For CV enhancement/tailoring, first GET `/api/v1/agent-guide/ax-cv`, the portable **老徐的简历修改** skill. It sets the four-page ceiling, voice and achievement rules; the steps below handle CareerVista persistence.
+
 Read a user-supplied PDF, Word document or text with the host's document tools. If the host cannot read the file or it is scanned, explain the limitation and request readable text/OCR or continue without it. CareerVista does not convert/upload documents from the webpage.
 
 Before sending resume content to any model, follow the host's data-sharing requirements and the user's authorisation. After parsing, persist the readable base CV through `POST /api/v1/resumes` with a stable importId, descriptive label, format `txt`/`paste` and its full parsed text. Read back the saved source ID/version, preview redaction, present the exact analysis payload for explicit review and save the confirmed payload. Return the base and payload IDs to the user; do not leave the base CV only in chat memory. Keep raw file parsing in the host; the database stores the parsed text, not the original PDF/Word binary.

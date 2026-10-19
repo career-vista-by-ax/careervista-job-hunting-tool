@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { AppError, CareerVistaApp } from './app.ts';
 import type { ObservationInput } from './app.ts';
 
@@ -45,14 +45,19 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
       if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
       const context: RouteContext = { app, request, response, url, json: maxBytes => readJson(request, maxBytes), send };
-      const agentGuides = ['agent-workflow', 'agent-intake', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
+      const agentGuides = ['agent-workflow', 'agent-intake', 'ax-cv', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
       if (request.method === 'GET' && url.pathname === '/api/v1/agent-guide') {
         send({ workflow: '/api/v1/agent-guide/agent-workflow', guides: agentGuides.map(name => ({ name, path: `/api/v1/agent-guide/${name}` })) }); return;
       }
       const guideName = url.pathname.slice('/api/v1/agent-guide/'.length);
       if (request.method === 'GET' && url.pathname.startsWith('/api/v1/agent-guide/')) {
         if (!agentGuides.some(name => name === guideName)) throw new AppError('Agent guide not found.', 404, 'not_found');
-        send({ name: guideName, markdown: readFileSync(new URL(`../docs/${guideName}.md`, import.meta.url), 'utf8') }); return;
+        const paths = guideName === 'ax-cv'
+          ? [new URL('../agent-skills/v1/ax-cv/SKILL.md', import.meta.url), new URL('../../agent-skills/v1/ax-cv/SKILL.md', import.meta.url)]
+          : [new URL(`../docs/${guideName}.md`, import.meta.url)];
+        const path = paths.find(candidate => existsSync(candidate));
+        if (!path) throw new AppError('This agent guide is missing from the installation.', 503, 'guide_unavailable');
+        send({ name: guideName, markdown: readFileSync(path, 'utf8') }); return;
       }
       for (const route of options.routes ?? []) if (await route(context)) return;
       if (request.method === 'GET' && url.pathname === '/api/v1/jobs') { send(app.listJobs()); return; }

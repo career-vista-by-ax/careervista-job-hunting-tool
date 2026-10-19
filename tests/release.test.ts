@@ -35,6 +35,7 @@ test('the native Mac archive contains the tested runtime, full notices, compiled
    launched=cli('--no-browser');assert.match(launched.url,/^http:\/\/127\.0\.0\.1:/);
    const screen=await fetch(launched.url);assert.equal(screen.status,200);assert.match(await screen.text(),/workspace-controls/);
    assert.equal((await fetch(`${launched.url}/workspace-ui.js`)).status,200);
+   const cvSkill=await(await fetch(`${launched.url}/api/v1/agent-guide/ax-cv`)).json();assert.equal(cvSkill.markdown,readFileSync(join(bundle,'agent-skills/v1/ax-cv/SKILL.md'),'utf8'));
    const saved=await fetch(`${launched.url}/api/v1/observations`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ingestionId:'offline-nurse',title:'Nurse',company:'Offline clinic',source:'manual',sourceUrl:'https://example.com/nurse',capturedAt:'2026-10-18T00:00:00Z',text:'Original synthetic evidence retained without external access.'})});assert.equal(saved.status,201);
    const listing=await saved.json();assert.equal(cli('--no-browser').alreadyRunning,true);
    const before=cli('storage').totalBytes;assert.equal(before,0);
