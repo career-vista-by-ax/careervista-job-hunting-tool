@@ -17,6 +17,10 @@ test('an independent agent discovers installed workflow and API guides without w
     for(const skill of ['careervista-job-search','careervista-capture','ax-cv','ax-30-secs']) {
       assert.equal(readFileSync(new URL(`../agent-skills/v1/${skill}/references/user-consent.md`,import.meta.url),'utf8'),consent.markdown,`${skill} must carry the same notice when installed independently`);
     }
+    const intake=await(await fetch(`${server.url}/api/v1/agent-guide/agent-intake`)).json() as {markdown:string};
+    for(const skill of ['careervista-job-search','careervista-capture']) {
+      assert.equal(readFileSync(new URL(`../agent-skills/v1/${skill}/intake.md`,import.meta.url),'utf8'),intake.markdown,`${skill} must carry current intake policy independently of the runtime image`);
+    }
     const workflow=await(await fetch(`${server.url}${index.workflow}`)).json() as {markdown:string};
     assert.match(workflow.markdown,/principal analytics engineer/);assert.match(workflow.markdown,/demonstratedExperience/);assert.match(workflow.markdown,/reasonsToPursue/);
     const cvSkill=await(await fetch(`${server.url}/api/v1/agent-guide/ax-cv`)).json() as {markdown:string};

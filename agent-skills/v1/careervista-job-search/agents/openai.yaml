@@ -1,4 +1,4 @@
 interface:
   display_name: "CareerVista Job Search"
-  short_description: "Launch CareerVista and guide an Australian job search"
-  default_prompt: "Use $careervista-job-search to help me find my next role in Australia."
+  short_description: "Launch CareerVista and guide a location-aware job search"
+  default_prompt: "Use $careervista-job-search to help me find my next role."

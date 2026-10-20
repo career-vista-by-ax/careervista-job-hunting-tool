@@ -2,7 +2,7 @@
 
 Canonical repository: <https://github.com/career-vista-by-ax/careervista-job-hunting-tool>.
 
-CareerVista helps people find Australian jobs, understand their fit, prepare
+CareerVista helps people find jobs in their target market, understand their fit, prepare
 truthful application documents and maintain their own records. The person
 remains in control of career decisions and application submission.
 
@@ -69,6 +69,11 @@ website. Docker and native releases are runtime options, not skill installers.
 Use the host agent's available shell, browser, HTTP and document tools; explain
 missing capabilities without claiming universal host compatibility.
 
+Edit intake policy in `docs/agent-intake.md`, then run
+`node scripts/sync-intake.mjs` to update both standalone skills. Verify with
+`node scripts/sync-intake.mjs --check`. Packaged intake policy overrides older
+runtime policy wording; API fields and capabilities follow the installed app.
+
 Onboarding should reuse a verified existing connection or ask Docker versus a
 local copy, one question at a time. Obtain permission before concrete Docker
 pull/start/update actions. Use a persistent named volume and publish only to
@@ -85,7 +90,7 @@ permission and attachment mechanisms; do not claim universal clickable UI.
 
 - Save original source text, URLs and capture times before analysis. Distinguish
   facts, employer claims, inference and unknowns; retain contradictory evidence.
-- Keep English job evidence and original quotations unchanged. Store translated
+- Keep job evidence and quotations in their original language unchanged. Store translated
   explanations separately with English lineage. Language choices are English,
   简体中文 and 繁体中文, without country or region qualifiers.
 - Preserve base CVs and earlier variants. Tailoring and a simulated 30-second
