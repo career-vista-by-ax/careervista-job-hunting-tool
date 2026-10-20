@@ -51,7 +51,7 @@ test('registered job-search shortcut resolves its own executable and refreshes o
   writeFileSync(join(source,'app/dist/lifecycle.js'),`export { Installation } from ${JSON.stringify(new URL('../src/lifecycle.ts',import.meta.url).href)};import {Installation} from ${JSON.stringify(new URL('../src/lifecycle.ts',import.meta.url).href)};const root=process.argv[process.argv.indexOf('--root')+1];if(process.argv[2]==='launch')console.log(JSON.stringify(await new Installation(root).launch()));`);
   manifest.files['app/dist/lifecycle.js']=createHash('sha256').update(readFileSync(join(source,'app/dist/lifecycle.js'))).digest('hex');
   for(const skill of ['careervista-capture','careervista-job-search']){
-   const origin=join('agent-skills/v1',skill),target=join(source,origin);cpSync(origin,target,{recursive:true});
+   const origin=`agent-skills/v1/${skill}`,target=join(source,origin);cpSync(origin,target,{recursive:true});
    for(const name of readdirSync(target,{recursive:true}))if(typeof name==='string'&&!name.endsWith('/')&&requireFile(join(target,name))){const path=`${origin}/${name.replaceAll('\\','/')}`;manifest.files[path]=createHash('sha256').update(readFileSync(join(source,path))).digest('hex');}
   }
   writeFileSync(manifestPath,JSON.stringify(manifest));await installation.install(source);const registered=await installation.registerSkills('codex');assert.ok(registered.starter);
