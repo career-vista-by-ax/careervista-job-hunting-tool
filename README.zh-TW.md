@@ -9,7 +9,7 @@
 首次使用，告訴智能體：
 
 ```text
-從 https://github.com/career-vista-by-ax/careervista-job-hunting-tool 安裝技能
+從 https://github.com/career-vista-by-ax/careervista-job-hunting-tool 安裝並啟動 CareerVista
 ```
 
 安裝後，只需輸入：
@@ -29,3 +29,5 @@ Docker 或本機應用程式、釐清求職目標，並提供本機職缺表連�
 [安裝與發布說明](docs/release.md) · [貢獻指南](CONTRIBUTING.md)
 
 使用 [GNU GPL v3 only](LICENSE) 授權。貢獻需簽署 [CLA](CLA.md)。
+
+Docker 映像已公開發布：`careervista/careervista:0.2.0-preview.3`。技能使用固定摘要拉取，無需 Docker Hub 帳號或本機建置；請先啟動 Docker。舊版技能請先更新。

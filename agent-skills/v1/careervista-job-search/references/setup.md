@@ -12,14 +12,14 @@ First use without a settled backend: ask **“How would you like to run CareerVi
 
 ## Docker
 
-Read `../distribution.json` for a published image reference. Use only a verified image from the declared project publisher or an explicitly supplied trusted image. If the image is null/unpublished, say so; offer a local release, a user-supplied image, or an explicitly authorised source build. Do not invent a registry tag or imply a local test image is publicly pullable.
+Read `../distribution.json` for the published image reference. When `docker.status` is `published`, use `docker.image` exactly, including its digest; `docker.tag` is a human-readable release label. Resolve this yourself rather than asking the user to supply an image name. The public image requires no Docker Hub account, login, token, Git checkout or local build. Do not request registry credentials for it. A pull failure is not permission to build from source: report the actual connectivity/platform/access problem and offer a retry or another supported setup. Use only a verified image from the declared project publisher or an explicitly supplied trusted image. If the image is null/unpublished, say so; offer a local release, a user-supplied image, or an explicitly authorised source build. Do not invent a registry tag or imply a local test image is publicly pullable.
 
 Before pulling, creating or starting, ask permission explaining the exact image, container name, named data volume and localhost port. A backend selection alone does not replace this confirmation. Reuse permission already given for those exact actions in the current conversation. Keep Docker credentials inside Docker's own credential store.
 
-Use a named volume for persistent data, one container per volume, and publish only to loopback. An illustrative command (replace IMAGE only after resolving it) is:
+Use a named volume for persistent data, one container per volume, and publish only to loopback. Resolve IMAGE from `distribution.json`, use `--init` and shared memory for the bundled browser, and run:
 
 ```text
-docker run -d --name careervista --label app=careervista --restart unless-stopped --security-opt no-new-privileges:true --cap-drop ALL -p 127.0.0.1:4318:4318 -e CAREERVISTA_PUBLIC_ORIGIN=http://127.0.0.1:4318 -v careervista-data:/var/lib/careervista IMAGE
+docker run -d --init --shm-size=256m --name careervista --label app=careervista --restart unless-stopped --security-opt no-new-privileges:true --cap-drop ALL -p 127.0.0.1:4318:4318 -e CAREERVISTA_PUBLIC_ORIGIN=http://127.0.0.1:4318 -v careervista-data:/var/lib/careervista IMAGE
 ```
 
 Check an existing named container's labels, image and mounts before reusing it; preserve unrelated resources. Inspect a chosen volume before starting, and avoid mounting it in two live app containers. If port 4318 is occupied, agree another port and set CAREERVISTA_PUBLIC_ORIGIN to that exact loopback origin; the internal container port stays 4318. Use Docker's actual port mapping to derive the browser/API URL. Verify the HTTP guide endpoint and container health before intake.

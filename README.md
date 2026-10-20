@@ -7,13 +7,13 @@ evidence, recommendations and application records in a local workspace.
 
 ## Start
 
-Install once by telling your agent:
+Tell your agent:
 
 ```text
-Install the skills from https://github.com/career-vista-by-ax/careervista-job-hunting-tool
+Install and start CareerVista from https://github.com/career-vista-by-ax/careervista-job-hunting-tool
 ```
 
-Then start with:
+Once installed, start future sessions with:
 
 ```text
 $careervista-job-search
@@ -44,10 +44,13 @@ applications or send messages for you.
 
 ## Docker and references
 
-The starter skill checks for a verified published image and guides installation.
+The starter skill pulls the public `careervista/careervista:0.2.0-preview.3` image,
+pinned by digest in its distribution metadata, and guides installation. Docker
+users need Docker running; no Docker Hub account, source checkout or local build
+is required. If you installed the skills before this release, update them from
+this repository first.
 Maintainers publish with the manual [Docker Hub workflow](docs/release.md#publish-a-prebuilt-docker-hub-image).
-The pull-only `compose.published.yaml` avoids local compilation once a published
-image is verified. Source-build instructions remain in the release guide.
+The pull-only `compose.published.yaml` also supports the published image. Source-build instructions remain in the release guide.
 
 [Runtime and releases](docs/release.md) · [Agent tasks](docs/agent-tasks.md) ·
 [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)

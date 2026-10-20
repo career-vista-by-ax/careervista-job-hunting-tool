@@ -85,8 +85,10 @@ syntax and document/browser capabilities depend on the agent host.
 
 ## Docker preview
 
-Build using the repository Dockerfile or Compose configuration. No public image
-is advertised until an image has actually been published. The runtime uses a
+The public preview is `docker.io/careervista/careervista:0.2.0-preview.3`
+for Linux AMD64 and ARM64. The starter skill’s `distribution.json` pins its
+verified registry digest. Use that skill for guided setup; source builds remain
+available through the repository Dockerfile or `compose.yaml`. The runtime uses a
 non-root user, loopback-only host port publishing and a persistent named volume.
 Host browser profiles, home directories and the Docker socket are not mounted.
 The container listener accepts only the configured HTTP loopback public origin;
@@ -114,7 +116,7 @@ After the workflow succeeds, verify a clean pull/start and the actual local
 `/api/v1/agent-guide` response. Update the standalone skill's `distribution.json`
 with the verified `docker.io/namespace/repository@sha256:...` image and published
 status so first-time setup can pull it instead of requesting a source build.
-Until that verification, the distribution image remains null.
+For future releases, retain the previous verified image until these checks pass.
 
 Users with the verified image can run the pull-only Compose file:
 

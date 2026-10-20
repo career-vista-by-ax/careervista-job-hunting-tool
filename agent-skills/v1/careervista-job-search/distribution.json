@@ -2,8 +2,9 @@
   "repository": "https://github.com/career-vista-by-ax/careervista-job-hunting-tool",
   "releasesUrl": "https://github.com/career-vista-by-ax/careervista-job-hunting-tool/releases",
   "docker": {
-    "image": null,
-    "status": "not-published",
-    "note": "A locally built/tested image is not a public registry release. Resolve a published reference or ask for an authorised source build."
+    "image": "docker.io/careervista/careervista@sha256:9cefa0f5cd165740099ea108795a6d0fcc96d6d6a08e0ce686deab437bda69b0",
+    "tag": "docker.io/careervista/careervista:0.2.0-preview.3",
+    "status": "published",
+    "note": "Public preview for linux/amd64 and linux/arm64. Pull the pinned image above; no Docker Hub login or local source build is required."
   }
 }
