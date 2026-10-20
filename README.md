@@ -107,3 +107,15 @@ does not auto-apply, complete application forms or send messages for you.
 
 The repository is private for now. Licensing and public distribution terms
 remain undecided.
+
+## Search usage and prebuilt Docker images
+
+Search instructions prefer compact previews, batched screening, text-first browser
+reads and reuse of saved evidence before detailed assessment. Start with a small
+agreed batch; model usage still belongs to your agent host. See
+[compact agent tasks](docs/agent-tasks.md) for the batch helper and filtered context.
+
+Maintainers can publish prebuilt Docker Hub images with the manual
+[release workflow](docs/release.md#publish-a-prebuilt-docker-hub-image).
+After a verified publication, users can use `compose.published.yaml` to pull and
+start without compiling. No public image is advertised until that step succeeds.

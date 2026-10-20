@@ -97,3 +97,34 @@ using the same volume concurrently. Image replacement runs the same validated,
 snapshot-backed installation/migration path as native releases. Keep the volume
 when replacing the image. Deleting it is permanent data removal, not an update.
 Skills and host document/default-browser tools stay outside the container. The image bundles pinned Playwright and Chromium headless shell for public JavaScript pages, available through `docker exec` without a local Playwright install or extra listening port. See `collection` Headless-first access for batch input, compact output, content validation and access-barrier fallback. Host search tools/public APIs remain the first discovery step; headless reads cannot guarantee access to bot-protected boards.
+
+### Publish a prebuilt Docker Hub image
+
+Maintainers can run **Publish Docker Hub image** (`docker-publish.yml`) manually
+from the reviewed release commit. Create the Docker Hub repository first. Set
+GitHub Actions variable `DOCKERHUB_USERNAME` and secret `DOCKERHUB_TOKEN` (a Docker
+Hub access token with push permission). Enter the exact `namespace/repository`
+and release version in the workflow. It smoke-tests the packaged headless browser
+on AMD64, then builds/pushes Linux AMD64 and ARM64 together. ARM64 is built but
+not runtime-smoke-tested by this workflow. The selected repository visibility
+controls who can pull; use a public repository for login-free installation.
+No `latest` tag is changed. The job summary records the immutable image digest.
+
+After the workflow succeeds, verify a clean pull/start and the actual local
+`/api/v1/agent-guide` response. Update the standalone skill's `distribution.json`
+with the verified `docker.io/namespace/repository@sha256:...` image and published
+status so first-time setup can pull it instead of requesting a source build.
+Until that verification, the distribution image remains null.
+
+Users with the verified image can run the pull-only Compose file:
+
+```sh
+export CAREERVISTA_IMAGE=docker.io/YOUR_NAMESPACE/careervista:YOUR_VERIFIED_VERSION
+docker compose -f compose.published.yaml pull
+docker compose -f compose.published.yaml up -d
+```
+
+Use the same Compose project name when replacing an existing source-built setup,
+so its named volume is reused; inspect the existing volume and stop the old
+container first. Keep `careervista-data` on updates. This moves compilation and
+browser installation to the publisher; it does not reduce model work per search.

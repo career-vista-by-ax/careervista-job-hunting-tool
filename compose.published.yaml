@@ -1,0 +1,19 @@
+# Use a verified published tag or digest. This file deliberately has no build step.
+services:
+  careervista:
+    image: ${CAREERVISTA_IMAGE:?Set CAREERVISTA_IMAGE to a verified published image tag or digest}
+    ports:
+      - "127.0.0.1:4318:4318"
+    environment:
+      CAREERVISTA_PUBLIC_ORIGIN: http://127.0.0.1:4318
+    volumes:
+      - careervista-data:/var/lib/careervista
+    init: true
+    shm_size: 256mb
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  careervista-data:

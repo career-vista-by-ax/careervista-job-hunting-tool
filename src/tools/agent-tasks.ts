@@ -18,7 +18,7 @@ interface CaptureInput {
   apiContext?: { method: 'public-api'; provider: 'greenhouse'|'lever'; endpoint: string };
 }
 export interface AgentTaskInputs {
-  'search-context': { runId?: string; offset?: number; limit?: number };
+  'search-context': { runId?: string; offset?: number; limit?: number; includeProfile?: boolean; disposition?: 'pending'|'selected'|'skipped' };
   'plan-search': { run: RunInput; plans: PlanInput[] };
   'prepare-work': { runId: string; operationId: string; workKey: string; modelWork: boolean; estimate?: number; currency?: string };
   'save-previews': { runId: string; operationId: string; searchKey: string; outcome: 'results'|'zero-results'|'access-failure'|'unsupported-content'; listings?: Preview[] };
@@ -60,19 +60,38 @@ export class LocalAgentTasks {
     if (!response.ok) throw new AgentTaskError(typeof data.error?.message === 'string' ? data.error.message.slice(0,1000) : 'Local API rejected the task.', response.status, typeof data.error?.code === 'string' ? data.error.code : 'api_error');
     return data as T;
   }
+  /** Sequential, bounded tasks: preserve receipts and stop before dependent work on failure. */
+  async batch(input: unknown): Promise<unknown> {
+    const tasks = (input as { tasks?: unknown })?.tasks;
+    if (!Array.isArray(tasks) || tasks.length < 1 || tasks.length > 100 || tasks.some(item => !item || typeof item.task !== 'string' || !Object.hasOwn(taskHelp, item.task) || !item.input || typeof item.input !== 'object' || Array.isArray(item.input))) throw new AgentTaskError('Supply 1–100 tasks with known task names and JSON input objects.');
+    const results: { index: number; task: string; result: unknown }[] = [];
+    for (const [index, item] of tasks.entries()) {
+      try {
+        const result = await this.execute(item.task, item.input);
+        results.push({ index, task: item.task, result });
+        if ((result as { partial?: boolean }).partial) return { results, partial: true, stoppedAt: index, remaining: tasks.length-index-1 };
+      } catch (error) {
+        if (!(error instanceof AgentTaskError)) throw error;
+        return { results, partial: true, stoppedAt: index, remaining: tasks.length-index-1, error: { code: error.code, message: error.message, status: error.status } };
+      }
+    }
+    return { results, partial: false, remaining: 0 };
+  }
   async execute<K extends keyof AgentTaskInputs>(task: K, input: AgentTaskInputs[K]): Promise<unknown> {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new AgentTaskError('Supply a JSON task object.');
     switch (task) {
       case 'search-context': {
-        const { runId, offset = 0, limit = 25 } = input as AgentTaskInputs['search-context'];
+        const { runId, offset = 0, limit = 25, includeProfile = true, disposition } = input as AgentTaskInputs['search-context'];
         if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new AgentTaskError('Use offset >= 0 and limit 1–100.');
+        if (typeof includeProfile !== 'boolean' || (disposition !== undefined && !['pending','selected','skipped'].includes(disposition))) throw new AgentTaskError('Use includeProfile boolean and a valid candidate disposition.');
         if (!runId) return { profile: await this.request<Profile|null>('/profiles/active') };
         const run = await this.request<ResearchRun>(`/runs/${part(runId)}`);
-        const [profile, candidates] = await Promise.all([this.request<Profile>(`/profiles/${run.profileVersion}`), this.request<Candidate[]>(`/runs/${part(runId)}/collection/candidates`)]);
+        const [profile, candidates] = await Promise.all([includeProfile ? this.request<Profile>(`/profiles/${run.profileVersion}`) : undefined, this.request<Candidate[]>(`/runs/${part(runId)}/collection/candidates`)]);
         const unfinished = run.work.filter(work => work.status === 'pending' || work.status === 'working' || work.status === 'failed');
-        return { profile, run: summary(run), unfinishedWork: unfinished.slice(0,25), unfinishedWorkTotal: unfinished.length,
-          candidates: candidates.slice(offset,offset+limit).map(item => ({ ...item, preview: { ...item.preview, ...(item.preview.snippet ? { snippet: item.preview.snippet.slice(0,500) } : {}) } })),
-          totalCandidates: candidates.length, nextOffset: offset+limit < candidates.length ? offset+limit : null };
+        const visible = disposition ? candidates.filter(item => item.disposition === disposition) : candidates;
+        return { ...(includeProfile ? { profile } : {}), run: summary(run), unfinishedWork: unfinished.slice(0,25), unfinishedWorkTotal: unfinished.length,
+          candidates: visible.slice(offset,offset+limit).map(item => ({ ...item, preview: { ...item.preview, ...(item.preview.snippet ? { snippet: item.preview.snippet.slice(0,500) } : {}) } })),
+          totalCandidates: candidates.length, matchingCandidates: visible.length, nextOffset: offset+limit < visible.length ? offset+limit : null };
       }
       case 'plan-search': {
         const { run: settings, plans } = input as AgentTaskInputs['plan-search'];
@@ -123,7 +142,7 @@ export class LocalAgentTasks {
 }
 
 export const taskHelp = {
-  'search-context': '{runId?,offset?:0,limit?:25}: active/pinned profile, run summary, paged previews; no resume or full listing text',
+  'search-context': '{runId?,offset?:0,limit?:25,includeProfile?:true,disposition?:pending|selected|skipped}: active/pinned profile, run summary, paged previews; no resume or full listing text',
   'plan-search': '{run:{requestId,profileVersion,trackIds,sources,limit,discoveryLimit,budget},plans:[{source,config}]}: save approved run and source plans; partial failures are explicit',
   'prepare-work': '{runId,operationId,workKey,modelWork,estimate?,currency?}: reserve model cost when needed, then authorize planned work',
   'save-previews': '{runId,operationId,searchKey,outcome,listings?:[{url,title?,company?,location?,snippet?}]}: deferred discovery for prepared search',
@@ -134,12 +153,13 @@ export const taskHelp = {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const args = process.argv.slice(2);
-    if (args.length === 1 && args[0] === '--help') console.log(JSON.stringify({ usage: 'node dist/tools/agent-tasks.js --origin <exact localhost origin> --task <name> < input.json', tasks: taskHelp }));
+    if (args.length === 1 && args[0] === '--help') console.log(JSON.stringify({ usage: 'node dist/tools/agent-tasks.js --origin <exact localhost origin> --task <name|batch> < input.json', batch: '{tasks:[{task:<name>,input:{...}}]}: sequential, stops at first error/partial; earlier writes persist', tasks: taskHelp }));
     else {
-      if (args.length !== 4 || args[0] !== '--origin' || args[2] !== '--task' || !Object.hasOwn(taskHelp,args[3]!)) throw new AgentTaskError('Use --origin <origin> --task <name> with JSON on stdin; --help lists tasks.');
+      if (args.length !== 4 || args[0] !== '--origin' || args[2] !== '--task' || !(args[3] === 'batch' || Object.hasOwn(taskHelp,args[3]!))) throw new AgentTaskError('Use --origin <origin> --task <name> with JSON on stdin; --help lists tasks.');
       const raw = readFileSync(0,'utf8');
       if (Buffer.byteLength(raw) > 2_000_000) throw new AgentTaskError('Task input exceeds the API limit.');
-      const result = await new LocalAgentTasks(args[1]!).execute(args[3] as keyof AgentTaskInputs,JSON.parse(raw));
+      const client = new LocalAgentTasks(args[1]!);
+      const result = args[3] === 'batch' ? await client.batch(JSON.parse(raw)) : await client.execute(args[3] as keyof AgentTaskInputs,JSON.parse(raw));
       console.log(JSON.stringify(result));
       if ((result as {partial?:boolean}).partial) process.exitCode = 1;
     }

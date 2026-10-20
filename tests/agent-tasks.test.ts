@@ -95,3 +95,47 @@ test('task client keeps career payloads on loopback and rejects redirects rather
   await assert.rejects(client.execute('search-context',{}),/Local API request failed/);
   assert.equal(calls,1);
 });
+
+test('batch validates envelopes before writes, stops on failure, and resumes without duplicating receipts',async()=>{
+  const f=await fixture();
+  try {
+    f.profiles.approve(f.profile.version);
+    await assert.rejects(f.client.batch({tasks:[{task:'plan-search',input:f.settings},{task:'unknown',input:{}}]}),/known task/);
+    assert.equal(new RunsService(f.app).list().length,0);
+    const planned=await f.client.execute('plan-search',f.settings) as any;
+    const runId=planned.run.id,workKey=planned.plans[0].searches[0].workKey;
+    const tasks=[
+      {task:'prepare-work',input:{runId,operationId:'batch-prepare',workKey,modelWork:false}},
+      {task:'save-previews',input:{runId,operationId:'batch-preview',searchKey:workKey,outcome:'results',listings:[{url:'https://au.seek.com/job/55',title:'Data Engineer'}]}},
+      {task:'prepare-work',input:{runId,operationId:'bad',workKey:'missing-work',modelWork:false}},
+      {task:'search-context',input:{runId}},
+    ];
+    const first=await f.client.batch({tasks}) as any;
+    assert.equal(first.partial,true);assert.equal(first.stoppedAt,2);assert.equal(first.remaining,1);assert.equal(first.results.length,2);assert.ok(first.error.code);
+    const retried=await f.client.batch({tasks:tasks.slice(0,2)}) as any;
+    assert.equal(retried.partial,false);
+    assert.equal(new SourceCollection(f.app).candidates(runId).length,1);
+    const context=await f.client.execute('search-context',{runId}) as any;
+    await f.client.execute('screen-candidates',{runId,operationId:'skip',decisions:[{workKey:context.candidates[0].workKey,disposition:'skipped',reason:'Outside selected scope.'}]});
+    const filtered=await f.client.execute('search-context',{runId,includeProfile:false,disposition:'pending'}) as any;
+    assert.equal('profile' in filtered,false);assert.equal(filtered.totalCandidates,1);assert.equal(filtered.matchingCandidates,0);assert.equal(filtered.nextOffset,null);assert.deepEqual(filtered.candidates,[]);
+    assert.ok(JSON.stringify(filtered).length<JSON.stringify(context).length);
+  } finally {await f.close();}
+});
+
+test('omitting the cached profile avoids its HTTP request and batches stop on partial plans',async()=>{
+  const paths:string[]=[];
+  const client=new LocalAgentTasks('http://127.0.0.1:4318',async(url)=>{
+    const path=new URL(String(url)).pathname;paths.push(path);
+    if(path.endsWith('/candidates'))return Response.json([]);
+    return Response.json({id:'run',profileVersion:1,work:[]});
+  });
+  await client.execute('search-context',{runId:'run',includeProfile:false});
+  assert.equal(paths.some(path=>path.includes('/profiles/')),false);
+  const f=await fixture();
+  try {
+    f.profiles.approve(f.profile.version);
+    const result=await f.client.batch({tasks:[{task:'plan-search',input:{run:{...f.run,sources:['seek','unsupported']},plans:[...f.settings.plans,{source:'unsupported',config:{}}]}},{task:'search-context',input:{}}]}) as any;
+    assert.equal(result.partial,true);assert.equal(result.stoppedAt,0);assert.equal(result.remaining,1);assert.equal(result.results.length,1);
+  } finally {await f.close();}
+});

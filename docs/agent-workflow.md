@@ -10,6 +10,12 @@ Use the exact loopback origin supplied by the user. GET `/api/v1/agent-guide` di
 
 Once the local connection is verified, send a visible clickable **Open CareerVista** link to that exact origin's `/` jobs page before the first intake question or research action, including when reusing a saved connection. Tell the user to click it in their browser to watch saved results appear; the page may initially be empty. Use the actual host/port, not a guessed default or an API-guide URL. A launcher opening the browser is not a substitute for giving the link. Send a verified replacement if the address changes; repeat the link with the finished batch.
 
+## Keep agent work bounded
+
+After consent, prefer the compact `agent-tasks` helpers when available. Read required guides once per installed version per conversation and optional guides only for the operation at hand. Keep the pinned profile in context once; use `includeProfile:false` and filter `disposition:"pending"` for later preview pages. Execute ordered API work in `--task batch` groups, inspect partial failures and reuse existing receipts/checkpoints. Keep large HTTP/browser responses in files, returning only the selected entries and compact summaries to the model.
+
+Use deferred preview discovery and batched screening before detailed capture. Propose five detailed listings for an initial pass when no limit was supplied; honour an existing agreed limit. Read original evidence for selected jobs only; reuse captured evidence unless freshness or missing evidence requires another read. Keep material evidence and reasoning concise. Optional company research and document tailoring require scope from the user. Saved language preferences still govern translations. No helper can enforce the host's subscription allowance; do not invent token savings or equate usage percentages with token counts.
+
 ## 1. Understand the search
 
 Read `language` first. Use explicit language instructions, then the saved preference, or infer from the user’s prompt when clear. Save the preference. For non-English explanations keep English originals and submit bilingual assessment translations. Display Chinese choices as 简体中文 and 繁体中文 only.

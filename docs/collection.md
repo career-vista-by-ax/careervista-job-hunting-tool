@@ -60,6 +60,12 @@ docker cp CONTAINER:/tmp/search-evidence-UNIQUE.json ./search-evidence-UNIQUE.js
 
 Stdout contains per-page status/counts; full readable text and observed links stay in the file. Inspect only selected entries. `skipped-access` identifies queries not attempted after a source wall. Preserve prepared work keys and checkpoint truthful access outcomes; do not record skipped queries as searched. A nonzero exit can still leave access metadata at the output path. Resolve the default host browser only for the fallback branch; container cookies and sessions are never transferred.
 
+## Read text before images
+
+In the host browser fallback, prefer its supported accessibility/DOM snapshot or targeted rendered-text/link reads for results and original adverts. Extract the relevant listing region when the tool supports it; do not return raw full-page HTML, scripts, styles, hidden data or repeated navigation. Inspect one compact snapshot to locate controls, then read only changed results or the selected advert. Expand relevant hidden description sections before reading; absence from a partial snapshot is unknown, not proof a requirement is absent.
+
+Use screenshots when layout matters, text is image/canvas-only, the text interface is incomplete, or a login/verification interaction needs visual review. Follow the host browser tool's inspection rules; do not bypass required screenshots or use unsupported page execution. The Docker helper already captures rendered body text and links rather than screenshots. Keep its full evidence file local and read selected entries only. Text usually reduces context for text-heavy adverts, but actual token use depends on the host's representation and image processing; measure rather than assume a fixed saving.
+
 ## Efficient discovery and screening
 
 Follow Headless-first access above for every source. Save compact previews before deep extraction; previews and skipped candidates are research records, not assessed jobs. Check title families across approved tracks before filling the detailed capture quota. Source quotas should measure coverage, not force weak matches into the shortlist. Retain missing salary/location/eligibility as unknown; search snippets cannot establish these facts.

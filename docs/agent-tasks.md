@@ -1,6 +1,6 @@
 # Compact local agent tasks
 
-After the `user-consent` notice has been explicitly accepted in the conversation, use these optional task-level helpers over the existing HTTP API. They reduce repeated request construction and large responses. They use no model, perform no website research and never write the database directly. No additional service, credential or listening port is required.
+After the `user-consent` notice has been explicitly accepted in the conversation, prefer these task-level helpers when available over the existing HTTP API. They reduce repeated request construction and large responses. They use no model, perform no website research and never write the database directly. No additional service, credential or listening port is required.
 
 The helper is `app/dist/tools/agent-tasks.js` in an extracted native release, `dist/tools/agent-tasks.js` after a source build, or `/opt/careervista/bundle/app/dist/tools/agent-tasks.js` in Docker. Run it with the selected native release's bundled Node, an available compatible host Node, or Docker's Node. A Docker user needs no local Node install.
 
@@ -25,3 +25,15 @@ Use the exact running app origin; the helper accepts loopback HTTP origins only 
 Continue using the existing APIs for profile draft review/approval, run controls/checkpoints/cost settlement, document variants and other operations. Keep explicit user approvals, clickable categorical questions, user-entered numeric values and the headless-first access order. All domain rules, immutable evidence and retry receipts remain owned by the existing API.
 
 Use stable request/operation/submission identifiers. The helper makes no automatic retries. A timeout may follow a successful mutation: inspect saved state and retry unchanged identifiers rather than making new ones. Plan creation is a sequence, not an atomic transaction; earlier successful plans survive later failures. Returned API errors preserve status/code without dumping request bodies. This client and the consent prompt do not technically control an external agent's data handling.
+
+## Batch operations and smaller follow-up reads
+
+Use `--task batch` to run 1–100 ordered tasks in one host tool call:
+
+```json
+{"tasks":[{"task":"prepare-work","input":{"runId":"RUN","operationId":"prepare-query-1","workKey":"QUERY1","modelWork":false}},{"task":"prepare-work","input":{"runId":"RUN","operationId":"prepare-query-2","workKey":"QUERY2","modelWork":false}}]}
+```
+
+A batch validates task names and object envelopes before any calls, then executes sequentially through the same API. It stops at the first API error or partial result; prior writes persist. Inspect `results`, `stoppedAt`, `remaining` and `error` before resuming with the same identifiers. There is no rollback or automatic retry. Each input must already have the IDs it needs; run planning/capture first to obtain IDs for later batches. Batch model preparation still requires truthful `modelWork:true` and estimates. Do not label agent reasoning as model-free work to bypass budgets.
+
+For subsequent `search-context` reads, use `{ "runId":"RUN", "includeProfile":false, "disposition":"pending", "limit":25 }`. The profile is neither fetched nor returned; only matching previews are paged. `totalCandidates` counts all candidates, `matchingCandidates` counts the filtered set, and `nextOffset` refers to that set. After selecting/skipping rows, restart pending pagination at offset zero because the filtered set changed. Request the profile again when switching runs or revisions. These options reduce repeated context; they do not remove any saved evidence.
