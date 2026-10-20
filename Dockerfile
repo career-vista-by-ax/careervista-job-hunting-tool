@@ -10,7 +10,7 @@ COPY scripts/copy-assets.mjs ./scripts/copy-assets.mjs
 RUN npm run build
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
-ARG VERSION=0.2.0-preview.2
+ARG VERSION=0.2.0-preview.3
 LABEL org.opencontainers.image.title="CareerVista" \
       org.opencontainers.image.description="Local Australian job-search workspace; use your own agent on the host" \
       org.opencontainers.image.source="https://github.com/career-vista-by-ax/careervista-job-hunting-tool" \

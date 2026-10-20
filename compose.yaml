@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        VERSION: 0.2.0-preview.2
-    image: careervista:0.2.0-preview.2
+        VERSION: 0.2.0-preview.3
+    image: careervista:0.2.0-preview.3
     ports:
       - "127.0.0.1:4318:4318"
     environment:
