@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { chromium } from '/opt/careervista/headless/node_modules/playwright/index.mjs';
 import { collectBatch } from '/opt/careervista/headless/headless.mjs';
 
@@ -44,3 +45,7 @@ assert.equal(result.results[3].text,undefined);
 assert.ok(!requests.some(url=>url.endsWith('/later')));
 assert.match(result.results[4].text,/wrong query/); // Readable mismatches still require agent review.
 console.log('PASS: real headless Chromium; delayed results, wall circuit breaker, login and unverified mismatches.');
+
+const tasks=JSON.parse(execFileSync(process.execPath,['/opt/careervista/bundle/app/dist/tools/agent-tasks.js','--help'],{encoding:'utf8'}));
+assert.ok(tasks.tasks['search-context']);assert.ok(tasks.tasks['capture-evidence']);
+console.log('PASS: shipped local task client loads without host dependencies.');

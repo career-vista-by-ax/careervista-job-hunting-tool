@@ -72,6 +72,8 @@ then read selected original pages headlessly. Docker includes Playwright and
 Chromium for JavaScript pages, with no local Playwright install. Login,
 verification or blocking triggers a fallback to your default host browser.
 Blocked or suspicious responses remain unverified, never job/review evidence.
+Optional local task helpers wrap the same HTTP API for compact planning,
+preview screening and evidence/assessment saves; see [agent tasks](docs/agent-tasks.md).
 When results are ready, it sends you to the jobs table.
 
 ## Your skill set
