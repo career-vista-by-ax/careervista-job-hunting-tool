@@ -50,6 +50,12 @@ pull/start/update actions. Use a persistent named volume and publish only to
 loopback. For a local copy, ask whether it is already downloaded and request
 its path, or guide an agreed download. Preserve existing data during updates.
 
+Conversational choices use the host's native question tool whenever available
+in the current mode, with clickable answers, a reasoned recommendation, custom
+input and an undecided path. Plain-text choices are a fallback only when that
+capability is absent. Keep skills provider-independent and respect each host's
+permission and attachment mechanisms; do not claim universal clickable UI.
+
 ## Evidence, documents and user control
 
 - Save original source text, URLs and capture times before analysis. Distinguish

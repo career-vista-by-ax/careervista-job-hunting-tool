@@ -57,7 +57,9 @@ its actual address. It checks available releases/images rather than assuming
 a fixed URL or executable path. No registry image has been published yet; if
 needed, it can offer a source build with your permission.
 
-It then asks one question at a time, confirms your strengths from an optional
+It uses clickable choices through your agent’s native question tool when
+available, with custom answers; text choices are the fallback for hosts without
+that UI. It asks one question at a time, confirms your strengths from an optional
 resume, expands related titles and agrees locations, work arrangements,
 AUD base/super, priorities, sites, search scope and budget before researching.
 When results are ready, it sends you to the jobs table.

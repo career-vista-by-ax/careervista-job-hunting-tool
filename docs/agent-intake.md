@@ -6,20 +6,22 @@ Use this guide when starting/refining a search or discussing resume strengths. T
 
 1. Ask one focused question about one decision.
 2. Give a short recommendation with a reason grounded in the user's goals or clearly labelled as a starting suggestion.
-3. Offer two or three useful choices plus custom free text and an undecided/skip path. Where the host supports a structured input tool, use one question item with suggested choices and its free-text input; do not add a literal Other option when the host supplies one. Otherwise present the same choices in ordinary chat and explicitly invite a custom answer.
+3. Check for the host's native ask-user/structured-question/choice-picker tool available in the current mode. When available, **call it** with one question item so answers are clickable; ordinary numbered text or Markdown checkboxes do not satisfy this requirement. Put the recommended choice first, offer two or three useful choices plus custom free text and an undecided/skip path, and use the built-in custom-answer field rather than a duplicate Other option. Use free-text mode for open factual questions when supported. If no suitable UI exists, explain that limitation once and present numbered chat choices with custom input. Use the host's permitted approval and file-attachment mechanisms where applicable.
 4. Wait. Silence is not consent. A “yes” may accept the stated recommendation; arbitrary assent must not approve unseen terms or hard exclusions.
 
 Recommendations are provisional. Briefly challenge contradictory answers and explain consequences, without arguing the user into your preferences. Look up factual market/site information with the host's tools when needed; label estimates and uncertainty. Never invent a salary benchmark, statutory leave entitlement, company policy or review score. Asking one question does not mean hiding several decisions in its wording.
 
-Example after the user says “principal analytics engineer”:
+Example question content after the user says “principal analytics engineer” (send this through the native question tool when available, not as a plain-chat questionnaire):
 
 > Should we keep this search on the senior individual-contributor path, or include people-management roles too?
 >
 > I suggest starting with principal/staff/lead analytics engineering, because these titles can describe similar scope. Data engineering manager is a distinct path; include it if you want to manage people.
 >
-> Choices: senior IC only; IC plus data leadership; explore management first. You can give a custom direction or stay undecided.
+> Suggested choices: senior IC only (recommended); IC plus data leadership; undecided. Allow a custom direction, such as exploring management first.
 
 After the answer, ask the next missing question. Do not append a location or salary question to that turn.
+
+For asynchronous tools, keep dependent work pending until an answer arrives. A default/preselected choice, timeout or silence is not a submitted answer. This rule applies during setup before intake and during later refinement as well; use each host's equivalent tool rather than requiring a specific agent provider.
 
 ## Decision tree and coverage
 

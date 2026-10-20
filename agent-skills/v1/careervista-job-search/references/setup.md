@@ -2,6 +2,8 @@
 
 The skill, runtime and agent are independent. Installing this directory installs instructions only. Use host-native tools; no proprietary MCP, global Node, fixed port or executable path is required for the search workflow.
 
+Follow SKILL.md's clickable-question rule from the first setup decision: invoke an available native question tool, not a list of choices in ordinary chat. This applies to Docker/local, existing/download, language and other setup choices. Use only the fallback and permission surfaces permitted by the host.
+
 ## Reuse or choose
 
 Use an exact origin or runtime choice already supplied in this conversation. Otherwise read the host's saved connection, if present, from `~/.careervista/agent-connection.json`. It stores only backend, localhost origin, Docker image/container/volume/port or native launcher/root paths, never passwords or tokens. A healthy saved origin can be reused read-only. Avoid scanning other ports or launching duplicate workspaces.

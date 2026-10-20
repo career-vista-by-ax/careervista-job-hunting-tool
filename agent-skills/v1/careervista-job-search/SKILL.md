@@ -5,6 +5,14 @@ description: Start or resume an Australian job search with CareerVista. Guide Do
 
 Use this skill with any agent that can read Markdown instructions. Shell, loopback HTTP, browser and document tools belong to the host; use its available equivalents. If a capability is absent, explain the specific limitation and offer a manual step. Invocation syntax belongs to the host (for example `$careervista-job-search` in Codex, or asking to use this skill by name).
 
+## Clickable questions, including setup
+
+Before asking the first question, check the host's available tools for a native ask-user, structured-question or choice-picker interface. When available in the current mode, **call that tool** so choices are clickable; writing numbered options or Markdown checkboxes in chat is not a substitute. Use the host's equivalent rather than requiring a particular provider or tool name. Apply this to runtime/language choices, intake, search scope, follow-ups and document-editing choices.
+
+Ask one question per call. Put the recommended choice first and label it, give a short reason, offer two or three useful choices and retain custom free text and an undecided path. Use the host's built-in custom-answer field instead of a duplicate Other option. For an open factual question, use the tool's free-text mode when supported. Wait for the user's submitted answer; a preselected choice, timeout or silence is not consent. With an asynchronous question, keep dependent work pending and continue only independent work.
+
+If no suitable question UI is available in the current host/mode, briefly explain that limitation once, then offer concise numbered choices with custom input in chat. Do not claim text is clickable or build a separate website merely to ask questions. File attachments use the host's attachment mechanism. Permission requests must use a surface allowed by the host's rules; an answer does not bypass execution approvals.
+
 ## Connect before intake
 
 A running CareerVista app is a separate dependency, not part of installing this skill. Read [references/setup.md](references/setup.md) to reuse a saved connection or guide first-time Docker/local setup. Ask one question at a time. Docker pull/start/update requires the user's permission for the concrete image, container, data volume and loopback port. A local download requires the user's chosen release/path. Keep existing work intact. Finish setup only after the exact returned localhost origin answers `/api/v1/agent-guide`.
