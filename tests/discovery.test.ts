@@ -39,7 +39,9 @@ test('discovery screens many previews before a single detailed capture, deduplic
     assert.throws(()=>collection.select(run.id,{...selection,decisions:[]}),/decisions/);
     assert.throws(()=>collection.select(run.id,{operationId:'change-selected',decisions:[{workKey:first!.workKey,disposition:'skipped',reason:'Changed'}]}),/already queued/);
     collection.prepare(run.id,{operationId:'open',workKey:first!.workKey,modelWork:false});
-    const capture=collection.capture(run.id,{operationId:'capture',workKey:first!.workKey,title:'Principal Analytics Engineer',company:'Example',text:'Own the dbt platform.',capturedAt:new Date().toISOString()});
+    assert.throws(()=>collection.capture(run.id,{operationId:'bad-method',workKey:first!.workKey,captureMethod:'stealth-browser'}),/captureMethod/);
+    const capture=collection.capture(run.id,{operationId:'capture',workKey:first!.workKey,captureMethod:'headless-browser',title:'Principal Analytics Engineer',company:'Example',text:'Own the dbt platform.',capturedAt:new Date().toISOString()});
+    assert.equal(capture.observation.context.method,'headless-browser');
     // Search coverage can continue even after the detailed capture quota has been filled.
     const third=plan.searches[2]!;collection.prepare(run.id,{operationId:'search-3',workKey:third.workKey,modelWork:false});
     collection.discover(run.id,{operationId:'third',searchKey:third.workKey,outcome:'zero-results',deferCapture:true});
@@ -71,6 +73,7 @@ test('preview discovery validates origins and limits, preserves pending evidence
     const capture={operationId:'capture',workKey:candidate.workKey,title:'Engineer',company:'Company',text:'Build dbt models.',capturedAt:new Date().toISOString(),apiContext:{method:'public-api',provider:'lever',endpoint:'https://api.lever.co/v0/postings/company?mode=json'}};
     assert.throws(()=>collection.capture(run.id,{...capture,apiContext:{...capture.apiContext,endpoint:capture.apiContext.endpoint+'&token=secret'}}),/token parameters/);
     assert.equal(app.listJobs().length,0);
+    assert.throws(()=>collection.capture(run.id,{...capture,captureMethod:'headless-http'}),/not both/);
     const saved=collection.capture(run.id,capture);assert.equal(saved.observation.context.method,'public-api');assert.equal(saved.observation.context.endpoint,capture.apiContext.endpoint);assert.equal(String(saved.observation.context.contentHash).length,64);
   }finally{await server.close();app.close();rmSync(root,{recursive:true,force:true});}
 });

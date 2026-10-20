@@ -1,0 +1,18 @@
+name: Docker headless acceptance
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Build Docker runtime with pinned Playwright and Chromium
+        run: docker build --build-arg VERSION=0.2.0-preview.2-ci -t careervista:headless-test .
+      - name: Verify rendered evidence and access-barrier fallback metadata
+        run: docker run --rm -i --init --security-opt no-new-privileges:true --cap-drop ALL --shm-size=256m --entrypoint node careervista:headless-test --input-type=module < docker/smoke-headless.mjs

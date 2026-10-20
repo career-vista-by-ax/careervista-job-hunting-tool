@@ -62,6 +62,11 @@ available, with custom answers; text choices are the fallback for hosts without
 that UI. It asks one question at a time, confirms your strengths from an optional
 resume, expands related titles and agrees locations, work arrangements,
 AUD base/super, priorities, sites, search scope and budget before researching.
+Searches batch approved keyword variants through search tools/public APIs first,
+then read selected original pages headlessly. Docker includes Playwright and
+Chromium for JavaScript pages, with no local Playwright install. Login,
+verification or blocking triggers a fallback to your default host browser.
+Blocked or suspicious responses remain unverified, never job/review evidence.
 When results are ready, it sends you to the jobs table.
 
 ## Your skill set
