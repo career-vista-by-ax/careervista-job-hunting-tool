@@ -45,10 +45,11 @@ required to use any Contribution. Nothing else in this agreement transfers any r
 
 ## Signing
 
-Before a contribution can be merged, post a pull-request comment containing:
+On your first pull request, the CLA bot asks you to reply with:
 
 > I have read the CLA Document and I hereby sign the CLA
 
-Include your full name and the date (YYYY-MM-DD). Your GitHub account, comment,
-date and pull request form the signature record. The maintainer manually checks
-that every contribution author has signed before merging. There is no CLA bot.
+It records your GitHub username, date and pull request in `signatures/cla.json`
+on the `cla-signatures` branch. Sign once; later contributions reuse that record.
+Post `recheck` as a separate comment if the check needs to run again. Every
+contribution author must sign before CI runs or the pull request can be merged.

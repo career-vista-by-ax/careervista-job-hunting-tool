@@ -1,6 +1,11 @@
 name: Windows native acceptance
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
 concurrency:
   group: windows-${{ github.ref }}
   cancel-in-progress: true
@@ -8,11 +13,14 @@ permissions:
   contents: read
 jobs:
   windows:
-    if: github.actor == 'allenhori' && github.triggering_actor == 'allenhori'
+    if: github.event_name == 'pull_request_target' || github.event_name == 'issue_comment' || (github.actor == 'allenhori' && github.triggering_actor == 'allenhori')
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 26.12.0

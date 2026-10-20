@@ -1,0 +1,71 @@
+name: CLA
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
+permissions: {}
+jobs:
+  cla:
+    name: CLA signature
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request && (
+        github.event.comment.body == 'recheck' ||
+        github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA'))
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+      statuses: write
+    outputs:
+      head_sha: ${{ steps.verified.outputs.head_sha }}
+    steps:
+      - name: Pin the PR head before checking signatures
+        id: before
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          gh api "repos/$REPO/pulls/$PR" --jq '.head.sha' | awk '{print "sha=" $0}' >> "$GITHUB_OUTPUT"
+      # Same pinned action and signature storage process as DRE. No PR checkout.
+      - uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-document: https://github.com/career-vista-by-ax/careervista-job-hunting-tool/blob/master/CLA.md
+          path-to-signatures: signatures/cla.json
+          branch: cla-signatures
+          allowlist: allenhori,dependabot[bot],github-actions[bot]
+          lock-pullrequest-aftermerge: false
+      - name: Release unchanged signed PR to CI
+        id: verified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          EXPECTED: ${{ steps.before.outputs.sha }}
+        run: |
+          current=$(gh api "repos/$REPO/pulls/$PR")
+          test "$(jq -r '.head.sha' <<< "$current")" = "$EXPECTED"
+          if test "$(jq -r '.state' <<< "$current")" = open; then
+            echo "head_sha=$EXPECTED" >> "$GITHUB_OUTPUT"
+          fi
+  headless:
+    needs: cla
+    if: needs.cla.outputs.head_sha != ''
+    permissions:
+      contents: read
+    uses: ./.github/workflows/headless.yml
+    with:
+      ref: ${{ needs.cla.outputs.head_sha }}
+  windows:
+    needs: cla
+    if: needs.cla.outputs.head_sha != ''
+    permissions:
+      contents: read
+    uses: ./.github/workflows/windows.yml
+    with:
+      ref: ${{ needs.cla.outputs.head_sha }}

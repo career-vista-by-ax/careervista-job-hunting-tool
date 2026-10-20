@@ -1,6 +1,6 @@
-Describe the change and relevant local validation.
+Describe the change and relevant validation.
 
-- [ ] Every contribution author has signed [CLA.md](../CLA.md) in a PR comment, including full name and date.
+- [ ] Every contribution author has signed [CLA.md](../CLA.md) using the bot's exact comment.
 - [ ] I have the right to contribute this work and have identified third-party material.
 
-The maintainer checks signatures manually before merging. CI is maintainer-triggered only.
+The CLA check must pass before CI and merge. Publishing is maintainer-only.

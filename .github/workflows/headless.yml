@@ -1,15 +1,23 @@
 name: Docker headless acceptance
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
 permissions:
   contents: read
 jobs:
   headless:
-    if: github.actor == 'allenhori' && github.triggering_actor == 'allenhori'
+    if: github.event_name == 'pull_request_target' || github.event_name == 'issue_comment' || (github.actor == 'allenhori' && github.triggering_actor == 'allenhori')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
       - name: Build Docker runtime with pinned Playwright and Chromium
         run: docker build --build-arg VERSION=0.2.0-preview.2-ci -t careervista:headless-test .
       - name: Verify rendered evidence and access-barrier fallback metadata

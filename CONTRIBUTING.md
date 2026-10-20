@@ -10,20 +10,29 @@ CareerVista is licensed under [GPL-3.0-only](LICENSE).
 
 ## Contributor agreement and review
 
-Before your first contribution is merged, read and sign the [Contributor License
-Agreement](CLA.md) in a pull-request comment, including your full name and date.
-You retain copyright and grant the maintainer the rights described there,
-including relicensing rights. The maintainer verifies signatures manually; no
-external contribution automatically runs GitHub Actions.
+Before your first contribution is merged, read the [Contributor License
+Agreement](CLA.md). The CLA bot comments on your pull request. Reply with exactly:
 
-Fork the repository, make a branch, and submit a pull request to `master`.
-Only @allenhori maintains and merges this repository. Agent operations use that
-same GitHub identity. `master` requires pull-request review and resolved review
-conversations; only the maintainer has the configured push permission and admin
-bypass (for example, `gh pr merge --admin`). Force pushes and branch deletion
-are disabled. Maintainers must check the CLA even when using admin bypass.
-Actions are manual-only and every job checks both the original and rerun actor
-against @allenhori. Contributors run checks locally and include results in PRs.
+```text
+I have read the CLA Document and I hereby sign the CLA
+```
+
+The bot records your GitHub username, date and PR on `cla-signatures`. Sign once;
+if needed, comment `recheck`. Every author must sign. You retain copyright and
+grant the maintainer the rights in the CLA, including relicensing rights.
+
+Fork the repository and submit a pull request to `master`. The required
+`CLA signature` check runs trusted code only. Build/test jobs run only after it
+passes, with read-only permissions and without publishing credentials. A changed
+PR head invalidates the current CI handoff. Publishing remains manual and
+restricted to @allenhori. `cla-signatures` is the sole non-master service branch.
+
+Only @allenhori maintains and merges this repository; agent operations use the
+same GitHub identity. `master` requires the CLA check, pull-request review and
+resolved conversations. Only the maintainer has configured push permission and
+admin bypass (for example `gh pr merge --admin`). Force pushes and branch
+deletion are disabled. Admin bypass must not be used to accept unsigned outside
+contributions.
 
 ## Product boundaries
 
