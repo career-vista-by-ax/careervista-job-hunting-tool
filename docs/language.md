@@ -2,7 +2,7 @@
 
 GET `/api/v1/settings/language` returns `{language:null|"en"|"zh-CN"|"zh-Hant"}`. POST the same endpoint with `{language}` to save the user's chosen language. User-facing names are **English**, **简体中文**, **繁体中文**, without country/region qualifiers. Explicit instructions override a saved preference. When none is established, the user's own prompt language is a useful signal; confirm only when ambiguous. A copied starter prompt contains its selected language explicitly. Respond and conduct intake in that language, save it for the webpage and reuse known answers.
 
-Australian source listings, employer titles, verbatim quotations and original evidence remain English. Store the canonical structured assessment in English, then save parallel translated explanations. This preserves practical English wording for CVs, recruiter questions and clarification. The local app does not call a translation provider or invent missing translations.
+Preserve source listings, employer titles, verbatim quotations and original evidence in their original language, including English for English-language adverts. Store canonical assessment explanations in English, then save parallel translated explanations through the supported API. English explanations do not replace original-language evidence or quotes. The local app does not call a translation provider or invent missing translations.
 
 After saving an assessment, POST `/api/v1/jobs/:jobId/translations`:
 
