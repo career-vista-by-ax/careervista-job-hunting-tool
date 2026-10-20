@@ -80,7 +80,7 @@ export class LocalAgentTasks {
         const run = await this.request<ResearchRun>('/runs', settings);
         const saved: SourcePlan[] = [], failures: { source: string; message: string; code: string }[] = [];
         for (const plan of plans) {
-          try { saved.push(await this.request<SourcePlan>(`/runs/${part(run.id)}/collection/plans`, { operationId: operation('plan',settings.requestId,plan.source), ...plan })); }
+          try { saved.push(await this.request<SourcePlan>(`/runs/${part(run.id)}/collection/plans`, { ...plan, operationId: operation('plan',settings.requestId,plan.source) })); }
           catch (error) { if (!(error instanceof AgentTaskError)) throw error; failures.push({ source: plan.source, message: error.message, code: error.code }); }
         }
         return { run: summary(await this.request<ResearchRun>(`/runs/${part(run.id)}`)), plans: saved, failures, partial: failures.length > 0 };

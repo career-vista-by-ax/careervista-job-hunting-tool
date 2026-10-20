@@ -30,7 +30,8 @@ test('task client plans approved work, reserves once, screens previews and retur
     assert.equal(new RunsService(f.app).list().length,0);
     f.profiles.approve(f.profile.version);
     const first=await f.client.execute('plan-search',f.settings) as any;
-    const again=await f.client.execute('plan-search',f.settings) as any;
+    const altered=structuredClone(f.settings);Object.assign(altered.plans[0]!,{operationId:'extra-caller-field'});
+    const again=await f.client.execute('plan-search',altered) as any;
     assert.equal(again.run.id,first.run.id);
     assert.equal(new RunsService(f.app).get(first.run.id).work.length,2);
     const runId=first.run.id,searchKey=first.plans[0].searches[0].workKey;
