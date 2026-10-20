@@ -1,0 +1,20 @@
+services:
+  careervista:
+    build:
+      context: .
+      args:
+        VERSION: 0.2.0-preview.1
+    image: careervista:0.2.0-preview.1
+    ports:
+      - "127.0.0.1:4318:4318"
+    environment:
+      CAREERVISTA_PUBLIC_ORIGIN: http://127.0.0.1:4318
+    volumes:
+      - careervista-data:/var/lib/careervista
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  careervista-data:

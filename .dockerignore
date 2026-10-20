@@ -1,0 +1,7 @@
+.git
+node_modules
+dist
+release-artifacts
+**/*.sqlite*
+**/.env*
+.DS_Store

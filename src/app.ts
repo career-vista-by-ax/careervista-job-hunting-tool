@@ -1,3 +1,4 @@
+import { sourceKey } from './job-storage-state.ts';
 import { vacancyIdentity } from './reconciliation-state.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
@@ -78,6 +79,8 @@ export class CareerVistaApp {
       const job = this.getJob(String(existing.job_id));
       return { job, observation: job.observations.find(item => item.id === existing.id)!, replayed: true };
     }
+    const suppressed = this.database.prepare('SELECT job_id FROM deleted_job_sources WHERE source_key=?').get(sourceKey(input.sourceUrl));
+    if (suppressed) throw new AppError('This listing is in Recently deleted. Restore it there before capturing it again.', 409, 'job_in_trash');
     const now = new Date().toISOString();
     const jobId = randomUUID(), observationId = randomUUID();
     this.database.exec('BEGIN IMMEDIATE');

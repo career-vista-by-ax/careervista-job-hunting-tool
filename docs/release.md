@@ -63,3 +63,37 @@ Extract All before opening `CareerVista.cmd`. Default data root: `%LOCALAPPDATA%
 `.github/workflows/windows.yml` builds and tests on a native Windows x64 runner, including the actual CMD wrapper with spaces in paths and no developer tools on PATH, local HTTP, persistent records, forward migration, shutdown and removal. Successful runs upload the ZIP and SHA-256 as private build artifacts. This is automated runner coverage, not a fresh consumer Windows installation or a Windows browser-agent validation. The preview is unsigned; Explorer/SmartScreen and Windows ARM64 remain unverified. Use a compatible external agent host on Windows; no Mac host capability is assumed portable.
 
 Each computer has its own database and host configuration. Transfer records using private JSON backup/restore into an empty installation; copy referenced external documents separately. Avoid syncing an open SQLite file between machines.
+
+## Reset without reinstalling
+
+Open **Local data → Reset all data** in the web interface. Review the scope and select **Confirm scope and continue**, then type `DELETE` exactly and select **Erase all data**. Cancel or close at either stage to leave saved data intact. The final action removes all relational career data (including profiles, resumes and variants, runs, saved views and application history) and clears the contents of the app-owned credentials, sessions, cache, logs and temp directories. Software, migration history, skill registration and the running localhost app remain available. External backups/exports, original documents and host browser profiles remain separate.
+
+Pause external research first. A confirmation expires after five minutes, is single-use, is invalidated by saved-data writes and cannot survive app restart. Database deletion is transactional. If ancillary file cleanup fails after the database commits, the interface reports the uncleared folders and offers a new confirmed reset to retry. Reset is logical deletion, not a forensic disk-erasure guarantee.
+
+## Search-history and application release
+
+The next release adds migrations 022–023 for search archives, recoverable deletion/source suppression, per-stage application answers/contact snapshots, exact local document copies, language preference and bilingual assessment translations. Backups include these records; reset clears them. Old backups remain readable with their original schemas. App-owned copies are limited to 5 MiB per file and 50 MiB total and always download as attachments.
+
+Optional native skill registration installs capture, careervista-job-search, ax-cv and ax-30-secs with installation ownership receipts. The shortcut's installation.json records its absolute bundled runtime, root, installation identity and capture-skill path. Its launch helper verifies the active runtime/lifecycle checksums, authenticates launch/reuse and returns the current localhost URL. Updates refresh unchanged owned skill content and paths; edited files are preserved and reported. This is the existing explicit local-package upgrade path, not an automatic release downloader.
+
+The skills can also be installed independently using a host installer or the
+skills CLI; see the README. The standalone search skill asks Docker versus
+local copy, obtains permission for Docker actions and discovers the actual
+connection. Its source/API guides are served by the app, so a Docker user does
+not need a native installation or local capture-skill path. Exact invocation
+syntax and document/browser capabilities depend on the agent host.
+
+## Docker preview
+
+Build using the repository Dockerfile or Compose configuration. No public image
+is advertised until an image has actually been published. The runtime uses a
+non-root user, loopback-only host port publishing and a persistent named volume.
+Host browser profiles, home directories and the Docker socket are not mounted.
+The container listener accepts only the configured HTTP loopback public origin;
+if changing the host port, set `CAREERVISTA_PUBLIC_ORIGIN` to that exact address.
+
+An OS-managed SQLite lock outside the workspace prevents two containers from
+using the same volume concurrently. Image replacement runs the same validated,
+snapshot-backed installation/migration path as native releases. Keep the volume
+when replacing the image. Deleting it is permanent data removal, not an update.
+Skills and host document/browser tools stay outside the container.

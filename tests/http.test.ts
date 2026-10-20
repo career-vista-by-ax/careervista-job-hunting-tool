@@ -49,3 +49,31 @@ test('opening the app from another page allows only document navigation, not cro
     assert.equal(await status('/', { 'Sec-Fetch-Site': 'cross-site' }), 403);
   } finally { await server.close(); app.close(); rmSync(root, { recursive: true, force: true }); }
 });
+
+test('container port mapping keeps the explicit loopback Host and Origin boundary and portable guides', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'cv-container-http-'));
+  const app = new CareerVistaApp({ root });
+  try {
+    await assert.rejects(startServer(app, {port:0,host:'0.0.0.0'}), /explicit public loopback origin/);
+    await assert.rejects(startServer(app, {port:0,host:'0.0.0.0',publicOrigin:'http://evil.example:4318'}), /exact HTTP loopback origin/);
+    const server = await startServer(app, {port:0,host:'0.0.0.0',publicOrigin:'http://127.0.0.1:64818'});
+    const address=server.server.address();
+    assert.ok(address&&typeof address!=='string');
+    const get=(path:string,headers:Record<string,string>)=>new Promise<{status:number|undefined;body:string}>((resolve,reject)=>{
+      const req=request(`http://127.0.0.1:${address.port}${path}`,{headers},res=>{
+        let body='';res.setEncoding('utf8');res.on('data',chunk=>body+=chunk);res.on('end',()=>resolve({status:res.statusCode,body}));
+      });req.on('error',reject);req.end();
+    });
+    try {
+      assert.equal(server.url,'http://127.0.0.1:64818');
+      assert.equal((await get('/api/v1/jobs',{Host:`127.0.0.1:${address.port}`})).status,403);
+      assert.equal((await get('/api/v1/jobs',{Host:'127.0.0.1:64818',Origin:'http://evil.example'})).status,403);
+      assert.equal((await get('/api/v1/jobs',{Host:'127.0.0.1:64818',Origin:server.url})).status,200);
+      for(const name of ['capture-interface','seek','linkedin','ax-cv','ax-30-secs']){
+        const response=await get(`/api/v1/agent-guide/${name}`,{Host:'127.0.0.1:64818'});
+        assert.equal(response.status,200,name);
+        assert.ok(JSON.parse(response.body).markdown.length>100,name);
+      }
+    } finally {await server.close();}
+  } finally {app.close();rmSync(root,{recursive:true,force:true});}
+});

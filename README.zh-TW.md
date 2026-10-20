@@ -12,7 +12,7 @@ CareerVista 是專為**澳洲就業市場**設計的本機求職研究助手與�
 
 ## 安裝
 
-請從私人儲存庫的 [Releases 頁面](https://github.com/allenhori/careervista-job-hunting-tool/releases)下載對應的壓縮檔；下載時需要具備該儲存庫的 GitHub 存取權限。
+請從私人儲存庫的 [Releases 頁面](https://github.com/career-vista-by-ax/careervista-job-hunting-tool/releases)下載對應的壓縮檔；下載時需要具備該儲存庫的 GitHub 存取權限。
 
 | 平台 | 檔案 | 解壓縮後開啟 | 預設資料位置 |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ CareerVista 是專為**澳洲就業市場**設計的本機求職研究助手與�
 
 請先解壓縮並保留整個資料夾，再開啟啟動檔。Windows 請使用「全部解壓縮」，不要直接從 ZIP 內執行。啟動程式已內含 Node 與應用程式，不必另外安裝 Node、npm、Git、編譯器、WSL 或 Docker，也不需要系統管理員權限。它會啟動本機服務並開啟瀏覽器；再次開啟時，會沿用既有執行個體與資料。全新安裝不包含開發測試用的職缺或個人資料。
 
-目前為預覽版。Mac 安裝套件尚未完成 Apple 公證，全新系統的 Gatekeeper 與下載隔離行為也尚未驗證。Windows x64 提供原生 CI 建置與壓縮檔驗收測試；成功執行的建置亦可從 [Windows Actions](https://github.com/allenhori/careervista-job-hunting-tool/actions/workflows/windows.yml)下載。Windows 套件尚未進行程式碼簽章，全新個人電腦上的檔案總管／SmartScreen 行為及 Windows 代理軟體仍需另行驗證。Linux、Intel Mac、Windows ARM64 與 Chromebook 不在已驗證範圍內。詳見[發行說明](docs/release.md)。
+目前為預覽版。Mac 安裝套件尚未完成 Apple 公證，全新系統的 Gatekeeper 與下載隔離行為也尚未驗證。Windows x64 提供原生 CI 建置與壓縮檔驗收測試；成功執行的建置亦可從 [Windows Actions](https://github.com/career-vista-by-ax/careervista-job-hunting-tool/actions/workflows/windows.yml)下載。Windows 套件尚未進行程式碼簽章，全新個人電腦上的檔案總管／SmartScreen 行為及 Windows 代理軟體仍需另行驗證。Linux、Intel Mac、Windows ARM64 與 Chromebook 不在已驗證範圍內。詳見[發行說明](docs/release.md)。
 
 每台電腦各自使用獨立的資料庫與代理工作階段。移轉紀錄請使用私人備份／還原功能；不要在不同電腦間同步使用中的 SQLite 檔案。
 

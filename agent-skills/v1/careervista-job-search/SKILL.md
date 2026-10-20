@@ -1,0 +1,26 @@
+---
+name: careervista-job-search
+description: Start or resume an Australian job search with CareerVista. Guide Docker or local-app setup, then clarify goals and save evidence-backed recommendations using the agent's own tools.
+---
+
+Use this skill with any agent that can read Markdown instructions. Shell, loopback HTTP, browser and document tools belong to the host; use its available equivalents. If a capability is absent, explain the specific limitation and offer a manual step. Invocation syntax belongs to the host (for example `$careervista-job-search` in Codex, or asking to use this skill by name).
+
+## Connect before intake
+
+A running CareerVista app is a separate dependency, not part of installing this skill. Read [references/setup.md](references/setup.md) to reuse a saved connection or guide first-time Docker/local setup. Ask one question at a time. Docker pull/start/update requires the user's permission for the concrete image, container, data volume and loopback port. A local download requires the user's chosen release/path. Keep existing work intact. Finish setup only after the exact returned localhost origin answers `/api/v1/agent-guide`.
+
+## Guided search
+
+GET `/api/v1/agent-guide`, `/api/v1/agent-guide/agent-workflow`, `/api/v1/agent-guide/agent-intake` and `/api/v1/agent-guide/language` from that origin. Follow the running app's current contracts. Read `capture-interface` before saving listings and the selected source's guides (`seek`, `linkedin`, `collection` or `custom-sources`) before browsing. These HTTP guides make source collection available even when no separate capture skill is installed.
+
+Explicit language instructions take priority, then the saved preference. The user's own prompt language is a signal when none is established; confirm only when ambiguous. Save the choice through the language API. Display names are English, 简体中文 and 繁体中文. Keep English source evidence and save bilingual explanations through the language guide.
+
+Use the user's custom goals, or begin the guided Australian job-search intake when none are supplied. Ask one consequential question at a time with a recommendation, choices, custom input and an undecided path. Reuse settled answers. Clarify responsibilities and related titles, strengths from an optional readable resume, Australian location, working arrangement, employment, AUD pay and base/super semantics, equity, leave, benefits and review priorities. Then agree sites, scope, listing limit and spending boundaries before researching and saving evidence-linked recommendations. Complete/checkpoint the run, verify saved records and send the user to the current jobs-table URL.
+
+Existing data is preserved by default. For a fresh search with current jobs, offer continuing or archiving; read the `history` guide after the user's choice. Full reset is a separate two-confirmation action in Local data. Respect Recently deleted suppression and `job_in_trash` responses. Record only user-confirmed application facts. Application submission is a user-only handoff; this skill never submits or completes application forms. Outbound messages are outside this flow.
+
+## When the user chooses to apply
+
+Offer CV/cover-letter tailoring and a simulated 30-second reader review. Fetch the app's `ax-cv` and `ax-30-secs` guides, or use those standalone skills when available. Ask whether the user prefers manual edits in their own tool, a separate agent-created draft, or authorised editor control; honour an editing mode already chosen. Save distinct variants and exact copies used, then let the user record their own progress.
+
+Recommend applying through the original advert on the website where this job was found and clicking that site's Apply button. Preserve job-board link-outs; never bypass them with extracted, redirected or guessed direct employer/ATS application links. A direct employer advert is valid only when the job was found there originally. Ask for the original advert if provenance is unclear. Preparing documents does not submit an application, send a message or mark the job applied.

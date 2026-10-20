@@ -27,8 +27,13 @@ const assets: Record<string, [string, string]> = {
   '/client.js': ['client.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['style.css', 'text/css; charset=utf-8'],
 };
-export async function startServer(app: CareerVistaApp, options: { port?: number; routes?: ApiRoute[] } = {}) {
+export async function startServer(app: CareerVistaApp, options: { port?: number; routes?: ApiRoute[]; host?: '127.0.0.1' | '0.0.0.0'; publicOrigin?: string } = {}) {
   let origin = '';
+  const host=options.host??'127.0.0.1';
+  if(host!=='127.0.0.1'&&host!=='0.0.0.0')throw new AppError('Unsupported listener address.');
+  let publicOrigin:string|undefined;
+  if(options.publicOrigin){const value=new URL(options.publicOrigin);if(value.protocol!=='http:'||value.hostname!=='127.0.0.1'||value.username||value.password||value.pathname!=='/'||value.search||value.hash)throw new AppError('Public origin must be an exact HTTP loopback origin.');publicOrigin=value.origin;}
+  if(host==='0.0.0.0'&&!publicOrigin)throw new AppError('A container listener requires an explicit public loopback origin.');
   const server = createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Cache-Control', 'no-store');
@@ -45,15 +50,18 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
       if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
       const context: RouteContext = { app, request, response, url, json: maxBytes => readJson(request, maxBytes), send };
-      const agentGuides = ['agent-workflow', 'agent-intake', 'ax-cv', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
+      const agentGuides = ['ax-30-secs', 'capture-interface', 'seek', 'linkedin', 'language', 'history', 'agent-workflow', 'agent-intake', 'ax-cv', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
       if (request.method === 'GET' && url.pathname === '/api/v1/agent-guide') {
         send({ workflow: '/api/v1/agent-guide/agent-workflow', guides: agentGuides.map(name => ({ name, path: `/api/v1/agent-guide/${name}` })) }); return;
       }
       const guideName = url.pathname.slice('/api/v1/agent-guide/'.length);
       if (request.method === 'GET' && url.pathname.startsWith('/api/v1/agent-guide/')) {
         if (!agentGuides.some(name => name === guideName)) throw new AppError('Agent guide not found.', 404, 'not_found');
-        const paths = guideName === 'ax-cv'
-          ? [new URL('../agent-skills/v1/ax-cv/SKILL.md', import.meta.url), new URL('../../agent-skills/v1/ax-cv/SKILL.md', import.meta.url)]
+        const captureFile=guideName==='capture-interface'?'interface':guideName==='seek'?'seek':guideName==='linkedin'?'linkedin':null;
+        const paths = captureFile
+          ? [new URL(`../agent-skills/v1/careervista-capture/${captureFile}.md`,import.meta.url),new URL(`../../agent-skills/v1/careervista-capture/${captureFile}.md`,import.meta.url)]
+          : ['ax-cv','ax-30-secs'].includes(guideName)
+          ? [new URL(`../agent-skills/v1/${guideName}/SKILL.md`, import.meta.url), new URL(`../../agent-skills/v1/${guideName}/SKILL.md`, import.meta.url)]
           : [new URL(`../docs/${guideName}.md`, import.meta.url)];
         const path = paths.find(candidate => existsSync(candidate));
         if (!path) throw new AppError('This agent guide is missing from the installation.', 503, 'guide_unavailable');
@@ -95,10 +103,10 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
   server.headersTimeout = 10_000;
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(options.port ?? 4318, '127.0.0.1', () => { server.off('error', reject); resolve(); });
+    server.listen(options.port ?? 4318, host, () => { server.off('error', reject); resolve(); });
   });
   const address = server.address();
   if (!address || typeof address === 'string') throw new Error('Could not bind a local port.');
-  origin = `http://127.0.0.1:${address.port}`;
+  origin = publicOrigin ?? `http://127.0.0.1:${address.port}`;
   return { url: origin, server, close: () => new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())) };
 }

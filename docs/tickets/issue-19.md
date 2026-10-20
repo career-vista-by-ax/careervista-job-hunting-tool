@@ -2,7 +2,7 @@ T18: Complete the daily review workspace
 
 ## Parent
 
-https://github.com/allenhori/careervista-job-hunting-tool/issues/1
+https://github.com/career-vista-by-ax/careervista-job-hunting-tool/issues/1
 
 ## What to build
 

@@ -12,7 +12,7 @@ CareerVista 是面向**澳大利亚就业市场**的本地求职研究助手与�
 
 ## 安装
 
-从私有仓库的 [Releases 页面](https://github.com/allenhori/careervista-job-hunting-tool/releases)下载对应压缩包；下载需要该仓库的 GitHub 访问权限。
+从私有仓库的 [Releases 页面](https://github.com/career-vista-by-ax/careervista-job-hunting-tool/releases)下载对应压缩包；下载需要该仓库的 GitHub 访问权限。
 
 | 平台 | 文件 | 解压后打开 | 默认数据位置 |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ CareerVista 是面向**澳大利亚就业市场**的本地求职研究助手与�
 
 先解压并保留整个文件夹，再打开启动文件。Windows 请使用“全部解压”，不要直接在 ZIP 内运行。启动器自带 Node 和应用，不需要单独安装 Node、npm、Git、编译器、WSL 或 Docker，也不需要管理员权限。它会启动本地服务并打开浏览器；再次启动会复用已有实例和数据。新安装不含开发测试用的职位或个人资料。
 
-这是预览版。Mac 安装包尚未公证，干净系统上的 Gatekeeper/下载隔离行为未验证。Windows x64 提供原生 CI 构建与压缩包验收测试；成功运行的构建也可从 [Windows Actions](https://github.com/allenhori/careervista-job-hunting-tool/actions/workflows/windows.yml)下载。Windows 包未代码签名，普通新电脑上的 Explorer/SmartScreen 行为及 Windows 智能体宿主仍需另行验证。Linux、Intel Mac、Windows ARM64 和 Chromebook 不在已验证范围。详见[发布说明](docs/release.md)。
+这是预览版。Mac 安装包尚未公证，干净系统上的 Gatekeeper/下载隔离行为未验证。Windows x64 提供原生 CI 构建与压缩包验收测试；成功运行的构建也可从 [Windows Actions](https://github.com/career-vista-by-ax/careervista-job-hunting-tool/actions/workflows/windows.yml)下载。Windows 包未代码签名，普通新电脑上的 Explorer/SmartScreen 行为及 Windows 智能体宿主仍需另行验证。Linux、Intel Mac、Windows ARM64 和 Chromebook 不在已验证范围。详见[发布说明](docs/release.md)。
 
 每台电脑使用独立数据库和智能体会话。迁移记录请使用私密备份/恢复；不要在电脑之间同步正在使用的 SQLite 文件。
 

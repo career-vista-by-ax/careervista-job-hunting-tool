@@ -37,3 +37,34 @@ test('a migration failure after touching the owned database restores its private
   assert.equal(existsSync(join(installation.root,'state/upgrade-stage.json')),false);assert.equal(readdirSync(join(installation.root,'state')).some(name=>name.startsWith('.upgrade-')),false);
  }finally{rmSync(root,{recursive:true,force:true,maxRetries:10,retryDelay:100});}
 });
+
+test('registered job-search shortcut resolves its own executable and refreshes owned paths across updates',async t=>{
+ const os=await import('node:os');const {syncBuiltinESMExports}=await import('node:module');const {execFileSync}=await import('node:child_process');
+ const root=mkdtempSync(join(tmpdir(),'cv-skill-launch-'));const fakeHome=join(root,'host home');mkdirSync(fakeHome);
+ t.mock.method(os.default,'homedir',()=>fakeHome);syncBuiltinESMExports();
+ const installation=new Installation(join(root,'custom installation'));
+ try{
+  const source=bundle(root),manifestPath=join(source,'release.json'),manifest=JSON.parse(readFileSync(manifestPath,'utf8'));
+  const main=`import {createServer} from 'node:http';const identity={installationId:process.env.CAREERVISTA_INSTALLATION_ID,instanceId:process.env.CAREERVISTA_INSTANCE_ID,pid:process.pid};const server=createServer((req,res)=>{if(req.headers.authorization!=='Bearer '+process.env.CAREERVISTA_CONTROL_NONCE){res.writeHead(403);res.end('{}');return;}if(req.url==='/api/v1/control/status'){res.end(JSON.stringify(identity));return;}if(req.url==='/api/v1/control/shutdown'){req.resume();res.end('{}');server.close(()=>process.exit(0));return;}res.end('{}');});server.listen(0,'127.0.0.1',()=>console.log('http://127.0.0.1:'+server.address().port));`;
+  writeFileSync(join(source,'app/dist/main.js'),main);manifest.files['app/dist/main.js']=createHash('sha256').update(main).digest('hex');
+  // The real launch helper, with production launch/control code.
+  writeFileSync(join(source,'app/dist/lifecycle.js'),`export { Installation } from ${JSON.stringify(new URL('../src/lifecycle.ts',import.meta.url).href)};import {Installation} from ${JSON.stringify(new URL('../src/lifecycle.ts',import.meta.url).href)};const root=process.argv[process.argv.indexOf('--root')+1];if(process.argv[2]==='launch')console.log(JSON.stringify(await new Installation(root).launch()));`);
+  manifest.files['app/dist/lifecycle.js']=createHash('sha256').update(readFileSync(join(source,'app/dist/lifecycle.js'))).digest('hex');
+  for(const skill of ['careervista-capture','careervista-job-search']){
+   const origin=join('agent-skills/v1',skill),target=join(source,origin);cpSync(origin,target,{recursive:true});
+   for(const name of readdirSync(target,{recursive:true}))if(typeof name==='string'&&!name.endsWith('/')&&requireFile(join(target,name))){const path=`${origin}/${name.replaceAll('\\','/')}`;manifest.files[path]=createHash('sha256').update(readFileSync(join(source,path))).digest('hex');}
+  }
+  writeFileSync(manifestPath,JSON.stringify(manifest));await installation.install(source);const registered=await installation.registerSkills('codex');assert.ok(registered.starter);
+  const config=JSON.parse(readFileSync(join(registered.starter!,'installation.json'),'utf8'));assert.equal(config.root,installation.root);assert.equal(config.runtime,join(installation.root,'releases/test-1/runtime',runtime));
+  const launch=()=>JSON.parse(execFileSync(config.runtime,[join(registered.starter!,'scripts/launch.mjs')],{encoding:'utf8'}));
+  assert.match(launch().url,/^http:\/\/127\.0\.0\.1:\d+$/);assert.equal(launch().alreadyRunning,true);
+  const edited=join(registered.registered,'SKILL.md');writeFileSync(edited,readFileSync(edited,'utf8')+'\nUser custom note.');
+  const incoming=join(root,'updated package');cpSync(source,incoming,{recursive:true});manifest.version='test-2';writeFileSync(join(incoming,'release.json'),JSON.stringify(manifest));
+  const result=await installation.install(incoming);assert.ok(result.preservedModifiedFiles.includes(edited));assert.match(readFileSync(edited,'utf8'),/User custom note/);
+  const updated=JSON.parse(readFileSync(join(registered.starter!,'installation.json'),'utf8'));assert.match(updated.runtime,/test-2/);
+  const relaunched=JSON.parse(execFileSync(updated.runtime,[join(registered.starter!,'scripts/launch.mjs')],{encoding:'utf8'}));assert.match(relaunched.url,/127\.0\.0\.1/);
+  await installation.uninstall();assert.equal(existsSync(registered.starter!),false);assert.equal(existsSync(edited),true);
+ }finally{await installation.stop().catch(()=>{});t.mock.restoreAll();syncBuiltinESMExports();rmSync(root,{recursive:true,force:true,maxRetries:10,retryDelay:100});}
+});
+function requireFile(path:string){return !readdirSafe(path);}
+function readdirSafe(path:string){try{readdirSync(path);return true;}catch{return false;}}

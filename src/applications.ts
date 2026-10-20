@@ -1,19 +1,21 @@
+import { validateDetails } from './application-details.ts';
+import type { ApplicationDetails } from './application-details.ts';
 import { vacancyIdentity } from './reconciliation-state.ts';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { AppError, CareerVistaApp } from './app.ts';
 import type { ApiRoute } from './server.ts';
 
-export const applicationStatuses = ['applied', 'interview', 'offer', 'accepted', 'rejected', 'withdrawn', 'follow_up'] as const;
+export const applicationStatuses = ['preparing', 'screening', 'assessment', 'applied', 'interview', 'offer', 'accepted', 'rejected', 'withdrawn', 'follow_up'] as const;
 export type ApplicationStatus = typeof applicationStatuses[number];
 export interface ApplicationDocument { kind: 'resume' | 'letter' | 'other'; reference: string; label: string }
 export interface ApplicationEventInput {
   operationId: string; status: ApplicationStatus; occurredAt: string; note?: string;
-  documents?: ApplicationDocument[]; followUpOn?: string | null;
+  documents?: ApplicationDocument[]; followUpOn?: string | null; details?: ApplicationDetails;
 }
 export interface ApplicationEvent {
   id: string; jobId: string; operationId: string; status: ApplicationStatus; occurredAt: string;
-  note: string; documents: ApplicationDocument[]; followUpOn: string | null; createdAt: string;
+  note: string; details: ApplicationDetails; documents: ApplicationDocument[]; followUpOn: string | null; createdAt: string;
 }
 const dateOnly = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 function required(value: unknown, label: string, limit = 8000): asserts value is string {
@@ -26,8 +28,8 @@ export class Applications {
   timeline(jobId: string, sourceOnly = false) {
     const memberIds = sourceOnly ? [jobId] : vacancyIdentity(this.app.database, jobId).memberJobIds;
     this.app.getJob(jobId);
-    const rows = this.app.database.prepare(`SELECT id, job_id AS jobId, operation_id AS operationId, status, occurred_at AS occurredAt, note, documents_json AS documentsJson, follow_up_on AS followUpOn, created_at AS createdAt FROM application_events WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds);
-    const events = rows.map(({ documentsJson, ...row }) => ({ ...row, documents: JSON.parse(String(documentsJson)) }) as unknown as ApplicationEvent);
+    const rows = this.app.database.prepare(`SELECT id, job_id AS jobId, operation_id AS operationId, status, occurred_at AS occurredAt, note, details_json AS detailsJson, documents_json AS documentsJson, follow_up_on AS followUpOn, created_at AS createdAt FROM application_events WHERE job_id IN (${memberIds.map(() => '?').join(',')}) ORDER BY sequence`).all(...memberIds);
+    const events = rows.map(({ documentsJson, detailsJson, ...row }) => ({ ...row, details: JSON.parse(String(detailsJson)), documents: JSON.parse(String(documentsJson)) }) as unknown as ApplicationEvent);
     const latest = events.at(-1);
     return { jobId, status: latest?.status ?? null, followUpOn: latest?.followUpOn ?? null, events };
   }
@@ -46,21 +48,23 @@ export class Applications {
     const documents = (input.documents ?? []).map(document => {
       if (!document || !['resume', 'letter', 'other'].includes(document.kind)) throw new AppError('Each document needs kind resume, letter or other.');
       required(document.reference, 'document reference'); required(document.label, 'document label');
+      if (document.reference.startsWith('application-file:')) { const file=this.app.database.prepare('SELECT job_id FROM application_files WHERE id=?').get(document.reference.slice(17)); if (!file || !(this.app.getJob(jobId).memberJobIds??[this.app.getJob(jobId).id]).includes(String(file.job_id))) throw new AppError('The application copy must belong to this job.'); }
       return { kind: document.kind, reference: document.reference, label: document.label };
     });
-    const normalized = { jobId, operationId: input.operationId, status: input.status, occurredAt: input.occurredAt, note: input.note ?? '', documents, followUpOn: input.followUpOn ?? null };
+    const details = input.details === undefined ? {} : validateDetails(input.details);
+    const normalized = { jobId, operationId: input.operationId, status: input.status, occurredAt: input.occurredAt, note: input.note ?? '', documents, followUpOn: input.followUpOn ?? null, ...(input.details === undefined ? {} : { details }) };
     const existing = this.app.database.prepare('SELECT input_json, job_id, id FROM application_events WHERE operation_id = ?').get(input.operationId);
     if (existing) {
       if (!isDeepStrictEqual(JSON.parse(String(existing.input_json)), normalized)) throw new AppError('This operationId already records different application details. Use a new operationId for a new event.', 409, 'idempotency_conflict');
       return { event: this.timeline(jobId).events.find(event => event.id === existing.id)!, replayed: true };
     }
     const id = randomUUID(), createdAt = new Date().toISOString();
-    this.app.database.prepare('INSERT INTO application_events (id, job_id, operation_id, status, occurred_at, note, documents_json, follow_up_on, input_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, jobId, input.operationId, input.status, input.occurredAt, normalized.note, JSON.stringify(documents), normalized.followUpOn, JSON.stringify(normalized), createdAt);
+    this.app.database.prepare('INSERT INTO application_events (id, job_id, operation_id, status, occurred_at, note, documents_json, follow_up_on, input_json, created_at, details_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, jobId, input.operationId, input.status, input.occurredAt, normalized.note, JSON.stringify(documents), normalized.followUpOn, JSON.stringify(normalized), createdAt, JSON.stringify(details));
     return { event: this.timeline(jobId).events.at(-1)!, replayed: false };
   }
   attention(on: string = new Date().toISOString().slice(0, 10)) {
     if (!dateOnly(on)) throw new AppError('on must be a valid YYYY-MM-DD date.');
-    return this.app.listJobs().map(job => ({ job, ...this.timeline(job.id) })).filter(item => item.followUpOn && item.followUpOn <= on && !['accepted', 'rejected', 'withdrawn'].includes(item.status ?? ''));
+    return this.app.listJobs().map(job => ({ job, ...this.timeline(job.id) })).filter(item => !this.app.database.prepare('SELECT deleted_at FROM job_storage WHERE job_id=?').get(item.job.id)?.deleted_at && item.followUpOn && item.followUpOn <= on && !['accepted', 'rejected', 'withdrawn'].includes(item.status ?? ''));
   }
 }
 export const applicationRoutes: ApiRoute = async ({ app, request, url, json, send }) => {

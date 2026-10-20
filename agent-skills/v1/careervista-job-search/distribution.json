@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/career-vista-by-ax/careervista-job-hunting-tool",
+  "releasesUrl": "https://github.com/career-vista-by-ax/careervista-job-hunting-tool/releases",
+  "docker": {
+    "image": null,
+    "status": "not-published",
+    "note": "A locally built/tested image is not a public registry release. Resolve a published reference or ask for an authorised source build."
+  }
+}

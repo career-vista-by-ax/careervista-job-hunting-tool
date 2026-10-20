@@ -1,3 +1,4 @@
+import { t } from './i18n.ts';
 import { defaultWorkspaceView, comparisonColumns, workspaceColumns, workspaceSorts } from './workspace-contract.ts';
 import type { WorkspaceView } from './workspace-contract.ts';
 import type { WorkspaceRow, WorkspaceResult } from '../workspace.ts';
@@ -33,7 +34,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   select('fit','Agent fit',[['all','All, including excluded'],['shortlist','Strong / promising'],['unassessed','Not assessed'],...Object.entries(fitLabels)]);
   select('provenance','Compensation source',[['all','All sources'],['unknown','Unknown'],...Object.entries(kindLabels)]);
   select('review','Your decision',[['all','All decisions'],['unreviewed','Unreviewed'],['saved','Saved'],['dismissed','Dismissed']]);
-  select('application','Application stage',[['all','All stages'],['none','No event recorded'],...['applied','interview','offer','accepted','rejected','withdrawn','follow_up'].map(value => [value,human(value)] as [string,string])]);
+  select('application','Application stage',[['all','All stages'],['none','No event recorded'],...['preparing','screening','assessment','applied','interview','offer','accepted','rejected','withdrawn','follow_up'].map(value => [value,human(value)] as [string,string])]);
   select('sort','Sort by',workspaceSorts.map(value => [value,sortLabels[value]]));
   select('direction','Sort direction',[['asc','Ascending'],['desc','Descending']]);
   select('density','Row density',[['compact','Compact'],['comfortable','Comfortable']]);
@@ -45,6 +46,16 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     const label = node('label'); label.append(checkbox,document.createTextNode(columnLabels[key])); columns.append(label);
   }
   filters.append(columns,node('p','Compensation sorts by source and original units; currencies and contract rates are never silently converted.','muted'));
+  const collection=node('select');collection.setAttribute('aria-label',t('Search history'));
+  async function loadArchives(){const response=await fetch('/api/v1/archives');if(!response.ok)throw new Error('Could not load search history.');const archives=await response.json() as {id:string;name:string;jobCount:number}[];collection.replaceChildren();for(const [value,label] of [['current','Current search'],['all','All saved searches'],['trash','Recently deleted'],...archives.map(item=>[item.id,`${item.name} (${item.jobCount})`])]){const option=node('option',label!);option.value=value!;collection.append(option);}collection.value=view.collection;}
+  collection.addEventListener('change',()=>{view.collection=collection.value;if(view.collection!=='current')view.availability='all';changed();});
+  const archive=node('button','Archive this search','quiet');archive.type='button';
+  const archiveDialog=node('dialog');archiveDialog.className='archive-dialog';archiveDialog.setAttribute('aria-labelledby','archive-title');
+  const archiveForm=node('form');const archiveTitle=node('h2','Archive this search');archiveTitle.id='archive-title';const archiveName=node('input');archiveName.required=true;archiveName.maxLength=100;archiveName.value=new Date().toLocaleDateString();
+  const archiveCancel=node('button','Cancel','quiet');archiveCancel.type='button';archiveCancel.addEventListener('click',()=>archiveDialog.close());const archiveSave=node('button','Archive and start fresh');archiveSave.type='submit';const archiveMessage=node('p');archiveMessage.setAttribute('role','status');
+  archiveForm.append(archiveTitle,node('p','Keep the current jobs and their application history in a named archive. Start an empty current search with new preferences. Recently deleted jobs stay separate.'),controlLabel('Archive name',archiveName),archiveCancel,archiveSave,archiveMessage);archiveDialog.append(archiveForm);document.body.append(archiveDialog);archive.addEventListener('click',()=>archiveDialog.showModal());
+  const archiveOperation=crypto.randomUUID();archiveForm.addEventListener('submit',async event=>{event.preventDefault();archiveSave.disabled=true;try{const response=await fetch('/api/v1/archives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operationId:archiveOperation,name:archiveName.value})});const result=await response.json();if(!response.ok)throw new Error(result.error?.message??'Could not archive the search.');location.reload();}catch(error){archiveMessage.textContent=error instanceof Error?error.message:'Could not archive the search.';archiveSave.disabled=false;}});
+  const searchHistory=node('div','','search-history-controls');searchHistory.append(controlLabel('Search history',collection),archive);controls.append(searchHistory);
   const quickViews = node('div','','quick-views'); quickViews.setAttribute('role','group'); quickViews.setAttribute('aria-label','Quick views');
   const quickButtons = new Map<string,HTMLButtonElement>();
   for (const [key,label] of [['all','All jobs'],['shortlist','Shortlist'],['saved','Saved by you']] as const) {
@@ -53,12 +64,14 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   }
   const comparison=node('button','Comparison columns','quiet'); comparison.type='button'; comparison.title='Show fit, pay, workplace, confidence and concerns in compact rows';
   comparison.addEventListener('click',()=>{view.columns=[...comparisonColumns];view.density='compact';view.sort='fit';view.direction='asc';syncControls();changed();});quickViews.append(comparison);
-  const legend=node('span','Green: strong · Teal: promising · Amber: investigate · Red: low fit / excluded','fit-legend'); quickViews.append(legend);
+  const legend=node('span','','fit-legend');legend.setAttribute('role','group');legend.setAttribute('aria-label',t('Fit colour legend'));
+  for(const [fit,label] of [['strong','Green: strong'],['promising','Teal: promising'],['investigate','Amber: investigate'],['low_fit','Red: low fit / excluded']])legend.append(node('span',label,`status-badge fit-${fit}`));
+  quickViews.append(legend);
   filters.append(savedControls); controls.append(quickViews,filters);
   async function api<T>(path: string, options?: RequestInit): Promise<T> { const response = await fetch(`/api/v1/workspace${path}`,options); const result = await response.json(); if (!response.ok) throw new Error(result.error?.message ?? 'Workspace unavailable. Retry.'); return result as T; }
   function report(error: unknown) { status.textContent = error instanceof Error ? error.message : 'Could not load the workspace. Retry.'; status.className = 'error'; }
   function syncControls() {
-    search.value = view.query;
+    search.value = view.query; collection.value=view.collection;
     table.dataset.density=view.density;
     for(const [key,button] of quickButtons) button.setAttribute('aria-pressed',String(key==='saved'?view.review==='saved':view.review==='all'&&view.fit===key));
     for (const [key,input] of Object.entries(inputs)) input.value = String(view[key as keyof WorkspaceView]);
@@ -76,10 +89,10 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
       const td = node('td','','identity-cell'); const button = node('button',row.title,'job-title'); button.type='button'; button.dataset.jobId=row.id; button.title=row.title; button.setAttribute('aria-haspopup','dialog'); button.setAttribute('aria-label',`View ${row.title} at ${row.company}`); button.addEventListener('click',()=>void openJob(row.id));
       td.append(button); return td;
     }
-    if (key === 'company') return cell(row.company);
-    if (key === 'location') return cell(row.location ?? 'Unknown');
-    if (key === 'workArrangement') return cell(row.workArrangement ?? 'Unknown');
-    if (key === 'employment') return cell(row.employment ?? 'Unknown');
+    if (key === 'company') {const td=cell(row.company);td.dataset.original='';return td;}
+    if (key === 'location') {const td=cell(row.location ?? 'Unknown');if(row.location)td.dataset.original='';return td;}
+    if (key === 'workArrangement') {const td=cell(row.workArrangement ?? 'Unknown');if(row.workArrangement)td.dataset.original='';return td;}
+    if (key === 'employment') {const td=cell(row.employment ?? 'Unknown');if(row.employment)td.dataset.original='';return td;}
     if (key === 'confidence') { const td=cell(row.confidence ? human(row.confidence) : 'Unassessed'); td.querySelector('span')!.className=`status-badge confidence-${row.confidence ?? 'unknown'}`; td.title=`Evidence confidence: ${row.confidence ?? 'not assessed'}`; return td; }
     if (key === 'createdAt') return cell(date(row.createdAt));
     if (key === 'followUp') return cell(row.application.followUpOn ?? 'None scheduled');
@@ -95,7 +108,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
       return td;
     }
     if (key === 'review') return cell(human(row.review));
-    if (key === 'application') { const td = cell(row.application.status ? human(row.application.status) : 'Not applied',row.application.appliedAt ? `Applied ${date(row.application.appliedAt)}` : null); if (row.application.followUpOn) td.append(node('span',`Follow up ${row.application.followUpOn}`,'cell-secondary')); return td; }
+    if (key === 'application') { const td = cell(row.application.status ? human(row.application.status) : 'Not applied',row.application.appliedAt ? `${t('Applied')} ${date(row.application.appliedAt)}` : null); if (row.application.followUpOn) td.append(node('span',`${t('Follow-up date')} ${row.application.followUpOn}`,'cell-secondary')); return td; }
     if (key === 'freshness') return cell(row.availability.status==='confirmed_closed'?'Closed':row.availability.status==='active'?'Verified active':'Unverified',`${row.availability.checkedAt ? 'Checked' : 'Captured'} ${date(row.availability.checkedAt ?? row.capturedAt)}${row.availability.lastAttempt==='could_not_verify'?' · latest check failed':''}`);
     return cell(row.sourceLabels.join(', ') || 'Unknown source');
   }
@@ -104,6 +117,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     document.getElementById('count')!.textContent = `${result.counts.total} saved`;
     summary.textContent = `${result.counts.shortlisted} strong / promising · ${result.counts.lowFit} low fit · ${result.counts.newLastSevenDays} saved in the last 7 days · ${result.counts.attention} applications need follow-up · ${result.counts.excluded} agent-excluded · ${result.counts.closed} confirmed closed`;
     document.getElementById('results-summary')!.textContent=`${result.counts.visible} of ${result.counts.total} jobs · Select a role for details`;
+    archive.disabled=view.collection!=='current'||result.counts.total===0;
     head.replaceChildren();
     for (const key of view.columns) { const th=node('th'); th.scope='col'; th.dataset.column=key; th.setAttribute('aria-sort',view.sort===columnSorts[key]?(view.direction==='asc'?'ascending':'descending'):'none'); const button=node('button',columnLabels[key]); button.type='button'; button.addEventListener('click',()=>{view.direction=view.sort===columnSorts[key]&&view.direction==='asc'?'desc':'asc';view.sort=columnSorts[key];syncControls();changed();}); th.append(button); head.append(th); }
     const actionHead=node('th','Listing'); actionHead.scope='col'; head.append(actionHead);
@@ -111,7 +125,7 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
     for (const row of result.rows) { const tr=node('tr'); tr.dataset.fit=row.fit ?? 'unknown'; for (const key of view.columns) { const td=rowCell(row,key); td.dataset.column=key; tr.append(td); } const actions=node('td','','row-actions'); const link=node('a','Original'); link.href=row.sourceUrl; link.target='_blank'; link.rel='noopener noreferrer'; link.setAttribute('aria-label',`Open original listing for ${row.title}`); actions.append(link); tr.append(actions); tr.addEventListener('click',event=>{if(event.target instanceof Element&&!event.target.closest('button,a')) void openJob(row.id);}); rows.append(tr); }
     syncControls();
     if (focusedColumn) head.querySelector<HTMLButtonElement>(`[data-column="${CSS.escape(focusedColumn)}"] button`)?.focus();
-    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':'Your next search starts with your agent'; empty.querySelectorAll('p')[1]!.hidden=result.counts.total>0; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':'Describe the role you want. Your agent explores related titles, researches jobs and saves its reasons here.';
+    const empty=document.getElementById('empty')!; empty.hidden=result.rows.length>0; empty.querySelector('h2')!.textContent=result.counts.total?'No jobs match these filters':view.collection==='trash'?'No recently deleted jobs':view.collection==='current'?'Your next search starts with your agent':'No jobs in this search'; empty.querySelectorAll('p')[1]!.hidden=result.counts.total>0||view.collection!=='current'; empty.querySelector('p')!.textContent=result.counts.total?'Change your filters or choose All availability to review closed listings. Agent exclusion, your decision and application outcomes stay separate.':view.collection==='trash'?'Jobs moved here remain recoverable until permanently deleted.':view.collection!=='current'?'Choose another search from Search history.':'Describe the role you want. Your agent explores related titles, researches jobs and saves its reasons here.';
   }
   async function loadRows() { const request=++requestId; table.setAttribute('aria-busy','true'); status.textContent='Loading comparisons…'; status.className='muted'; const params=new URLSearchParams(Object.entries(view).filter(([key])=>key!=='columns').map(([key,value])=>[key,String(value)]));
     try { const result=await api<WorkspaceResult>(`?${params}`); if(request!==requestId)return; render(result); status.textContent=''; }
@@ -124,6 +138,6 @@ export function installWorkspaceUI(openJob: (id: string) => Promise<void>) {
   let initialized = false;
   async function initialize() { if (initialized) return; const state = await api<{current:WorkspaceView;saved:typeof saved}>('/views'); view=state.current;saved=state.saved;syncControls();listSaved();initialized=true;controls.inert=false;search.disabled=false; }
   const retry=document.getElementById('refresh-jobs')!; retry.addEventListener('click',()=>void refresh().catch(report));
-  async function refresh(){await initialize();await loadRows();}
+  async function refresh(){await initialize();await loadArchives();await loadRows();}
   return {refresh};
 }

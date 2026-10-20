@@ -60,6 +60,9 @@ test('damaged, unsupported and relationally invalid backups fail before an empty
     const older = structuredClone(good);
     older.migrations = older.migrations.filter(name => name.startsWith('001-') || name.startsWith('017-'));
     for (const name of Object.keys(older.tables)) if (!['jobs', 'observations', 'application_events'].includes(name)) delete older.tables[name];
+    const detailsColumn = older.tables.application_events!.columns.indexOf('details_json');
+    older.tables.application_events!.columns.splice(detailsColumn, 1);
+    for (const row of older.tables.application_events!.rows) row.splice(detailsColumn, 1);
     new Backups(destination).restore(resign(older));
     assert.equal(destination.listJobs()[0]?.title, 'Chef');
     assert.equal(new ProfilesService(destination).getActiveProfile(), null);

@@ -1,0 +1,4 @@
+interface:
+  display_name: "30-Second CV & Letter Review"
+  short_description: "Review first impressions and guide truthful job-specific edits"
+  default_prompt: "Use $ax-30-secs to review my CV or cover letter for this job and guide the most useful edits."

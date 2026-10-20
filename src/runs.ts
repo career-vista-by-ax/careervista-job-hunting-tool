@@ -66,7 +66,7 @@ export class RunsService {
   if (kind === 'control' && operation.pageUrl !== undefined) { const page = new URL(webUrl(operation.pageUrl)); input.pageUrl = page.origin + page.pathname; }
   const allowed: Record<string,string[]> = {queue:['operationId','workKey','trackId','source','url','workKind'],authorize:['operationId','workKey','modelWork','reservationId'],checkpoint:['operationId','workKey','status','jobId','errorCode'],reservation:['operationId','workKey','estimate','currency'],cost:['operationId','reservationId','actual'],control:['operationId','action','workKey','sessionRef','pageUrl','userConfirmed','amount','currency']};
   if (Object.keys(operation).some(key => !allowed[kind]?.includes(key))) throw new AppError('Unsupported run operation fields. Send no raw provider output, passwords or session secrets.');
-  const db = this.app.database; db.exec('BEGIN IMMEDIATE');
+  const db = this.app.database; db.exec('SAVEPOINT run_change');
   try {
    const run = this.stored(id), receipt = db.prepare('SELECT input_json FROM run_operations WHERE run_id=? AND operation_id=?').get(id, operation.operationId);
    if (receipt) { if (!isDeepStrictEqual(JSON.parse(String(receipt.input_json)), input)) throw new AppError('Run operation identifier already has different content.', 409, 'idempotency_conflict'); }
@@ -75,8 +75,8 @@ export class RunsService {
     db.prepare('UPDATE research_runs SET state_json=? WHERE id=?').run(JSON.stringify(run), id);
     db.prepare('INSERT INTO run_operations VALUES (?,?,?)').run(id, operation.operationId, JSON.stringify(input));
    }
-   db.exec('COMMIT'); return this.get(id);
-  } catch (error) { db.exec('ROLLBACK'); throw error; }
+   db.exec('RELEASE run_change'); return this.get(id);
+  } catch (error) { db.exec('ROLLBACK TO run_change; RELEASE run_change'); throw error; }
  }
  private active(run: StoredRun) { if (run.status !== 'running') throw new AppError(`Run is ${run.status}. Resume it explicitly before authorizing more work.`, 409, 'run_not_running'); }
  private work(run: StoredRun, key: unknown): RunWork { text(key, 'workKey'); const work = run.work.find(w => w.workKey === key); if (!work) throw new AppError('Queue this work item before changing its checkpoint.'); return work; }

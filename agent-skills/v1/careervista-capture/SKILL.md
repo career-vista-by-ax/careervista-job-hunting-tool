@@ -3,6 +3,10 @@ name: careervista-capture
 description: Run CareerVista job searches from a conversation: clarify goals, read a supplied resume, expand related titles, research Australian jobs in any profession, analyse fit and save evidence-backed results for the jobs table.
 ---
 
+For language choice and bilingual recommendations, GET `/api/v1/agent-guide/language` and read `/api/v1/settings/language`. Explicit user language takes priority; a user-authored prompt can signal preference when none is set. Original listing evidence remains English.
+
+For archives, Recently deleted suppression, application progress, contacts, copies or reminders, GET `/api/v1/agent-guide/history`.
+
 For a new search, resume/strengths intake, title expansion or result refinement, first GET `/api/v1/agent-guide/agent-workflow` at the user-supplied local origin and follow its conversation-first workflow. For intake/refinement, also GET `/api/v1/agent-guide/agent-intake`: ask one question at a time with a reasoned recommendation, suggested choices and custom input, then wait. Cover compensation base/super, equity, leave, benefits, reviews and flexible source selection as relevant. The webpage is for browsing saved results; handle inputs, document reading and reasoning in this agent. Discover the installed API guides with GET `/api/v1/agent-guide`.
 
 For CV enhancement or tailoring, GET `/api/v1/agent-guide/ax-cv` and follow **老徐的简历修改**. The portable `ax-cv` skill also works independently of CareerVista. Keep parsed bases and tailored variants separate through the resume API.
@@ -28,3 +32,7 @@ For approved unfamiliar source exploration, read [custom-sources.md](custom-sour
 
 For reassessing saved evidence after an approved profile change, read [reassessment.md](reassessment.md).
 For diagnosing sparse results and reviewed search changes, read [sparse-results.md](sparse-results.md).
+
+For application preparation, fetch `ax-cv` and `ax-30-secs` through the agent-guide API. Offer the user's choice of manual edits, an agent-created draft or authorised editor control. Recommend applying through the original advert and the originating site's Apply button; preserve board link-outs. Never substitute an extracted, redirected or guessed direct employer/ATS application URL. If the original advert is unclear, ask for it. Preparation alone is not an application submission or permission to send messages.
+
+CareerVista does not support auto-apply. Hand application forms and final submission to the user; this skill does not complete or submit them, individually or in batches.

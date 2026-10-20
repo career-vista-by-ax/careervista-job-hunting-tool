@@ -1,3 +1,6 @@
+import { languageRoutes } from './language.ts';
+import { applicationFileRoutes } from './application-files.ts';
+import { jobStorageRoutes } from './job-storage.ts';
 import {sparseRoutes} from './sparse.ts';
 import {reassessmentRoutes} from './reassessment.ts';
 import { feedbackRoutes } from './feedback.ts';
@@ -10,6 +13,7 @@ import { resumeVariantRoutes } from './resume-variants.ts';
 import { resumeRoutes } from './resume.ts';
 import { availabilityRoutes } from './availability.ts';
 import { dataLifecycleRoutes } from './datalifecycle.ts';
+import { resetRoutes } from './reset.ts';
 import { controlRoute, defaultRoot } from './lifecycle.ts';
 import { RunsService, runsRoute } from './runs.ts';
 import { assessmentRoutes } from './assessments.ts';
@@ -29,7 +33,9 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('CAREER
 const app = new CareerVistaApp({ root });
 try {
   new RunsService(app).cleanupStorage();
-  const server = await startServer(app, { port, routes: [sparseRoutes, reassessmentRoutes, feedbackRoutes, reconciliationRoutes, customSourceRoutes, companyRoutes, workspaceRoutes, collectionRoutes(), ...(process.env.CAREERVISTA_CONTROL_NONCE && process.env.CAREERVISTA_INSTALLATION_ID && process.env.CAREERVISTA_INSTANCE_ID ? [controlRoute({ installationId: process.env.CAREERVISTA_INSTALLATION_ID, instanceId: process.env.CAREERVISTA_INSTANCE_ID, nonce: process.env.CAREERVISTA_CONTROL_NONCE, shutdown: () => { process.emit('SIGTERM'); } })] : []), resumeVariantRoutes, resumeRoutes, availabilityRoutes, dataLifecycleRoutes, runsRoute, compensationRoutes, applicationRoutes, backupRoutes, profileRoutes(new ProfilesService(app)), extractionRoute, assessmentRoutes] });
+  const host=process.env.CAREERVISTA_BIND_HOST??'127.0.0.1';
+  if(host!=='127.0.0.1'&&host!=='0.0.0.0')throw new Error('CAREERVISTA_BIND_HOST must be 127.0.0.1 or 0.0.0.0.');
+  const server = await startServer(app, { port, host, publicOrigin:process.env.CAREERVISTA_PUBLIC_ORIGIN, routes: [languageRoutes, applicationFileRoutes, jobStorageRoutes, resetRoutes, sparseRoutes, reassessmentRoutes, feedbackRoutes, reconciliationRoutes, customSourceRoutes, companyRoutes, workspaceRoutes, collectionRoutes(), ...(process.env.CAREERVISTA_CONTROL_NONCE && process.env.CAREERVISTA_INSTALLATION_ID && process.env.CAREERVISTA_INSTANCE_ID ? [controlRoute({ installationId: process.env.CAREERVISTA_INSTALLATION_ID, instanceId: process.env.CAREERVISTA_INSTANCE_ID, nonce: process.env.CAREERVISTA_CONTROL_NONCE, shutdown: () => { process.emit('SIGTERM'); } })] : []), resumeVariantRoutes, resumeRoutes, availabilityRoutes, dataLifecycleRoutes, runsRoute, compensationRoutes, applicationRoutes, backupRoutes, profileRoutes(new ProfilesService(app)), extractionRoute, assessmentRoutes] });
   console.log(`CareerVista is ready: ${server.url}\nLocal data: ${app.paths.data}\nPress Ctrl+C to stop.`);
   let stopping = false;
   for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => {

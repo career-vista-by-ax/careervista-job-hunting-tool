@@ -20,7 +20,7 @@ export function mountBackupTools(target?: HTMLElement) {
     finally { download.disabled = false; }
   });
   const form = element('form'); form.append(element('h3', 'Restore into this empty installation'));
-  form.append(element('p', 'Restore never overwrites an installation containing saved data. To keep existing work, launch a separate empty installation first. Supported backup size: up to 128 MiB.'));
+  form.append(element('p', 'Restore never overwrites an installation containing saved data. Keep existing work in a separate installation, or download a backup before using Reset all data below. Supported backup size: up to 128 MiB.'));
   const fileLabel = element('label', 'Choose backup JSON file'); const file = element('input'); file.type = 'file'; file.accept = '.json,application/json'; fileLabel.append(file);
   const textLabel = element('label', 'Or paste backup JSON'); const text = element('textarea'); text.rows = 5; text.spellcheck = false; textLabel.append(text);
   const restore = element('button', 'Restore backup'); restore.type = 'submit'; form.append(fileLabel, textLabel, restore);

@@ -1,3 +1,4 @@
+import { JobStorage } from './job-storage.ts';
 import { FeedbackService } from './feedback.ts';
 import { Reconciliation } from './reconciliation.ts';
 import { randomUUID } from 'node:crypto';
@@ -24,7 +25,7 @@ export class WorkspaceService {
       const capturedAt = detail.observations.map(item => item.capturedAt).sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1)!;
       const sourceNames: Record<string,string> = {seek:'SEEK',linkedin:'LinkedIn',glassdoor:'Glassdoor',employer:'Employer',manual:'Manual'};
       const sourceLabels=(job.sources??[]).map(source=>sourceNames[source]??new URL(detail.observations.find(item=>item.source===source)!.sourceUrl).hostname.replace(/^www\./,''));
-      return { ...job, sourceLabels, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
+      return { ...job, storage: new JobStorage(this.app).state(job.id), sourceLabels, memberJobIds: reconciliation.memberJobIds, aliases: reconciliation.sourceJobs, differences: reconciliation.differences, location: analysis?.details.location.value ?? job.location, employment: analysis?.details.employment.value ?? null, workArrangement: analysis?.details.workArrangement.value ?? null,
         compensation: compensation.summary(job.id), fit: assessment?.label ?? null, confidence: assessment?.confidence.level ?? null,
         reasons: assessment?.reasonsToPursue.map(item => item.statement) ?? [],
         unknowns: assessment?.unknowns.map(item => item.explanation) ?? [],
@@ -39,13 +40,14 @@ export class WorkspaceService {
     if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !Object.hasOwn(defaultWorkspaceView, key))) throw new AppError('Use only documented workspace filters, sort and columns.');
     const view = { ...defaultWorkspaceView, ...input };
     if (typeof view.query !== 'string' || view.query.length > 8000) throw new AppError('Search must be text up to 8000 characters.');
-    const options = { availability: ['active','all','closed'], fit: ['all','shortlist','unassessed',...fitLabels], provenance: ['all','unknown','advertised','external_report','model_estimate'], review: ['all','unreviewed','saved','dismissed'], application: ['all','none','applied','interview','offer','accepted','rejected','withdrawn','follow_up'], sort: workspaceSorts, direction: ['asc','desc'], density: ['compact','comfortable'] };
+    if (typeof view.collection !== 'string' || (view.collection !== 'current' && view.collection !== 'all' && view.collection !== 'trash' && !new JobStorage(this.app).list().some(archive => archive.id === view.collection))) throw new AppError('Choose a current, archived or recently deleted search.');
+    const options = { availability: ['active','all','closed'], fit: ['all','shortlist','unassessed',...fitLabels], provenance: ['all','unknown','advertised','external_report','model_estimate'], review: ['all','unreviewed','saved','dismissed'], application: ['all','none','preparing','screening','assessment','applied','interview','offer','accepted','rejected','withdrawn','follow_up'], sort: workspaceSorts, direction: ['asc','desc'], density: ['compact','comfortable'] };
     for (const [key, values] of Object.entries(options)) if (!(values as readonly unknown[]).includes(view[key as keyof WorkspaceView])) throw new AppError(`Unsupported ${key} filter. Select a documented option.`);
     if (!Array.isArray(view.columns) || !view.columns.includes('role') || new Set(view.columns).size !== view.columns.length || view.columns.some(column => !workspaceColumns.includes(column))) throw new AppError('Visible columns must be unique supported columns and include role.');
     return view;
   }
   query(input: Partial<WorkspaceView> = {}) {
-    const view = this.validate(input), all = this.summaries(), query = view.query.toLocaleLowerCase().trim();
+    const view = this.validate(input), all = this.summaries().filter(row => view.collection === 'trash' ? !!row.storage.deletedAt : !row.storage.deletedAt && (view.collection === 'all' || (view.collection === 'current' ? !row.storage.archiveId : row.storage.archiveId === view.collection))), query = view.query.toLocaleLowerCase().trim();
     const rows = all.filter(row => (!query || [row.title,row.company,row.location ?? '',row.workArrangement ?? '',row.employment ?? '',...(row.sources ?? []),...row.sourceLabels].some(value => value.toLocaleLowerCase().includes(query)))
       && (view.availability === 'all' || (row.availability.status === 'confirmed_closed') === (view.availability === 'closed'))
       && (view.fit === 'all' || (view.fit === 'shortlist' ? row.fit === 'strong' || row.fit === 'promising' : view.fit === 'unassessed' ? row.fit === null : row.fit === view.fit))

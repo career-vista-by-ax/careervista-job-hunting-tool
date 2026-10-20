@@ -1,6 +1,6 @@
 # Spec #1 implementation status
 
-Integration branch: `integration/spec-1`. Review: https://github.com/allenhori/careervista-job-hunting-tool/pull/23. All feature slices #2–#21 are integrated. #22 includes native Mac arm64 packaging, isolated offline installation, populated-data upgrades/rollback, repeat launch, keep-data reinstall and explicit owned-data removal. The PR closes #1–#22 when merged; no ticket is closed merely because code was drafted.
+Integration branch: `integration/spec-1`. Review: https://github.com/career-vista-by-ax/careervista-job-hunting-tool/pull/23. All feature slices #2–#21 are integrated. #22 includes native Mac arm64 packaging, isolated offline installation, populated-data upgrades/rollback, repeat launch, keep-data reinstall and explicit owned-data removal. The PR closes #1–#22 when merged; no ticket is closed merely because code was drafted.
 
 The product supports any profession and arbitrary user-approved tracks. It is model/agent independent; Codex is the development/browser validation host. Daily review is a rich full-width table with filters, saved views, column choices and modal details. User review, agent fit, application progress and source availability have separate histories.
 

@@ -8,6 +8,10 @@ Use the exact loopback origin supplied by the user. GET `/api/v1/agent-guide` di
 
 ## 1. Understand the search
 
+Read `language` first. Use explicit language instructions, then the saved preference, or infer from the user’s prompt when clear. Save the preference. For non-English explanations keep English originals and submit bilingual assessment translations. Display Chinese choices as 简体中文 and 繁体中文 only.
+
+Read `history` when existing searches, deleted listings or application progress are involved. Preserve existing data by default; archive an old search on request. Respect Recently deleted suppression. Users can manage application records, contacts, document copies and due follow-ups directly in the job modal.
+
 First GET `/api/v1/agent-guide/agent-intake` and use its adaptive interview. Ask exactly one question at a time, explain your recommendation, offer suggested answers plus custom free text and an undecided path, then wait. Probe title families, location, work arrangement, salary and base/super semantics, equity, leave, benefits, role quality and review priorities; reuse known answers and ask only consequential follow-ups. Ask which sites to search after the preference discussion, including SEEK, LinkedIn, Glassdoor, Indeed or user-supplied sites. Keep all intake and later refinement in the agent conversation.
 
 Expand the seed role by responsibilities, seniority, domain and common title variants. Explain why each family belongs. For “principal analytics engineer”, consider principal/staff/lead analytics engineer and principal/staff data engineer where the work matches. Explore engineering manager (data), analytics engineering manager or data engineering manager as a separate leadership track only if management is in scope. A title is a search hypothesis, not proof of equivalent duties, salary, qualifications or the user's interest. This method applies to any profession in Australia; teaching, healthcare, trades and other roles need their own expansions.

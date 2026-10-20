@@ -62,3 +62,18 @@ Return the revised CV, brief change rationale and unresolved factual questions.
 For an exported document, render and inspect every page: verify page count,
 readability, section flow and accurate page footers. A text-only draft has
 unverified pagination; never claim four-page compliance without rendering.
+
+## Review and application handoff
+
+When preparing for a specific application, offer a simulated 30-second reader
+review using ax-30-secs when available, or the connected app's ax-30-secs guide.
+Let the user choose manual editing in their preferred tool, a separate drafted
+version, or agent-assisted editor control when supported and authorised.
+Repeat the skim after revisions. Keep the original and prior versions intact.
+
+Recommend applying through the original advert on the website where the role
+was found and its own Apply button. Preserve a job board's link-out flow;
+never substitute an extracted, redirected or guessed employer/ATS application
+URL. A direct employer advert is appropriate only when that is where the role
+was originally found. If provenance is unclear, ask for the original advert.
+Preparation does not submit an application or record an applied status.
