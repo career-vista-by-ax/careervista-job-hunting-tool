@@ -1,6 +1,6 @@
 # Supervised unfamiliar sources
 
-Explore a source opens an explicit source URL approval with the active approved tracks, listing limit and spending budget. It creates an ordinary Research Run. Neither the app nor its adapter claims the site is supported; the agent investigates through its controlled browser. Separate origins require another approval. Links to employer destinations remain evidence, not permission to navigate beyond the selected source.
+Explore a source opens an explicit source URL approval with the active approved tracks, listing limit and spending budget. It creates an ordinary Research Run. Neither the app nor its adapter claims the site is supported; the agent follows `collection` Headless-first access, using public search/interfaces and headless reads before default-host-browser fallback for observed access barriers. Separate origins require another approval. Links to employer destinations remain evidence, not permission to navigate beyond the selected source.
 
 `POST /api/v1/sources/explorations` accepts `{operationId,url,profileVersion,trackIds,limit?,budget:{amount,currency},userConfirmed:true}`. GET this collection or `/:sourceId` for history and runId. Use that sourceId with the existing run collection planning/preparation/discovery/capture API. Every approved keyword is represented in the plan, with the approved starting URL; the agent must determine how the site searches and report any absent controls. Keywords are never silently appended using invented URL syntax.
 

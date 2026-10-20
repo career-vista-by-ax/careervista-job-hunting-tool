@@ -10,12 +10,18 @@ COPY scripts/copy-assets.mjs ./scripts/copy-assets.mjs
 RUN npm run build
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
-ARG VERSION=0.2.0-preview.1
+ARG VERSION=0.2.0-preview.2
 LABEL org.opencontainers.image.title="CareerVista" \
       org.opencontainers.image.description="Local Australian job-search workspace; use your own agent on the host" \
       org.opencontainers.image.source="https://github.com/career-vista-by-ax/careervista-job-hunting-tool" \
       org.opencontainers.image.version="${VERSION}"
 WORKDIR /opt/careervista
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+COPY docker/package.json docker/package-lock.json ./headless/
+RUN cd headless && npm ci --ignore-scripts --no-audit --no-fund \
+    && npx playwright install --with-deps chromium --only-shell \
+    && rm -rf /var/lib/apt/lists/*
+COPY docker/headless.mjs ./headless/headless.mjs
 COPY --from=build /build/dist ./bundle/app/dist
 COPY docs ./bundle/app/docs
 COPY agent-skills ./bundle/agent-skills

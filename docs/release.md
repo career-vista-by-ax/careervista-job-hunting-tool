@@ -96,4 +96,4 @@ An OS-managed SQLite lock outside the workspace prevents two containers from
 using the same volume concurrently. Image replacement runs the same validated,
 snapshot-backed installation/migration path as native releases. Keep the volume
 when replacing the image. Deleting it is permanent data removal, not an update.
-Skills and host document/browser tools stay outside the container.
+Skills and host document/default-browser tools stay outside the container. The image bundles pinned Playwright and Chromium headless shell for public JavaScript pages, available through `docker exec` without a local Playwright install or extra listening port. See `collection` Headless-first access for batch input, compact output, content validation and access-barrier fallback. Host search tools/public APIs remain the first discovery step; headless reads cannot guarantee access to bot-protected boards.

@@ -118,7 +118,7 @@ export class SourceCollection {
   return this.candidates(runId);
  }
  capture(runId:string,input:unknown){
-  record(input);only(input,['operationId','workKey','capturedAt','title','company','location','text','links','partial','apiContext']);text(input.operationId,'operationId',128);text(input.workKey,'workKey',128);
+  record(input);only(input,['operationId','workKey','capturedAt','title','company','location','text','links','partial','apiContext','captureMethod']);text(input.operationId,'operationId',128);text(input.workKey,'workKey',128);
   const state=this.get(runId),listing=state.listings.find(item=>item.workKey===input.workKey);if(!listing)throw new AppError('Discover this listing through its approved source plan before capture.');
   const runs=new RunsService(this.app),run=runs.get(runId),work=run.work.find(item=>item.workKey===listing.workKey)!;
   const db=this.app.database,existing=db.prepare('SELECT * FROM collection_captures WHERE run_id=? AND work_key=?').get(runId,input.workKey);
@@ -126,7 +126,9 @@ export class SourceCollection {
   if(existing){if(existing.input_hash!==digest(content))throw new AppError('This source capture already has different content. Save a new observation revision instead of overwriting it.',409,'idempotency_conflict');const job=this.app.getJob(String(existing.job_id));db.prepare('UPDATE collection_listings SET job_id=? WHERE run_id=? AND work_key=?').run(job.id,runId,work.workKey);runs.checkpoint(runId,{operationId:key('capture-checkpoint',runId,work.workKey),workKey:work.workKey,status:existing.completion==='complete'?'collected':'failed',jobId:job.id,...(existing.completion==='partial'?{errorCode:'malformed_output'}:{})});return {job,observation:job.observations.find(item=>item.id===existing.observation_id)!,completion:String(existing.completion),destinations:JSON.parse(String(existing.destinations_json)) as Destination[]};}
   if(run.status!=='running')throw new AppError('Resume the paused source run before capture.');
   if(work.status!=='working')throw new AppError('Authorize this listing before browser capture.');
-  let context:Record<string,unknown>={method:'supervised-browser',planId:listing.planId,workKey:listing.workKey};
+  if(input.captureMethod!==undefined&&!['headless-http','headless-browser','supervised-browser'].includes(input.captureMethod))throw new AppError('Use captureMethod headless-http, headless-browser or supervised-browser.');
+  if(input.captureMethod!==undefined&&input.apiContext!==undefined)throw new AppError('Use captureMethod or apiContext, not both.');
+  let context:Record<string,unknown>={method:input.captureMethod??'supervised-browser',planId:listing.planId,workKey:listing.workKey};
   if(input.apiContext!==undefined){
    record(input.apiContext);only(input.apiContext,['method','provider','endpoint']);
    const {method,provider,endpoint}=input.apiContext;
