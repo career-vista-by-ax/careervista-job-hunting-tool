@@ -4,6 +4,10 @@ description: >-
   Run CareerVista job searches from a conversation: clarify goals, read a supplied resume, expand related titles, research Australian jobs in any profession, analyse fit and save evidence-backed results for the jobs table.
 ---
 
+## First decision: privacy acknowledgement
+
+Before setup, intake, reading career records/documents or using research tools, read [references/user-consent.md](references/user-consent.md), show its full notice and wait for **I understand and agree to continue** or **Stop — do not proceed**. Use a permitted native choice tool when available; this acknowledgement has no recommended answer. An explicit agreement already given to this notice in the same conversation covers handoffs between these skills. Until agreement, perform only the instruction/question-tool checks allowed in that reference. A stop or missing/ambiguous answer leaves all workflow work pending.
+
 For conversational choices, invoke the host's native question/choice tool when available in the current mode so answers are clickable. Ask one question with the recommended choice first, a short reason, custom input and an undecided path, then wait for the user's submitted answer. Use a host-equivalent tool rather than a fixed provider API. Only if unavailable, explain the limitation once and use numbered chat choices; Markdown checkboxes are not a substitute. Respect the host's permission and attachment mechanisms.
 
 For language choice and bilingual recommendations, GET `/api/v1/agent-guide/language` and read `/api/v1/settings/language`. Explicit user language takes priority; a user-authored prompt can signal preference when none is set. Original listing evidence remains English.

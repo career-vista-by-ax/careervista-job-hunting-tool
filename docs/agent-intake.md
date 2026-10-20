@@ -1,5 +1,7 @@
 # Adaptive intake: one question at a time
 
+Before any career workflow, follow the `user-consent` guide (`GET /api/v1/agent-guide/user-consent`) unless its notice has already been explicitly accepted in this conversation. Present the notice and wait before setup checks, intake, career-record/document reads, browsing or writes. A stop or missing agreement ends or holds the workflow. This gate precedes the steps below.
+
 Use this guide when starting/refining a search or discussing resume strengths. This product searches the Australian job market only, across any occupation. Keep the conversation in the agent. Read available profile/history and the user's messages first; reuse settled answers. Follow a decision tree: ask only the next question whose prerequisites are known, then wait for the reply. Recompute the next question after each answer. This is a probing interview with advice, not a form or a batch questionnaire.
 
 ## Every question
@@ -47,9 +49,9 @@ Cover the following decisions before finalising search scope, in the order depen
 
 ## Flexible sources and review access
 
-Selected sites are browser-controlled research sources, not a promise of bundled integrations. Use an already connected suitable MCP when available and authorised; otherwise use the host browser. Follow the packaged SEEK/LinkedIn instructions for those sources. For Glassdoor, Indeed, employer pages and unfamiliar sites, load the `custom-sources` guide and inspect actual visible search controls. Agree the starting origin and scope in the conversation, create the exploration through the API and record supported/partial/unsupported outcomes. Reusable workflow approval is a separate user review in the conversation. Do not require the user to open a web configuration form.
+Selected sites are research sources, not a promise of bundled integrations. Follow `collection` Headless-first access: use approved search tools/public APIs and headless original-page reads before default-host-browser fallback for an observed access barrier. An already connected suitable MCP can be used within the same access and authorisation boundaries. Follow the packaged SEEK/LinkedIn instructions for those sources. For Glassdoor, Indeed, employer pages and unfamiliar sites, load the `custom-sources` guide and inspect actual visible search controls. Agree the starting origin and scope in the conversation, create the exploration through the API and record supported/partial/unsupported outcomes. Reusable workflow approval is a separate user review in the conversation. Do not require the user to open a web configuration form.
 
-Glassdoor company reports use the `company` guide. Open the source in the controlled browser, pause for the user to sign in or complete verification, then resume the same session after their confirmation. Do not collect passwords/cookies, bypass access controls or pretend inaccessible reviews were read. Retain source URL, date/team/location context, company-name linkage, relevant quotations and conflicting reports before an agent summary. Avoid definitive culture judgements from anecdotes. Failed access stays an explicit limitation.
+Glassdoor company reports use the `company` guide. Inspect actual access using the headless-first order. At a login/verification wall, stop headless requests to that source, open it in the default host browser and pause for the user to sign in or complete verification, then resume that session after confirmation. Do not collect passwords/cookies, bypass access controls or pretend inaccessible reviews were read. Retain source URL, date/team/location context, company-name linkage, relevant quotations and conflicting reports before an agent summary. Avoid definitive culture judgements from anecdotes. Failed access stays an explicit limitation.
 
 ## Close the interview, then research
 

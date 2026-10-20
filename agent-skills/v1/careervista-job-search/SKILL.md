@@ -3,6 +3,10 @@ name: careervista-job-search
 description: Start or resume an Australian job search with CareerVista. Guide Docker or local-app setup, then clarify goals and save evidence-backed recommendations using the agent's own tools.
 ---
 
+## First decision: privacy acknowledgement
+
+Before setup, intake, reading career records/documents or using research tools, read [references/user-consent.md](references/user-consent.md), show its full notice and wait for **I understand and agree to continue** or **Stop — do not proceed**. Use a permitted native choice tool when available; this acknowledgement has no recommended answer. An explicit agreement already given to this notice in the same conversation covers handoffs between these skills. Until agreement, perform only the instruction/question-tool checks allowed in that reference. A stop or missing/ambiguous answer leaves all workflow work pending.
+
 Use this skill with any agent that can read Markdown instructions. Shell, loopback HTTP, browser and document tools belong to the host; use its available equivalents. If a capability is absent, explain the specific limitation and offer a manual step. Invocation syntax belongs to the host (for example `$careervista-job-search` in Codex, or asking to use this skill by name).
 
 ## Clickable questions, including setup
