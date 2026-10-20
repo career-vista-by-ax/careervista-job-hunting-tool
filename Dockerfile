@@ -11,7 +11,8 @@ RUN npm run build
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ARG VERSION=0.2.0-preview.3
-LABEL org.opencontainers.image.title="CareerVista" \
+LABEL org.opencontainers.image.licenses="GPL-3.0-only" \
+      org.opencontainers.image.title="CareerVista" \
       org.opencontainers.image.description="Local Australian job-search workspace; use your own agent on the host" \
       org.opencontainers.image.source="https://github.com/career-vista-by-ax/careervista-job-hunting-tool" \
       org.opencontainers.image.version="${VERSION}"
@@ -25,7 +26,7 @@ COPY docker/headless.mjs ./headless/headless.mjs
 COPY --from=build /build/dist ./bundle/app/dist
 COPY docs ./bundle/app/docs
 COPY agent-skills ./bundle/agent-skills
-COPY README.md CONTRIBUTING.md ./bundle/app/
+COPY README.md CONTRIBUTING.md LICENSE CLA.md ./bundle/app/
 COPY package.json ./bundle/app/package.json
 COPY docker/create-bundle.mjs docker/entrypoint.mjs docker/healthcheck.mjs ./
 ENV CAREERVISTA_IMAGE_VERSION=${VERSION}

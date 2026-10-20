@@ -1,8 +1,5 @@
 name: Windows native acceptance
 on:
-  push:
-    branches: [master]
-  pull_request:
   workflow_dispatch:
 concurrency:
   group: windows-${{ github.ref }}
@@ -11,6 +8,7 @@ permissions:
   contents: read
 jobs:
   windows:
+    if: github.actor == 'allenhori' && github.triggering_actor == 'allenhori'
     runs-on: windows-latest
     timeout-minutes: 20
     steps:

@@ -3,6 +3,8 @@ name: careervista-job-search
 description: Start or resume an Australian job search with CareerVista. Guide Docker or local-app setup, then clarify goals and save evidence-backed recommendations using the agent's own tools.
 ---
 
+A bare invocation such as `$careervista-job-search` or “Use careervista-job-search” starts this guided workflow. Do not require the user to provide a prepared prompt, mention privacy, supply an app URL or install the runtime first. Present the notice below yourself, then reuse a healthy saved setup or guide the missing setup steps. Reuse answers and permissions already given in the conversation.
+
 ## First decision: privacy acknowledgement
 
 Before setup, intake, reading career records/documents or using research tools, read [references/user-consent.md](references/user-consent.md), show its full notice and wait for **I understand and agree to continue** or **Stop — do not proceed**. When a permitted native choice tool is available, **call it** with both choices; the user can click an answer and typing is optional. This acknowledgement has no recommended answer. An explicit agreement already given to this notice in the same conversation covers handoffs between these skills. Until agreement, perform only the instruction/question-tool checks allowed in that reference. A stop or missing/ambiguous answer leaves all workflow work pending.

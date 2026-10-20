@@ -1,6 +1,6 @@
 # References and dependency-license inventory
 
-Recorded 2026-10-18. Original application implementation; no JobSync or other application's code was copied. This record grants no public distribution or repository license.
+Recorded 2026-10-18. Original application implementation; no JobSync or other application's code was copied. CareerVista original code is GPL-3.0-only; see the root LICENSE. Third-party components retain their own licenses and notices.
 
 | Material | Role | License / provenance |
 | --- | --- | --- |

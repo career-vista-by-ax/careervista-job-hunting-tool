@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
+    if: github.actor == 'allenhori' && github.triggering_actor == 'allenhori'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:

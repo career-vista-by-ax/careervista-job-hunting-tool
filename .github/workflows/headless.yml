@@ -1,13 +1,11 @@
 name: Docker headless acceptance
 on:
-  pull_request:
-  push:
-    branches: [master]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   headless:
+    if: github.actor == 'allenhori' && github.triggering_actor == 'allenhori'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

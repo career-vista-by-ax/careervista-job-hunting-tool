@@ -6,8 +6,24 @@ CareerVista helps people find Australian jobs, understand their fit, prepare
 truthful application documents and maintain their own records. The person
 remains in control of career decisions and application submission.
 
-This repository is currently private. Licensing and public distribution terms
-will be decided separately; this document does not establish a licence.
+CareerVista is licensed under [GPL-3.0-only](LICENSE).
+
+## Contributor agreement and review
+
+Before your first contribution is merged, read and sign the [Contributor License
+Agreement](CLA.md) in a pull-request comment, including your full name and date.
+You retain copyright and grant the maintainer the rights described there,
+including relicensing rights. The maintainer verifies signatures manually; no
+external contribution automatically runs GitHub Actions.
+
+Fork the repository, make a branch, and submit a pull request to `master`.
+Only @allenhori maintains and merges this repository. Agent operations use that
+same GitHub identity. `master` requires pull-request review and resolved review
+conversations; only the maintainer has the configured push permission and admin
+bypass (for example, `gh pr merge --admin`). Force pushes and branch deletion
+are disabled. Maintainers must check the CLA even when using admin bypass.
+Actions are manual-only and every job checks both the original and rerun actor
+against @allenhori. Contributors run checks locally and include results in PRs.
 
 ## Product boundaries
 
