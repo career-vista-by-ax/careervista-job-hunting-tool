@@ -50,7 +50,7 @@ export async function startServer(app: CareerVistaApp, options: { port?: number;
       if (request.headers['sec-fetch-site'] === 'cross-site' && !isDocumentNavigation) throw new AppError('Cross-site requests are not allowed.', 403, 'forbidden_origin');
       const url = new URL(request.url ?? '/', origin);
       const context: RouteContext = { app, request, response, url, json: maxBytes => readJson(request, maxBytes), send };
-      const agentGuides = ['ax-30-secs', 'capture-interface', 'seek', 'linkedin', 'language', 'history', 'agent-workflow', 'agent-intake', 'ax-cv', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
+      const agentGuides = ['user-consent', 'agent-tasks', 'ax-30-secs', 'capture-interface', 'seek', 'linkedin', 'language', 'history', 'agent-workflow', 'agent-intake', 'ax-cv', 'profiles', 'resume', 'runs', 'collection', 'assessments', 'compensation', 'feedback', 'reassessment', 'sparse-results', 'applications', 'availability', 'company', 'custom-sources', 'reconciliation'] as const;
       if (request.method === 'GET' && url.pathname === '/api/v1/agent-guide') {
         send({ workflow: '/api/v1/agent-guide/agent-workflow', guides: agentGuides.map(name => ({ name, path: `/api/v1/agent-guide/${name}` })) }); return;
       }

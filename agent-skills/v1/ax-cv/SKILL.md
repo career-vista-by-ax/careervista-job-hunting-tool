@@ -3,6 +3,10 @@ name: ax-cv
 description: "Improve or tailor Australian-market CVs using 老徐的简历修改: truthful achievements, natural language and a hard four-page limit."
 ---
 
+## First decision: privacy acknowledgement
+
+Before setup, intake, reading career records/documents or using research tools, read [references/user-consent.md](references/user-consent.md), show its full notice and wait for **I understand and agree to continue** or **Stop — do not proceed**. When a permitted native choice tool is available, **call it** with both choices; the user can click an answer and typing is optional. This acknowledgement has no recommended answer. An explicit agreement already given to this notice in the same conversation covers handoffs between these skills. Until agreement, perform only the instruction/question-tool checks allowed in that reference. A stop or missing/ambiguous answer leaves all workflow work pending.
+
 # 老徐的简历修改
 
 Read the supplied PDF, Word document or text with the host's document tools.

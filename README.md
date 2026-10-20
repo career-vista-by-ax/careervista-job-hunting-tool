@@ -51,7 +51,12 @@ Use the careervista-job-search skill to help me find my next role in Australia.
 You can add your own goals in the same message. Invocation syntax varies by
 agent; in Codex you can also use `$careervista-job-search`.
 
-The skill guides your preferred language and Docker versus a local copy, asks
+The first decision is a privacy acknowledgement: review how local CareerVista
+storage differs from data processing by your chosen agent/model/tools, then
+choose **I understand and agree to continue** or **Stop — do not proceed**.
+Setup, document reads and research wait for explicit agreement.
+
+The skill then guides your preferred language and Docker versus a local copy, asks
 for the required permissions, then finds or starts the workspace and verifies
 its actual address. It checks available releases/images rather than assuming
 a fixed URL or executable path. No registry image has been published yet; if
@@ -67,6 +72,8 @@ then read selected original pages headlessly. Docker includes Playwright and
 Chromium for JavaScript pages, with no local Playwright install. Login,
 verification or blocking triggers a fallback to your default host browser.
 Blocked or suspicious responses remain unverified, never job/review evidence.
+Optional local task helpers wrap the same HTTP API for compact planning,
+preview screening and evidence/assessment saves; see [agent tasks](docs/agent-tasks.md).
 When results are ready, it sends you to the jobs table.
 
 ## Your skill set

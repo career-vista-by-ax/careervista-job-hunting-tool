@@ -1,5 +1,7 @@
 # Evidence-linked analysis interface v1
 
+Before any career workflow, follow the `user-consent` guide (`GET /api/v1/agent-guide/user-consent`) unless its notice has already been explicitly accepted in this conversation. Present the notice and wait before setup checks, intake, career-record/document reads, browsing or writes. A stop or missing agreement ends or holds the workflow. This gate precedes the steps below.
+
 Any agent or model can use the local HTTP application interface. No proprietary SDK, model key, cloud provider or app account is required. The agent host owns its model/provider settings and any credentials. CareerVista accepts resulting JSON and records optional provenance; it never calls a provider during extraction or sends unrelated notes, resumes or preferences. Change providers/models in the selected host. Do not include API keys or tokens in metadata.
 
 For goal intake, role expansion, resume-derived strengths or a new search, first GET `/api/v1/agent-guide/agent-workflow`. GET `/api/v1/agent-guide` lists the installed API guides, including profile, run, fit, feedback and application contracts. These read-only endpoints return Markdown as JSON and require no webpage form interaction.

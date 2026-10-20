@@ -1,5 +1,7 @@
 # Adaptive intake: one question at a time
 
+Before any career workflow, follow the `user-consent` guide (`GET /api/v1/agent-guide/user-consent`) unless its notice has already been explicitly accepted in this conversation. Present the notice and wait before setup checks, intake, career-record/document reads, browsing or writes. A stop or missing agreement ends or holds the workflow. This gate precedes the steps below.
+
 Use this guide when starting/refining a search or discussing resume strengths. This product searches the Australian job market only, across any occupation. Keep the conversation in the agent. Read available profile/history and the user's messages first; reuse settled answers. Follow a decision tree: ask only the next question whose prerequisites are known, then wait for the reply. Recompute the next question after each answer. This is a probing interview with advice, not a form or a batch questionnaire.
 
 ## Every question
@@ -23,6 +25,10 @@ After the answer, ask the next missing question. Do not append a location or sal
 
 For asynchronous tools, keep dependent work pending until an answer arrives. A default/preselected choice, timeout or silence is not a submitted answer. This rule applies during setup before intake and during later refinement as well; use each host's equivalent tool rather than requiring a specific agent provider.
 
+## User-entered values
+
+Use the host's native free-text or numeric question field for personal factual/numeric values such as salary ranges, contract/day rates, availability dates, hours or an exact leave target. The user types their value; provide units/format guidance, not recommended amounts, preset salary bands or invented personal facts. A native question tool can be called without suggested answers for these fields. The user may answer undecided or skip. Keep categorical decisions clickable: for example annual/hourly/day rate, base excluding super versus total package, or remote/hybrid/on-site. Ask for an interpretation separately from the amount when necessary.
+
 ## Decision tree and coverage
 
 Cover the following decisions before finalising search scope, in the order dependencies permit. Previously supplied answers count; acknowledge them briefly and move on. A user may skip a preference, proceed with an exploratory batch, or return to it after seeing results. Record skipped/unclear criteria as undecided, not as hard filters. Split follow-ups into separate turns.
@@ -33,7 +39,7 @@ Cover the following decisions before finalising search scope, in the order depen
 | Location | Australian state/territory, city/region and relevant Australian time zone | Suggest nearby Australian regions or compatible Australian time zones where useful. Ask relocation or commute tolerance separately if it changes coverage. |
 | Work arrangement | Remote only, hybrid or on site | Remote-only is a hard restriction only if the user chooses it. For hybrid, ask acceptable office-day frequency in the next turn. Remote means a role available to someone working in Australia; verify Australian hiring eligibility and location limits. |
 | Employment | Permanent, fixed term, contract, part time or other | Recommend comparing like-for-like compensation; a daily contract rate is not an annual base salary. Ask hours/flexibility separately when relevant. |
-| Salary range | Desired floor/target/range | Offer ways to express the range, rather than inventing an appropriate amount. Use AUD; clarify annual, hourly or contract units in a separate turn if unclear. |
+| Salary range | Desired floor/target/range | Ask through a native free-text/numeric field for the user’s own amount or range in AUD, with optional floor/target. Give format guidance only; omit suggested salary bands/amounts. Clarify annual, hourly or contract units in a separate turn if unclear. |
 | Base and super/package | Whether that range is base excluding super, total package including super, or undecided | Suggest keeping base and super explicitly separate for comparison. Ask which interpretation applies; never silently convert or assume the current contribution rate. |
 | Equity | Whether equity matters, and preferred form/weight | Treat equity as uncertain upside unless the user chooses a different tradeoff. Ask separately whether it can compensate for lower cash; do not assume an option's valuation or liquidity. |
 | Annual leave | Desired paid leave and its importance | Offer standard company allowance acceptable; prefer extra leave (for example, more than 20 days); or custom target. This is a preference example, not a legal minimum. Clarify purchased leave, shutdown deductions or pro-rata terms only if material. |
@@ -47,9 +53,9 @@ Cover the following decisions before finalising search scope, in the order depen
 
 ## Flexible sources and review access
 
-Selected sites are browser-controlled research sources, not a promise of bundled integrations. Use an already connected suitable MCP when available and authorised; otherwise use the host browser. Follow the packaged SEEK/LinkedIn instructions for those sources. For Glassdoor, Indeed, employer pages and unfamiliar sites, load the `custom-sources` guide and inspect actual visible search controls. Agree the starting origin and scope in the conversation, create the exploration through the API and record supported/partial/unsupported outcomes. Reusable workflow approval is a separate user review in the conversation. Do not require the user to open a web configuration form.
+Selected sites are research sources, not a promise of bundled integrations. Follow `collection` Headless-first access: use approved search tools/public APIs and headless original-page reads before default-host-browser fallback for an observed access barrier. An already connected suitable MCP can be used within the same access and authorisation boundaries. Follow the packaged SEEK/LinkedIn instructions for those sources. For Glassdoor, Indeed, employer pages and unfamiliar sites, load the `custom-sources` guide and inspect actual visible search controls. Agree the starting origin and scope in the conversation, create the exploration through the API and record supported/partial/unsupported outcomes. Reusable workflow approval is a separate user review in the conversation. Do not require the user to open a web configuration form.
 
-Glassdoor company reports use the `company` guide. Open the source in the controlled browser, pause for the user to sign in or complete verification, then resume the same session after their confirmation. Do not collect passwords/cookies, bypass access controls or pretend inaccessible reviews were read. Retain source URL, date/team/location context, company-name linkage, relevant quotations and conflicting reports before an agent summary. Avoid definitive culture judgements from anecdotes. Failed access stays an explicit limitation.
+Glassdoor company reports use the `company` guide. Inspect actual access using the headless-first order. At a login/verification wall, stop headless requests to that source, open it in the default host browser and pause for the user to sign in or complete verification, then resume that session after confirmation. Do not collect passwords/cookies, bypass access controls or pretend inaccessible reviews were read. Retain source URL, date/team/location context, company-name linkage, relevant quotations and conflicting reports before an agent summary. Avoid definitive culture judgements from anecdotes. Failed access stays an explicit limitation.
 
 ## Close the interview, then research
 

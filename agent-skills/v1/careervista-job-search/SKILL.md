@@ -3,13 +3,17 @@ name: careervista-job-search
 description: Start or resume an Australian job search with CareerVista. Guide Docker or local-app setup, then clarify goals and save evidence-backed recommendations using the agent's own tools.
 ---
 
+## First decision: privacy acknowledgement
+
+Before setup, intake, reading career records/documents or using research tools, read [references/user-consent.md](references/user-consent.md), show its full notice and wait for **I understand and agree to continue** or **Stop — do not proceed**. When a permitted native choice tool is available, **call it** with both choices; the user can click an answer and typing is optional. This acknowledgement has no recommended answer. An explicit agreement already given to this notice in the same conversation covers handoffs between these skills. Until agreement, perform only the instruction/question-tool checks allowed in that reference. A stop or missing/ambiguous answer leaves all workflow work pending.
+
 Use this skill with any agent that can read Markdown instructions. Shell, loopback HTTP, browser and document tools belong to the host; use its available equivalents. If a capability is absent, explain the specific limitation and offer a manual step. Invocation syntax belongs to the host (for example `$careervista-job-search` in Codex, or asking to use this skill by name).
 
 ## Clickable questions, including setup
 
 Before asking the first question, check the host's available tools for a native ask-user, structured-question or choice-picker interface. When available in the current mode, **call that tool** so choices are clickable; writing numbered options or Markdown checkboxes in chat is not a substitute. Use the host's equivalent rather than requiring a particular provider or tool name. Apply this to runtime/language choices, intake, search scope, follow-ups and document-editing choices.
 
-Ask one question per call. Put the recommended choice first and label it, give a short reason, offer two or three useful choices and retain custom free text and an undecided path. Use the host's built-in custom-answer field instead of a duplicate Other option. For an open factual question, use the tool's free-text mode when supported. Wait for the user's submitted answer; a preselected choice, timeout or silence is not consent. With an asynchronous question, keep dependent work pending and continue only independent work.
+Ask one question per call. Put the recommended choice first and label it, give a short reason, offer two or three useful choices and retain custom free text and an undecided path. Use the host's built-in custom-answer field instead of a duplicate Other option. For personal factual/numeric values such as salary ranges, day rates, dates or exact targets, call the tool’s free-text/numeric mode without preset answers; the user enters their own value. Provide format guidance, not recommended amounts. Keep categorical decisions clickable. Wait for the user's submitted answer; a preselected choice, timeout or silence is not consent. With an asynchronous question, keep dependent work pending and continue only independent work.
 
 If no suitable question UI is available in the current host/mode, briefly explain that limitation once, then offer concise numbered choices with custom input in chat. Do not claim text is clickable or build a separate website merely to ask questions. File attachments use the host's attachment mechanism. Permission requests must use a surface allowed by the host's rules; an answer does not bypass execution approvals.
 
@@ -19,7 +23,7 @@ A running CareerVista app is a separate dependency, not part of installing this 
 
 ## Guided search
 
-GET `/api/v1/agent-guide`, `/api/v1/agent-guide/agent-workflow`, `/api/v1/agent-guide/agent-intake` and `/api/v1/agent-guide/language` from that origin. Follow the running app's current contracts. Read `capture-interface` before saving listings and the selected source's guides (`seek`, `linkedin`, `collection` or `custom-sources`) before browsing. These HTTP guides make source collection available even when no separate capture skill is installed.
+GET `/api/v1/agent-guide`, `/api/v1/agent-guide/agent-workflow`, `/api/v1/agent-guide/agent-intake` and `/api/v1/agent-guide/language` from that origin. Follow the running app’s current contracts. After the privacy acknowledgement, read `agent-tasks` when available for compact task-level helpers over the same HTTP API; use the raw API when the installed version lacks them. Read `capture-interface` before saving listings and the selected source's guides (`seek`, `linkedin`, `collection` or `custom-sources`) before browsing. These HTTP guides make source collection available even when no separate capture skill is installed.
 
 Search headless first: batch the agreed keyword/location variants with host search tools and public APIs, then read selected original pages with headless HTTP or the Docker Playwright helper described in `collection`. Open the user’s default host browser only for an observed login/verification/access barrier or unavailable headless capability, stating the reason. Stop headless requests for a blocked source; keep accessible sources moving. Verify actual query/location and readable original content before saving evidence; snippets and suspicious responses remain unverified. This access order also applies when an older running app’s source guide says to open a browser immediately.
 

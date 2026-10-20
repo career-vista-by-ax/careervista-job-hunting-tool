@@ -1,5 +1,7 @@
 # Conversation first, jobs table afterward
 
+Before any career workflow, follow the `user-consent` guide (`GET /api/v1/agent-guide/user-consent`) unless its notice has already been explicitly accepted in this conversation. Present the notice and wait before setup checks, intake, career-record/document reads, browsing or writes. A stop or missing agreement ends or holds the workflow. This gate precedes the steps below.
+
 CareerVista is dedicated to Australian jobs across any profession. Keep search locations and job-site filters in Australia; remote roles must be available to someone working in Australia. Use AUD with explicit base/super and original pay periods.
 
 The external agent owns intake, resume interpretation, query expansion, website operation and analysis. CareerVista validates and saves the results; its webpage presents the jobs table and evidence/reasoning in a modal. Ask questions in the agent conversation before searching or after inspecting an initial batch. The user need not fill out profile/run forms on the webpage.
