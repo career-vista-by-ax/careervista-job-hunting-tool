@@ -8,6 +8,8 @@ The external agent owns intake, resume interpretation, query expansion, website 
 
 Use the exact loopback origin supplied by the user. GET `/api/v1/agent-guide` discovers the installed version's API guides; GET each listed path returns `{name,markdown}`. Read `profiles` and `runs` before onboarding, `collection` and the relevant packaged source instructions before searching, and `assessments` before saving fit reasoning. All mutations use the documented HTTP API, never direct database writes. The host supplies browser/document tools, model configuration and credentials.
 
+Once the local connection is verified, send a visible clickable **Open CareerVista** link to that exact origin's `/` jobs page before the first intake question or research action, including when reusing a saved connection. Tell the user to click it in their browser to watch saved results appear; the page may initially be empty. Use the actual host/port, not a guessed default or an API-guide URL. A launcher opening the browser is not a substitute for giving the link. Send a verified replacement if the address changes; repeat the link with the finished batch.
+
 ## 1. Understand the search
 
 Read `language` first. Use explicit language instructions, then the saved preference, or infer from the user’s prompt when clear. Save the preference. For non-English explanations keep English originals and submit bilingual assessment translations. Display Chinese choices as 简体中文 and 繁体中文 only.

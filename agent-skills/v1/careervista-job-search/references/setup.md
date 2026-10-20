@@ -36,6 +36,10 @@ Mac releases use `CareerVista.command --no-browser`; Windows releases use `Caree
 
 For an already registered native install, `installation.json` beside this skill contains its root and bundled runtime path. That runtime can run `scripts/launch.mjs` beside this skill: it verifies the installation identity/active package and launches/reuses it. If the recorded runtime path is stale, read the root's active ownership manifest and resolve its verified bundled runtime; never guess another installation.
 
+## Show the local page before intake
+
+After verifying `/api/v1/agent-guide`, send a visible user-facing message with a clickable **Open CareerVista** link to the verified origin's `/` page. Explain: “Click Open CareerVista to open your local jobs page in your browser. Saved jobs will appear here as research progresses; it may be empty at first.” This step is required for Docker, native setup and a healthy reused connection, even if a launcher already opened a browser. Use the actual published host port or launcher URL; never substitute a default port, container-internal address or API path. Finish this handoff before asking intake questions or starting source research. If the origin changes, verify it and send the replacement link promptly.
+
 ## Save connection and continue
 
 After a healthy connection is verified, save only nonsecret connection information to the host connection file when file tools permit, or use the host's normal persistent preferences. Its runtime choice is reusable; it does not grant future Docker mutations blanket permission. If no persistent file tools exist, provide the exact origin/path for reuse next session. Resume SKILL.md's guided intake without asking the user to copy a long prompt or open configuration forms.

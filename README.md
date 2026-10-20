@@ -74,7 +74,10 @@ verification or blocking triggers a fallback to your default host browser.
 Blocked or suspicious responses remain unverified, never job/review evidence.
 Optional local task helpers wrap the same HTTP API for compact planning,
 preview screening and evidence/assessment saves; see [agent tasks](docs/agent-tasks.md).
-When results are ready, it sends you to the jobs table.
+As soon as the local connection is verified, the agent gives you a clickable
+**Open CareerVista** link before intake or research. Click it to open the local
+jobs page and see saved results appear; a new workspace may initially be empty.
+The agent shares the link again when the batch is ready.
 
 ## Your skill set
 
